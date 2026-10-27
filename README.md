@@ -3,7 +3,7 @@
 Handyspiel, das Hof-Aufbau im Stil von Clash of Clans mit Tower Defense im Stil von Bloons TD6 verbindet: Baue deinen Bauernhof auf und verteidige deine Kühe gegen milchsüchtige Aliens.
 
 - Engine: Unity 6
-- Plattform: iOS und Android, Querformat
+- Plattform: Android, Querformat
 
 Das vollständige Spielkonzept steht in [docs/Spielkonzept.md](docs/Spielkonzept.md).
 
@@ -30,6 +30,14 @@ Das Level baut sich komplett per Code auf (`Assets/Scripts/Core/GameBootstrap.cs
 Tipp: Im Game-Fenster ein Querformat wie *1920×1080* einstellen.
 
 **Alternative:** Ein neues Unity-6-Projekt (z. B. Vorlage *Universal 3D*) anlegen und den Ordner `Assets/Scripts` hineinkopieren – das funktioniert auch mit URP.
+
+## Auf dem Android-Handy testen
+
+1. In Unity Hub unter **Installs** bei deiner Unity-Version das Modul **Android Build Support** (mit *OpenJDK* und *Android SDK & NDK Tools*) installieren.
+2. Im Unity-Editor oben im Menü **Muh Defense → Android einrichten** klicken. Das stellt App-Name, Paketname, Querformat und die Play-Store-Einstellungen ein, legt die Startszene an und wechselt auf Android.
+3. Auf dem Handy die **Entwickleroptionen** aktivieren (Einstellungen → Über das Telefon → 7× auf *Build-Nummer* tippen) und dort **USB-Debugging** einschalten.
+4. Handy per USB anschließen und die Nachfrage auf dem Handy erlauben.
+5. In Unity **File → Build Profiles** → **Android** → **Build And Run**. Die App wird gebaut und startet auf dem Handy.
 
 ## Steuerung
 

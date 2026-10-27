@@ -7,7 +7,7 @@
 **Muh Defense** ist ein Handyspiel, das **Hof-Aufbau wie in Clash of Clans** mit **klassischem Tower Defense wie in Bloons TD6** verbindet.
 Der Spieler baut seinen eigenen Bauernhof auf und verteidigt in Levels die Kühe gegen Aliens, die süchtig nach Milch sind.
 
-- **Plattform:** iOS und Android
+- **Plattform:** Android (Google Play Store); iOS eventuell später
 - **Engine:** Unity 6
 - **Stil:** Low-Poly-3D im Comic-Look, mit leicht schräger Draufsicht (wie Clash of Clans)
 - **Ton:** lustig, schräg, familienfreundlich
@@ -308,7 +308,8 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - Kamera: schräge Draufsicht, auf dem Hof frei zoom- und schiebbar
 - **Querformat** – auf dem Hof und in den Levels (mehr Platz für Wege und Türme, wie in BTD6)
 - Keine Spielgeschwindigkeits-Erhöhung (2x) in der ersten Version
-- Speicherstand lokal, später optional Cloud-Speicherung (Google Play / iCloud)
+- Speicherstand lokal, später optional Cloud-Speicherung über Google Play Games
+- Android-App: IL2CPP, ARM64, Veröffentlichung als App Bundle (.aab) im Google Play Store
 
 ---
 
@@ -325,6 +326,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 
 ## 14. Entscheidungen
 
+- **Android-App** (Google Play Store), iOS eventuell später
 - **Querformat** für das ganze Spiel
 - **Keine doppelte Geschwindigkeit** in der ersten Version (kann später ergänzt werden)
 - **Name:** vorerst egal, „Muh Defense“ bleibt Arbeitstitel
