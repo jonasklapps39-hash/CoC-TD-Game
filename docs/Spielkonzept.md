@@ -1,6 +1,6 @@
 # Muh Defense – Spielkonzept
 
-> Arbeitstitel. Stand: Entwurf v0.1 – wird gemeinsam weiterentwickelt.
+> Arbeitstitel (finaler Name wird später festgelegt). Stand: Entwurf v0.2 – wird gemeinsam weiterentwickelt.
 
 ## 1. Kurzbeschreibung
 
@@ -12,6 +12,7 @@ Der Spieler baut seinen eigenen Bauernhof auf und verteidigt in Levels die Kühe
 - **Stil:** Low-Poly-3D im Comic-Look, mit leicht schräger Draufsicht (wie Clash of Clans)
 - **Ton:** lustig, schräg, familienfreundlich
 - **Modus:** Einzelspieler, kein Multiplayer
+- **Ausrichtung:** Querformat
 - **Keine Energie und keine Leben:** Man kann so viele Levels spielen, wie man will.
 
 ---
@@ -305,7 +306,8 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - **Unity 6** mit URP (Universal Render Pipeline) für gute Optik bei guter Leistung auf Handys
 - **Low-Poly-3D**, kräftige Farben, weiche Schatten, Comic-Proportionen
 - Kamera: schräge Draufsicht, auf dem Hof frei zoom- und schiebbar
-- Hochformat oder Querformat: **offen** (siehe unten)
+- **Querformat** – auf dem Hof und in den Levels (mehr Platz für Wege und Türme, wie in BTD6)
+- Keine Spielgeschwindigkeits-Erhöhung (2x) in der ersten Version
 - Speicherstand lokal, später optional Cloud-Speicherung (Google Play / iCloud)
 
 ---
@@ -321,10 +323,13 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 
 ---
 
-## 14. Offene Fragen
+## 14. Entscheidungen
 
-- Hochformat (einhändig spielbar) oder Querformat (mehr Platz für Levels wie in BTD6)?
-- Soll man im Level die Geschwindigkeit erhöhen können (2x)?
+- **Querformat** für das ganze Spiel
+- **Keine doppelte Geschwindigkeit** in der ersten Version (kann später ergänzt werden)
+- **Name:** vorerst egal, „Muh Defense“ bleibt Arbeitstitel
+
+## 15. Offene Fragen
+
 - Sollen Aliens später doch auch den eigenen Hof angreifen (z. B. als Ereignis)?
 - Endlos-Modus für Fortgeschrittene?
-- Name des Spiels: „Muh Defense“ oder etwas anderes?
