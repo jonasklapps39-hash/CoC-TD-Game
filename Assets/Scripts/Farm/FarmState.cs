@@ -343,8 +343,8 @@ namespace MuhDefense
 
         // ---------------------------------------------------------------- Türme und Levels
 
-        /// <summary>Höchste Turm-Stufe im Level für eine Werkstatt-Stufe (0 = nicht freigeschaltet).</summary>
-        public static int TowerLevelForWorkshop(int workshopLevel) => workshopLevel <= 0 ? 0 : Mathf.Min(workshopLevel + 1, TowerType.MaxLevel);
+        /// <summary>Höchste Upgrade-Stufe im Level für eine Werkstatt-Stufe (0 = Turm nicht freigeschaltet).</summary>
+        public static int TowerLevelForWorkshop(int workshopLevel) => workshopLevel <= 0 ? 0 : Mathf.Min(workshopLevel + 1, TowerType.MaxTier);
 
         /// <summary>Höchste Stufe, bis zu der dieser Turm im Level gebaut werden darf (0 = nicht freigeschaltet).</summary>
         public int TowerMaxLevel(TowerType tower)

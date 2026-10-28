@@ -48,7 +48,7 @@ namespace MuhDefense
         public Resource StoredResource;
         public int[] StorageCapacity;
 
-        /// <summary>Werkstatt: schaltet diesen Turm frei. Höchste Turm-Stufe im Level = Werkstatt-Stufe + 1.</summary>
+        /// <summary>Werkstatt: schaltet diesen Turm frei. Höchste Upgrade-Stufe im Level = Werkstatt-Stufe + 1.</summary>
         public TowerType UnlocksTower;
 
         public string Id => Kind.ToString();
@@ -144,11 +144,11 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Schmiede,
             Name = "Schmiede",
-            Description = "Werkstatt für Basis-Türme. Schaltet den Mistgabel-Bauern frei. Stufe 2 erlaubt im Level die höchste Turm-Stufe.",
-            MaxLevel = 2,
+            Description = "Werkstatt für Basis-Türme. Schaltet den Mistgabel-Bauern frei. Jede Stufe erlaubt im Level eine höhere Upgrade-Stufe (Stufe 4: alle Upgrades).",
+            MaxLevel = 4,
             CostResource = Resource.Milch,
-            Costs = new[] { 200, 500 },
-            BuildSeconds = new[] { 10, 60 },
+            Costs = new[] { 200, 500, 1200, 2500 },
+            BuildSeconds = new[] { 10, 60, 180, 300 },
             MaxCount = new[] { 1, 1, 1, 1, 1 },
             UnlocksTower = TowerType.Mistgabel,
         };
@@ -157,11 +157,11 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Zimmerei,
             Name = "Zimmerei",
-            Description = "Werkstatt für Explosiv-Türme. Schaltet das Heuballen-Katapult frei. Stufe 2 erlaubt im Level die höchste Turm-Stufe.",
-            MaxLevel = 2,
+            Description = "Werkstatt für Explosiv-Türme. Schaltet das Heuballen-Katapult frei. Jede Stufe erlaubt im Level eine höhere Upgrade-Stufe (Stufe 4: alle Upgrades).",
+            MaxLevel = 4,
             CostResource = Resource.Milch,
-            Costs = new[] { 400, 1200 },
-            BuildSeconds = new[] { 30, 120 },
+            Costs = new[] { 400, 1000, 2000, 3500 },
+            BuildSeconds = new[] { 30, 120, 240, 360 },
             MaxCount = new[] { 0, 1, 1, 1, 1 },
             UnlocksTower = TowerType.Heuballen,
         };
@@ -170,11 +170,11 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Tueftlerschuppen,
             Name = "Tüftlerschuppen",
-            Description = "Werkstatt für Technik-Türme. Schaltet den Eismilch-Sprüher frei. Stufe 2 erlaubt im Level die höchste Turm-Stufe.",
-            MaxLevel = 2,
+            Description = "Werkstatt für Technik-Türme. Schaltet den Eismilch-Sprüher frei. Jede Stufe erlaubt im Level eine höhere Upgrade-Stufe (Stufe 4: alle Upgrades).",
+            MaxLevel = 4,
             CostResource = Resource.Milch,
-            Costs = new[] { 900, 2000 },
-            BuildSeconds = new[] { 60, 180 },
+            Costs = new[] { 900, 1800, 3000, 4500 },
+            BuildSeconds = new[] { 60, 180, 300, 420 },
             MaxCount = new[] { 0, 0, 1, 1, 1 },
             UnlocksTower = TowerType.Eismilch,
         };

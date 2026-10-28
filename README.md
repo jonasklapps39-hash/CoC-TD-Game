@@ -19,8 +19,9 @@ Der komplette Spielkreislauf ist als Prototyp spielbar: **Level spielen → Hof 
 - Gebäude lassen sich verschieben. Der Hof wird automatisch gespeichert.
 
 **Levels (Tower Defense, wie in Bloons TD6)**
-- Weltkarte mit 3 Levels im Heimattal, jeweils 10 Wellen mit Boss
+- Weltkarte mit 5 Levels im Heimattal (10 bis 12 Wellen, Bosse am Ende)
 - 3 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher
+- Upgrade-System wie in Bloons TD6: je 3 Pfade mit 5 Stufen (ein Pfad bis 5, ein zweiter bis 2), Fähigkeiten auf Stufe 5, Zielmodus (Erster, Letzter, Stärkster, Nächster)
 - 4 Aliens: Grünling, Flitzer, Brocken (gepanzert), Oberbrocken Gorg (Boss)
 - Aliens schnappen sich Kühe von der Weide. Sterne: 3 ohne Verluste, 2 bei höchstens 2 verlorenen Kühen, sonst 1.
 - Tempo-Knopf (1x/2x) und Pause-Menü (Weiterspielen, Neu starten, Level verlassen)
@@ -28,7 +29,7 @@ Der komplette Spielkreislauf ist als Prototyp spielbar: **Level spielen → Hof 
 
 **Verbindung**
 - Levels bringen Mais, Milch und Sterne für den Hof (anteilig nach Sternen).
-- Werkstätten schalten Türme frei: höchste Turm-Stufe im Level = Werkstatt-Stufe + 1.
+- Werkstätten schalten Türme frei: höchste Upgrade-Stufe im Level = Werkstatt-Stufe + 1 (Werkstatt Stufe 4 = alle Upgrades).
 - Ein Level wird freigeschaltet, wenn das vorherige geschafft ist.
 
 Grafik bewusst nur aus Unity-Grundkörpern (Platzhalter), UI als einfache IMGUI-Oberfläche. Zeiten und Kosten sind für schnelles Testen kurz gehalten.
@@ -63,7 +64,8 @@ Tipp: Im Game-Fenster ein Querformat wie *1920×1080* einstellen.
 
 **Level**
 - Turm in der Seitenleiste wählen → auf ein hell markiertes Feld tippen
-- Auf einen Turm tippen → verbessern oder verkaufen
+- Auf einen Turm tippen → Upgrade-Fenster unten (3 Pfade), Zielmodus, verkaufen
+- Fähigkeiten der Stufe-5-Türme erscheinen als Knöpfe in der Seitenleiste
 - „Welle starten“, wenn du bereit bist
 
 **Zum Testen:** Menü **Muh Defense → Spielstand löschen** setzt den Hof zurück.

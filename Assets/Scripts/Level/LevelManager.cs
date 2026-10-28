@@ -59,6 +59,10 @@ namespace MuhDefense
 
         MapView map;
         Vector3[] pathWorld;
+        /// <summary>Weg der Aliens in Weltkoordinaten (Eingang → Weide).</summary>
+        public Vector3[] PathWorld => pathWorld;
+        /// <summary>Restzeit der Fähigkeit „Bauernaufstand“ (Mistgabel-Bauern doppelt so schnell).</summary>
+        public float FarmerFrenzyTimer { get; private set; }
         int pendingGroups;
         Dictionary<TowerType, int> towerMaxLevels;
 
@@ -106,6 +110,8 @@ namespace MuhDefense
         {
             // Jedes Bild setzen: Beim Neustart setzt das alte Level beim Zerstören die Zeit sonst auf 1x zurück.
             ApplyTimeScale();
+
+            if (FarmerFrenzyTimer > 0f && State == LevelState.WaveRunning) FarmerFrenzyTimer -= Time.deltaTime;
 
             for (int i = FloatingTexts.Count - 1; i >= 0; i--)
             {
@@ -372,14 +378,83 @@ namespace MuhDefense
             if (SelectedTower != null) SelectedTower.SetSelected(true);
         }
 
-        public void UpgradeSelected()
+        public void UpgradeSelected(int path)
         {
             var tower = SelectedTower;
-            if (tower == null || !tower.NextUpgradeCost.HasValue) return;
-            int cost = tower.NextUpgradeCost.Value;
+            if (tower == null || tower.WhyCannotUpgrade(path) != null) return;
+            int cost = tower.NextTier(path).Cost;
             if (Money < cost) return;
             Money -= cost;
-            tower.Upgrade(cost);
+            tower.Upgrade(path);
+        }
+
+        // ---------------------------------------------------------------- Fähigkeiten (Stufe 5)
+
+        public void UseAbility(Tower tower)
+        {
+            if (State != LevelState.WaveRunning || tower == null || !tower.AbilityReady) return;
+            var ability = tower.Stats.Ability;
+            tower.TriggerAbility();
+            AddFloatingText(tower.transform.position + Vector3.up * 1.2f, TowerType.AbilityName(ability) + "!", new Color(1f, 0.9f, 0.3f));
+
+            switch (ability)
+            {
+                case TowerAbility.Gabelsturm:
+                    for (int i = Enemies.Count - 1; i >= 0; i--)
+                    {
+                        if (i >= Enemies.Count) continue;
+                        var e = Enemies[i];
+                        RingEffect.Spawn(transform, e.transform.position, 0.6f, new Color(0.9f, 0.9f, 1f, 1f), 0.4f);
+                        e.TakeDamage(60f, true);
+                    }
+                    break;
+                case TowerAbility.Bauernaufstand:
+                    FarmerFrenzyTimer = 10f;
+                    break;
+                case TowerAbility.Heulawine:
+                    StartCoroutine(HayAvalanche());
+                    break;
+                case TowerAbility.Eiszeit:
+                    foreach (var e in Enemies) e.Freeze(4f, 1.5f, true);
+                    break;
+            }
+        }
+
+        IEnumerator HayAvalanche()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                RollingBale.Spawn(this, pathWorld[pathWorld.Length - 1], pathWorld.Length - 2, 999f, 80f, 0.55f);
+                yield return new WaitForSeconds(0.6f);
+            }
+        }
+
+        public void CycleTargetMode()
+        {
+            if (SelectedTower != null) SelectedTower.CycleTargetMode();
+        }
+
+        /// <summary>Nächster Punkt auf dem Weg und der Index des Weg-Punkts davor (Richtung Eingang).</summary>
+        public Vector3 ClosestPointOnPath(Vector3 position, out int towardsEntrance)
+        {
+            towardsEntrance = 0;
+            Vector3 best = pathWorld[0];
+            float bestDist = float.MaxValue;
+            for (int i = 0; i < pathWorld.Length - 1; i++)
+            {
+                Vector3 a = pathWorld[i], b = pathWorld[i + 1];
+                Vector3 ab = b - a;
+                float t = ab.sqrMagnitude > 0f ? Mathf.Clamp01(Vector3.Dot(position - a, ab) / ab.sqrMagnitude) : 0f;
+                Vector3 p = a + ab * t;
+                float d = (p - position).sqrMagnitude;
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = p;
+                    towardsEntrance = i;
+                }
+            }
+            return best;
         }
 
         public void SellSelected()

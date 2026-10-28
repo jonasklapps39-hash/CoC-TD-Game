@@ -14,9 +14,17 @@ namespace MuhDefense
         public float Hp { get; private set; }
         public Cow Carried { get; private set; }
         public bool Alive => Hp > 0f;
+        public bool IsBoss => Type.Kind == EnemyKind.Boss;
+        public bool IsArmored => Type.Armor > 0f;
+        /// <summary>Große Aliens (Brocken, Boss) lassen sich nur von starker Kälte einfrieren.</summary>
+        public bool IsBig => Type.Kind == EnemyKind.Brocken || IsBoss;
+        public bool IsFrozen => freezeTimer > 0f;
 
-        /// <summary>Je höher, desto dringender sollten Türme dieses Alien angreifen.</summary>
+        /// <summary>Je höher, desto weiter ist das Alien gekommen (Kuh-Träger zuerst).</summary>
         public float Priority => returning ? 1000f + travelled : travelled;
+
+        /// <summary>Index des Weg-Punkts hinter dem Alien in Richtung Eingang.</summary>
+        public int WaypointTowardsEntrance => returning ? targetIndex : Mathf.Max(0, targetIndex - 1);
 
         public Vector3 AimPoint => transform.position + Vector3.up * (0.45f * Type.Scale);
         public Vector3 HealthBarPoint => transform.position + Vector3.up * (1.05f * Type.Scale + (Carried != null ? 0.6f : 0f));
@@ -27,9 +35,22 @@ namespace MuhDefense
         bool returning;
         bool waitingForCow;
         float travelled;
+        Transform model;
+
         float slowFactor = 1f;
         float slowTimer;
-        Transform model;
+        float freezeTimer;
+        float frozenVulnerability = 1f;
+        float dotDps;
+        float dotTimer;
+        float burnDps;
+        float burnTimer;
+        bool burnIgnoresArmor;
+        float armorShred;
+        float armorShredTimer;
+        float permanentVulnerability;
+        GameObject iceBlock;
+        GameObject flame;
 
         public void Init(LevelManager level, EnemyType type, float hpMultiplier, Vector3[] path)
         {
@@ -49,11 +70,10 @@ namespace MuhDefense
             if (level.State != LevelState.WaveRunning) return;
 
             float dt = Time.deltaTime;
-            if (slowTimer > 0f)
-            {
-                slowTimer -= dt;
-                if (slowTimer <= 0f) slowFactor = 1f;
-            }
+            UpdateEffects(dt);
+            if (!Alive) return;
+
+            if (freezeTimer > 0f) return;
 
             if (waitingForCow)
             {
@@ -69,11 +89,44 @@ namespace MuhDefense
             float speed = Type.Speed * slowFactor * (Carried != null ? 0.75f : 1f);
             Move(speed * dt);
 
-            // Wackeln beim Laufen
             if (model != null)
             {
                 float bob = Mathf.Abs(Mathf.Sin(Time.time * speed * 6f)) * 0.06f;
                 model.localPosition = new Vector3(0f, bob, 0f);
+            }
+        }
+
+        void UpdateEffects(float dt)
+        {
+            if (slowTimer > 0f)
+            {
+                slowTimer -= dt;
+                if (slowTimer <= 0f) slowFactor = 1f;
+            }
+            if (freezeTimer > 0f)
+            {
+                freezeTimer -= dt;
+                if (freezeTimer <= 0f) SetIce(false);
+            }
+            if (armorShredTimer > 0f)
+            {
+                armorShredTimer -= dt;
+                if (armorShredTimer <= 0f) armorShred = 0f;
+            }
+            if (dotTimer > 0f)
+            {
+                dotTimer -= dt;
+                TakeDamage(dotDps * dt, true);
+            }
+            if (burnTimer > 0f)
+            {
+                burnTimer -= dt;
+                TakeDamage(burnDps * dt, burnIgnoresArmor);
+                if (burnTimer <= 0f)
+                {
+                    burnIgnoresArmor = false;
+                    SetFlame(false);
+                }
             }
         }
 
@@ -137,19 +190,94 @@ namespace MuhDefense
             }
         }
 
-        public void TakeDamage(float damage)
+        // ---------------------------------------------------------------- Schaden und Effekte
+
+        /// <param name="armorPiercing">Panzer wird ignoriert.</param>
+        /// <param name="armoredBonus">Faktor gegen gepanzerte Aliens.</param>
+        /// <returns>Tatsächlich verursachter Schaden.</returns>
+        public float TakeDamage(float damage, bool armorPiercing = false, float armoredBonus = 1f)
         {
-            if (!Alive) return;
-            float dealt = Mathf.Max(damage - Type.Armor, damage * 0.25f);
+            if (!Alive || damage <= 0f) return 0f;
+            if (IsArmored) damage *= armoredBonus;
+            float armor = armorPiercing ? 0f : Mathf.Max(0f, Type.Armor - armorShred);
+            float dealt = Mathf.Max(damage - armor, damage * 0.25f);
+            dealt *= 1f + permanentVulnerability + (IsFrozen ? frozenVulnerability - 1f : 0f);
             Hp -= dealt;
             if (Hp <= 0f) Die();
+            return dealt;
         }
 
         /// <param name="factor">Geschwindigkeits-Faktor, z. B. 0.6 = 40 % langsamer.</param>
         public void ApplySlow(float factor, float duration)
         {
-            slowFactor = Mathf.Min(slowFactor, factor);
+            slowFactor = Mathf.Min(slowFactor, Mathf.Max(0.15f, factor));
             slowTimer = Mathf.Max(slowTimer, duration);
+        }
+
+        public void Freeze(float duration, float vulnerability, bool canFreezeBig)
+        {
+            if (IsBig && !canFreezeBig) return;
+            if (IsBoss) duration *= 0.5f;
+            freezeTimer = Mathf.Max(freezeTimer, duration);
+            frozenVulnerability = Mathf.Max(frozenVulnerability, vulnerability);
+            SetIce(true);
+        }
+
+        public void ApplyDot(float dps, float duration)
+        {
+            dotDps = Mathf.Max(dotDps, dps);
+            dotTimer = Mathf.Max(dotTimer, duration);
+        }
+
+        public void ApplyBurn(float dps, float duration, bool ignoresArmor)
+        {
+            if (dps <= 0f) return;
+            burnDps = Mathf.Max(burnTimer > 0f ? burnDps : 0f, dps);
+            burnTimer = Mathf.Max(burnTimer, duration);
+            burnIgnoresArmor |= ignoresArmor;
+            SetFlame(true);
+        }
+
+        public void ShredArmor(float amount, float duration)
+        {
+            armorShred = Mathf.Max(armorShred, amount);
+            armorShredTimer = Mathf.Max(armorShredTimer, duration);
+        }
+
+        public void AddPermanentVulnerability(float amount)
+        {
+            permanentVulnerability = Mathf.Max(permanentVulnerability, amount);
+        }
+
+        /// <summary>Schiebt das Alien ein Stück entgegen seiner Laufrichtung zurück (nicht bei Bossen).</summary>
+        public void PushBack(float distance)
+        {
+            if (IsBoss || !Alive) return;
+            if (waitingForCow)
+            {
+                waitingForCow = false;
+                targetIndex = path.Length - 1;
+            }
+            while (distance > 0f)
+            {
+                int back = returning ? targetIndex + 1 : targetIndex - 1;
+                if (back < 0 || back >= path.Length) return;
+                Vector3 p = path[back];
+                float d = Vector3.Distance(transform.position, p);
+                if (d <= distance)
+                {
+                    transform.position = p;
+                    distance -= d;
+                    travelled = Mathf.Max(0f, travelled - d);
+                    targetIndex = back;
+                }
+                else
+                {
+                    transform.position += (p - transform.position).normalized * distance;
+                    travelled = Mathf.Max(0f, travelled - distance);
+                    return;
+                }
+            }
         }
 
         void Die()
@@ -161,6 +289,26 @@ namespace MuhDefense
             }
             level.OnEnemyKilled(this);
             Destroy(gameObject);
+        }
+
+        void SetIce(bool on)
+        {
+            if (on && iceBlock == null)
+            {
+                iceBlock = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, 0.45f * Type.Scale, 0f),
+                    new Vector3(0.6f, 0.95f, 0.6f) * Type.Scale, new Color(0.7f, 0.9f, 1f), "Eisblock");
+            }
+            if (iceBlock != null) iceBlock.SetActive(on);
+        }
+
+        void SetFlame(bool on)
+        {
+            if (on && flame == null)
+            {
+                flame = Visuals.Prim(PrimitiveType.Sphere, transform, new Vector3(0f, 1.0f * Type.Scale, 0f),
+                    new Vector3(0.18f, 0.28f, 0.18f) * Type.Scale, new Color(1f, 0.45f, 0.1f), "Flamme");
+            }
+            if (flame != null) flame.SetActive(on);
         }
 
         void BuildModel()

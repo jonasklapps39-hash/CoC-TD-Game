@@ -36,6 +36,7 @@ namespace MuhDefense
             DrawWorldOverlays();
             DrawTopBar();
             DrawSideBar();
+            if (level.SelectedTower != null && !level.Paused) DrawUpgradePanel(level.SelectedTower);
 
             switch (level.State)
             {
@@ -129,6 +130,7 @@ namespace MuhDefense
             }
 
             GUILayout.FlexibleSpace();
+            DrawAbilities();
 
             if (level.State == LevelState.Building && level.HasMoreWaves)
             {
@@ -144,32 +146,102 @@ namespace MuhDefense
             GUILayout.EndArea();
         }
 
+        /// <summary>Kurzinfo in der Seitenleiste; die Upgrades selbst stehen im Fenster unten.</summary>
         void DrawTowerInfo(Tower tower)
         {
-            GUILayout.Label($"{tower.Type.Name} (Stufe {tower.Level})", UiKit.Label);
-
-            string stats = $"Schaden: {tower.Damage:0.#}\nReichweite: {tower.Range:0.#}\nAngriffe pro Sek.: {tower.FireRate:0.##}";
-            if (tower.Splash > 0f) stats += $"\nFlächenradius: {tower.Splash:0.#}";
-            if (tower.Slow < 1f) stats += $"\nVerlangsamung: {(1f - tower.Slow) * 100f:0} %";
+            var st = tower.Stats;
+            GUILayout.Label(tower.Type.Name, UiKit.Label);
+            string stats = $"Schaden: {st.Damage:0.#}   Tempo: {st.FireRate:0.##}/s\n" +
+                           (st.GlobalRange ? "Reichweite: unbegrenzt" : $"Reichweite: {st.Range:0.#}");
+            if (st.Splash > 0f) stats += $"   Fläche: {st.Splash:0.#}";
+            if (st.Slow < 1f) stats += $"\nVerlangsamung: {(1f - st.Slow) * 100f:0} %";
             GUILayout.Label(stats, UiKit.Small);
+            GUILayout.Label("Upgrades: unten im Bild", UiKit.Small);
+        }
 
-            int? upgrade = tower.NextUpgradeCost;
-            if (upgrade.HasValue)
+        /// <summary>Knöpfe für Fähigkeiten der Stufe-5-Türme.</summary>
+        void DrawAbilities()
+        {
+            bool any = false;
+            int shown = 0;
+            foreach (var tower in level.Towers)
             {
-                GUI.enabled = level.Money >= upgrade.Value;
-                if (GUILayout.Button($"Verbessern ({upgrade.Value})", UiKit.Button, GUILayout.Height(44f))) level.UpgradeSelected();
+                if (!tower.HasAbility || shown >= 4) continue;
+                shown++;
+                if (!any)
+                {
+                    GUILayout.Label("Fähigkeiten", UiKit.Title);
+                    any = true;
+                }
+                string name = TowerType.AbilityName(tower.Stats.Ability);
+                bool ready = tower.AbilityReady && level.State == LevelState.WaveRunning;
+                string label = tower.AbilityReady ? name : $"{name} ({Mathf.CeilToInt(tower.AbilityCooldownLeft)} s)";
+                GUI.enabled = ready;
+                if (GUILayout.Button(label, tower.AbilityReady ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(40f))) level.UseAbility(tower);
                 GUI.enabled = true;
             }
-            else if (tower.LimitedByWorkshop)
-            {
-                GUILayout.Label($"Für Stufe {tower.Level + 1} die Werkstatt auf dem Hof verbessern.", UiKit.Small);
-            }
-            else
-            {
-                GUILayout.Label("Maximale Stufe erreicht", UiKit.Small);
-            }
+        }
 
+        /// <summary>Upgrade-Fenster wie in Bloons TD6: drei Pfade nebeneinander, links Zielmodus und Verkaufen.</summary>
+        void DrawUpgradePanel(Tower tower)
+        {
+            float width = UiKit.VirtualWidth - UiKit.SideBarWidth - 16f;
+            const float height = 200f;
+            var r = new Rect(8f, UiKit.RefHeight - height - 8f, width, height);
+            blockers.Add(r);
+            GUI.Box(r, GUIContent.none, UiKit.Panel);
+
+            const float leftWidth = 190f;
+            GUILayout.BeginArea(new Rect(r.x + 10f, r.y + 8f, leftWidth, height - 16f));
+            GUILayout.Label(tower.Type.Name, UiKit.Label);
+            if (GUILayout.Button($"Ziel: {TowerType.TargetModeName(tower.TargetMode)}", UiKit.Button, GUILayout.Height(40f))) level.CycleTargetMode();
             if (GUILayout.Button($"Verkaufen (+{tower.SellValue})", UiKit.Button, GUILayout.Height(40f))) level.SellSelected();
+            if (GUILayout.Button("Schließen", UiKit.Button, GUILayout.Height(34f))) level.Select(null);
+            GUILayout.EndArea();
+
+            float colWidth = (width - leftWidth - 30f) / TowerType.PathCount;
+            for (int p = 0; p < TowerType.PathCount; p++)
+            {
+                var path = tower.Type.Paths[p];
+                var col = new Rect(r.x + leftWidth + 20f + p * colWidth, r.y + 8f, colWidth - 8f, height - 16f);
+                UiKit.DrawRect(col, new Color(0f, 0f, 0f, 0.2f));
+                UiKit.DrawRect(new Rect(col.x, col.y, col.width, 4f), path.Color);
+
+                GUILayout.BeginArea(new Rect(col.x + 8f, col.y + 8f, col.width - 16f, col.height - 12f));
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(path.Name, UiKit.Label);
+                GUILayout.FlexibleSpace();
+                Rect pips = GUILayoutUtility.GetRect(5 * 14f, 20f, GUILayout.Width(5 * 14f));
+                for (int t = 0; t < TowerType.MaxTier; t++)
+                {
+                    var pip = new Rect(pips.x + t * 14f, pips.y + 5f, 10f, 10f);
+                    UiKit.DrawRect(pip, t < tower.Tiers[p] ? path.Color : new Color(1f, 1f, 1f, 0.15f));
+                }
+                GUILayout.EndHorizontal();
+
+                var next = tower.NextTier(p);
+                if (next == null)
+                {
+                    GUILayout.Label("Alle Stufen gekauft", UiKit.Small);
+                }
+                else
+                {
+                    GUILayout.Label($"Stufe {tower.Tiers[p] + 1}: {next.Name}", UiKit.Small);
+                    GUILayout.Label(next.Description, UiKit.Small, GUILayout.Height(54f));
+                    string reason = tower.WhyCannotUpgrade(p);
+                    if (reason != null)
+                    {
+                        GUILayout.Label(reason, UiKit.Small);
+                    }
+                    else
+                    {
+                        GUI.enabled = level.Money >= next.Cost;
+                        if (GUILayout.Button($"Kaufen: {next.Cost}", UiKit.ActiveButton, GUILayout.Height(40f))) level.UpgradeSelected(p);
+                        GUI.enabled = true;
+                    }
+                }
+                GUILayout.EndArea();
+            }
         }
 
         void DrawWorldOverlays()

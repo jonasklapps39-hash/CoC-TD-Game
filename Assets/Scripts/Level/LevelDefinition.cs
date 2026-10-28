@@ -84,7 +84,7 @@ namespace MuhDefense
         const EnemyKind F = EnemyKind.Flitzer;
         const EnemyKind B = EnemyKind.Brocken;
 
-        public static readonly LevelDefinition[] All = { Level1(), Level2(), Level3() };
+        public static readonly LevelDefinition[] All = { Level1(), Level2(), Level3(), Level4(), Level5() };
 
         static LevelDefinition Level1() => new LevelDefinition
         {
@@ -150,6 +150,63 @@ namespace MuhDefense
             RewardCorn = 650,
             RewardMilk = 650,
         };
+
+        static LevelDefinition Level4() => new LevelDefinition
+        {
+            Id = "heimattal-4",
+            Name = "Heimattal 4 – Der Hühnerhof",
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 2), new Vector2Int(2, 2), new Vector2Int(2, 7), new Vector2Int(5, 7),
+                new Vector2Int(5, 1), new Vector2Int(8, 1), new Vector2Int(8, 7), new Vector2Int(11, 7),
+                new Vector2Int(11, 2), new Vector2Int(12, 2), new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 400,
+            CowCount = 10,
+            Waves = ExtendedWaves(),
+            HpMultiplier = 2.2f,
+            RewardCorn = 900,
+            RewardMilk = 900,
+        };
+
+        static LevelDefinition Level5() => new LevelDefinition
+        {
+            Id = "heimattal-5",
+            Name = "Heimattal 5 – Gorgs Rückkehr",
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 4), new Vector2Int(4, 4), new Vector2Int(4, 1), new Vector2Int(9, 1),
+                new Vector2Int(9, 7), new Vector2Int(12, 7), new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 450,
+            CowCount = 10,
+            Waves = ExtendedWaves(finalBosses: 2),
+            HpMultiplier = 2.7f,
+            RewardCorn = 1200,
+            RewardMilk = 1200,
+        };
+
+        /// <summary>12 Wellen: die Standard-Wellen ohne Boss-Welle, dann zwei harte Wellen und das Finale.</summary>
+        static WaveDefinition[] ExtendedWaves(int finalBosses = 1)
+        {
+            var standard = StandardWaves();
+            var waves = new WaveDefinition[12];
+            for (int i = 0; i < 9; i++) waves[i] = standard[i];
+            waves[9] = new WaveDefinition(110, new SpawnGroup(B, 10, 1.4f), new SpawnGroup(F, 30, 0.25f, 3f));
+            waves[10] = new WaveDefinition(120, new SpawnGroup(G, 30, 0.3f), new SpawnGroup(B, 12, 1.2f, 4f), new SpawnGroup(F, 20, 0.3f, 10f));
+            waves[11] = new WaveDefinition(0,
+                new SpawnGroup(G, 25, 0.4f),
+                new SpawnGroup(F, 25, 0.3f, 4f),
+                new SpawnGroup(B, 12, 1.5f, 6f),
+                new SpawnGroup(EnemyKind.Boss, finalBosses, 6f, 12f));
+            return waves;
+        }
 
         static WaveDefinition[] StandardWaves() => new[]
         {

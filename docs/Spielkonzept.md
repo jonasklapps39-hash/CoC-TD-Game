@@ -120,6 +120,8 @@ Später möglich: Herausforderungs-Modi pro Level (z. B. „Nur Support- und Spe
 | 5 | **Wintertal** | Eis lässt Aliens schneller rutschen | 10 |
 | 6 | **Das Mutterschiff** | Finale gegen Imperator Schlürf | 10 |
 
+*Im Prototyp gibt es bisher 5 Levels im Heimattal.*
+
 Jedes Gebiet endet mit einem **Boss-Level**.
 
 ---
@@ -345,10 +347,11 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] Knopf für doppelte Geschwindigkeit (1x / 2x) in den Levels
 - [x] Level 1 als Tutorial: Man startet mit dem Mistgabel-Bauern, ab Welle 3 gibt es das Heuballen-Katapult und ab Welle 6 den Eismilch-Sprüher als Geschenk – mit kurzer Einblendung, was der neue Turm kann. Gilt nur in Level 1; danach schalten wie bisher die Werkstätten auf dem Hof die Türme frei.
 - [x] Level vorzeitig beenden: Menü-Knopf im Level (pausiert das Spiel) mit „Weiterspielen“, „Neu starten“ und „Level verlassen“ (mit Sicherheitsabfrage, zurück zum Hof ohne Belohnung)
-- [ ] **Upgrade-System wie in Bloons TD6** (Details unten)
+- [x] **Upgrade-System wie in Bloons TD6** (Details unten)
+- [x] **2 neue Levels:** Heimattal 4 „Der Hühnerhof“ und Heimattal 5 „Gorgs Rückkehr“ (je 12 Wellen, Level 5 mit zwei Bossen)
 - [ ] **Grafik auf Stil 7 umstellen:** Figuren in Blender bauen, Umriss- und Cel-Shading-Shader in Unity, neue Bedienoberfläche
 
-### Upgrade-System (geplant)
+### Upgrade-System
 
 **Regeln**
 - Jeder Turm hat **3 Pfade mit je 5 Stufen**. Ein Pfad darf bis Stufe 5, ein zweiter bis Stufe 2, der dritte bleibt gesperrt (wie in Bloons TD6). So entstehen Spezialisierungen, zum Beispiel ein schneller Scharfschütze oder ein langsamer Panzerknacker.

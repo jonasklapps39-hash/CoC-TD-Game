@@ -10,6 +10,7 @@ namespace MuhDefense
         Camera cam;
         readonly List<Rect> blockers = new List<Rect>();
         Vector2 shopScroll;
+        Vector2 mapScroll;
 
         FarmState State => farm.Farm;
 
@@ -179,7 +180,7 @@ namespace MuhDefense
             }
             if (type.UnlocksTower != null)
             {
-                lines.Add($"Turm: {type.UnlocksTower.Name}, im Level bis Stufe {FarmState.TowerLevelForWorkshop(b.Level)}");
+                lines.Add($"Turm: {type.UnlocksTower.Name}, Upgrades im Level bis Stufe {FarmState.TowerLevelForWorkshop(b.Level)}");
             }
             return string.Join("\n", lines);
         }
@@ -231,11 +232,12 @@ namespace MuhDefense
             GUILayout.EndHorizontal();
             GUILayout.Space(10f);
 
+            mapScroll = GUILayout.BeginScrollView(mapScroll);
             for (int i = 0; i < Levels.All.Length; i++)
             {
                 var def = Levels.All[i];
                 bool unlocked = GameFlow.IsUnlocked(i);
-                GUILayout.BeginHorizontal(UiKit.Panel, GUILayout.Height(110f));
+                GUILayout.BeginHorizontal(UiKit.Panel, GUILayout.Height(96f));
                 GUILayout.BeginVertical();
                 GUILayout.Label(def.Name, UiKit.Label);
                 GUILayout.Label(unlocked
@@ -254,8 +256,8 @@ namespace MuhDefense
                 GUILayout.EndHorizontal();
                 GUILayout.Space(6f);
             }
+            GUILayout.EndScrollView();
 
-            GUILayout.FlexibleSpace();
             GUILayout.Label("Tipp: Werkstätten auf dem Hof schalten neue Türme frei und erlauben höhere Turm-Stufen im Level.", UiKit.Small);
             GUILayout.EndArea();
         }
