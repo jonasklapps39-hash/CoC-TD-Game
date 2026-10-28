@@ -64,13 +64,23 @@ namespace MuhDefense
 
         static void SetupLight()
         {
+            // Helles, gleichmäßiges Umgebungslicht und Schatten bis zum Rand des Spielfelds (Grafikstil 7)
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.55f, 0.6f, 0.7f);
+            QualitySettings.shadowDistance = 60f;
+
+            Light light = null;
             foreach (var l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
             {
-                if (l.type == LightType.Directional) return;
+                if (l.type == LightType.Directional) light = l;
             }
-            var light = new GameObject("Sonne").AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.1f;
+            if (light == null)
+            {
+                light = new GameObject("Sonne").AddComponent<Light>();
+                light.type = LightType.Directional;
+            }
+            light.intensity = 1.15f;
+            light.color = new Color(1f, 0.95f, 0.85f);
             light.shadows = LightShadows.Soft;
             light.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }

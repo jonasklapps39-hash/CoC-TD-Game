@@ -40,8 +40,10 @@ namespace MuhDefense
         }
 
         /// <summary>Richtet die Kamera so aus, dass ein Feld der Größe width × height neben Seitenleiste und Kopfzeile ganz sichtbar ist.</summary>
-        public static void FitCamera(Camera cam, float width, float height)
+        /// <param name="angle">Neigung der Kamera in Grad (90 = senkrecht von oben).</param>
+        public static void FitCamera(Camera cam, float width, float height, float angle = 55f)
         {
+            cam.transform.rotation = Quaternion.Euler(angle, 0f, 0f);
             float s = Scale;
             float sideFraction = Mathf.Clamp01(SideBarWidth * s / Screen.width);
             float topFraction = Mathf.Clamp01(TopBarHeight * s / Screen.height);
@@ -51,8 +53,8 @@ namespace MuhDefense
             var center = new Vector3(width / 2f, 0f, height / 2f);
             cam.transform.position = center - cam.transform.forward * 30f;
 
-            float angle = cam.transform.eulerAngles.x * Mathf.Deg2Rad;
-            float neededHeight = height * Mathf.Sin(angle) + 1.8f;
+            float rad = angle * Mathf.Deg2Rad;
+            float neededHeight = height * Mathf.Sin(rad) + 1.8f;
             float neededWidth = width + 1f;
             cam.orthographicSize = Mathf.Max(neededHeight / 2f, neededWidth / (2f * cam.aspect));
         }

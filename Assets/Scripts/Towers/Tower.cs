@@ -30,6 +30,8 @@ namespace MuhDefense
         int pulseCount;
         Transform turret;
         Transform decorations;
+        /// <summary>Höhe der Turmspitze über dem Boden (für die Upgrade-Abzeichen).</summary>
+        float modelTop = 1.15f;
         LineRenderer rangeCircle;
 
         public void Init(LevelManager level, TowerType type, Vector2Int cell, int allowedMaxTier)
@@ -252,21 +254,40 @@ namespace MuhDefense
                 }
                 if (Tiers[p] >= 3)
                 {
-                    Visuals.Prim(PrimitiveType.Sphere, decorations, new Vector3(-0.25f + 0.25f * p, 1.15f, 0f),
+                    Visuals.Prim(PrimitiveType.Sphere, decorations, new Vector3(-0.25f + 0.25f * p, modelTop + 0.15f, 0f),
                         Vector3.one * (Tiers[p] >= 5 ? 0.24f : 0.14f), color, "Abzeichen");
                 }
             }
             turret.localScale = Vector3.one * (1f + 0.035f * total);
         }
 
+        static string ModelName(TowerKind kind)
+        {
+            switch (kind)
+            {
+                case TowerKind.Arc: return "HeuballenKatapult";
+                case TowerKind.Aura: return "EismilchSprueher";
+                default: return "MistgabelBauer";
+            }
+        }
+
         void BuildModel()
         {
+            turret = new GameObject("Turm").transform;
+            turret.SetParent(transform, false);
+            var model = ModelLibrary.Spawn(ModelName(Type.Kind), turret, 0.92f, ModelLibrary.Fit.Footprint);
+            if (model != null)
+            {
+                float top = 0f;
+                foreach (var r in model.GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y - transform.position.y);
+                modelTop = top;
+                return;
+            }
+
+            // Ersatz aus Grundkörpern, falls das Modell fehlt
             var wood = new Color(0.55f, 0.36f, 0.20f);
             var stone = new Color(0.6f, 0.58f, 0.55f);
             Visuals.Prim(PrimitiveType.Cylinder, transform, new Vector3(0f, 0.05f, 0f), new Vector3(0.8f, 0.05f, 0.8f), stone, "Sockel");
-
-            turret = new GameObject("Turm").transform;
-            turret.SetParent(transform, false);
 
             switch (Type.Kind)
             {

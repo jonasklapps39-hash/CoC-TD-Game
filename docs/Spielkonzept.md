@@ -349,7 +349,10 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] Level vorzeitig beenden: Menü-Knopf im Level (pausiert das Spiel) mit „Weiterspielen“, „Neu starten“ und „Level verlassen“ (mit Sicherheitsabfrage, zurück zum Hof ohne Belohnung)
 - [x] **Upgrade-System wie in Bloons TD6** (Details unten)
 - [x] **2 neue Levels:** Heimattal 4 „Der Hühnerhof“ und Heimattal 5 „Gorgs Rückkehr“ (je 12 Wellen, Level 5 mit zwei Bossen)
-- [ ] **Grafik auf Stil 7 umstellen:** Figuren in Blender bauen, Umriss- und Cel-Shading-Shader in Unity, neue Bedienoberfläche
+- [ ] **Grafik auf Stil 7 umstellen:**
+  - [x] Schritt 1: Toon-Shader mit Cel-Shading und Umrisslinien, Modelle für Kuh, 4 Aliens, 3 Türme, Ufo und Baum, Weg aus Steinplatten, neues Licht
+  - [ ] Schritt 2: Hof-Gebäude als Modelle
+  - [ ] Schritt 3: neue Bedienoberfläche
 
 ### Upgrade-System
 

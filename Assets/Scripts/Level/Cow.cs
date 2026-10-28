@@ -92,6 +92,9 @@ namespace MuhDefense
 
         void BuildModel()
         {
+            if (ModelLibrary.Spawn("Kuh", transform, 0.62f) != null) return;
+
+            // Ersatz aus Grundkörpern, falls das Modell fehlt
             var white = new Color(0.97f, 0.97f, 0.95f);
             var black = new Color(0.1f, 0.1f, 0.1f);
             var pink = new Color(1f, 0.7f, 0.75f);

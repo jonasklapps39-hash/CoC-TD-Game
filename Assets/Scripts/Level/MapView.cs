@@ -6,9 +6,11 @@ namespace MuhDefense
     /// <summary>Baut das Spielfeld (Raster, Weg, Weide, Ufo am Eingang) und kennt, welche Felder Weg sind.</summary>
     public class MapView : MonoBehaviour
     {
-        static readonly Color GrassA = new Color(0.42f, 0.70f, 0.30f);
-        static readonly Color GrassB = new Color(0.38f, 0.65f, 0.27f);
-        static readonly Color PathColor = new Color(0.66f, 0.50f, 0.32f);
+        static readonly Color GrassA = new Color(0.40f, 0.72f, 0.22f);
+        static readonly Color GrassB = new Color(0.37f, 0.68f, 0.20f);
+        static readonly Color PathColor = new Color(0.42f, 0.29f, 0.18f);
+        static readonly Color StoneA = new Color(0.86f, 0.52f, 0.32f);
+        static readonly Color StoneB = new Color(0.93f, 0.64f, 0.4f);
         static readonly Color PastureColor = new Color(0.56f, 0.82f, 0.40f);
         static readonly Color BuildableColor = new Color(0.62f, 0.93f, 0.48f);
         static readonly Color Wood = new Color(0.55f, 0.36f, 0.20f);
@@ -25,7 +27,8 @@ namespace MuhDefense
             ComputePathCells();
 
             Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(def.Width / 2f, -0.45f, def.Height / 2f),
-                new Vector3(def.Width + 12f, 0.5f, def.Height + 12f), new Color(0.30f, 0.52f, 0.22f), "Untergrund");
+                new Vector3(def.Width + 12f, 0.5f, def.Height + 12f), new Color(0.30f, 0.55f, 0.18f), "Untergrund", outline: false);
+            BuildTrees();
 
             tiles = new Renderer[def.Width, def.Height];
             tileColors = new Color[def.Width, def.Height];
@@ -60,8 +63,25 @@ namespace MuhDefense
             bool isPath = pathCells.Contains(cell);
             float y = isPath ? -0.13f : -0.1f;
             var go = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(cell.x + 0.5f, y, cell.y + 0.5f),
-                new Vector3(0.98f, 0.2f, 0.98f), color, $"Feld {cell.x},{cell.y}");
+                new Vector3(1f, 0.2f, 1f), color, $"Feld {cell.x},{cell.y}", outline: false);
+            if (isPath) AddPathStones(cell);
             return go.GetComponent<Renderer>();
+        }
+
+        /// <summary>Steinplatten auf dem Weg wie in Bloons TD6 (mit Umrisslinie).</summary>
+        void AddPathStones(Vector2Int cell)
+        {
+            var rng = new System.Random(cell.x * 73856093 ^ cell.y * 19349663);
+            for (int i = 0; i < 2; i++)
+            {
+                float t = (float)rng.NextDouble();
+                var color = Color.Lerp(StoneA, StoneB, t);
+                float ox = (i == 0 ? -0.2f : 0.2f) + ((float)rng.NextDouble() - 0.5f) * 0.12f;
+                float oz = ((float)rng.NextDouble() - 0.5f) * 0.4f;
+                var stone = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(cell.x + 0.5f + ox, -0.01f, cell.y + 0.5f + oz),
+                    new Vector3(0.34f + 0.08f * t, 0.06f, 0.28f), color, "Steinplatte");
+                stone.transform.localRotation = Quaternion.Euler(0f, ((float)rng.NextDouble() - 0.5f) * 40f, 0f);
+            }
         }
 
         void ComputePathCells()
@@ -96,7 +116,7 @@ namespace MuhDefense
                 for (int y = 0; y < def.Height; y++)
                 {
                     bool highlight = show && canBuild(new Vector2Int(x, y));
-                    tiles[x, y].sharedMaterial = Visuals.Mat(highlight ? BuildableColor : tileColors[x, y]);
+                    tiles[x, y].sharedMaterial = Visuals.Mat(highlight ? BuildableColor : tileColors[x, y], false);
                 }
             }
         }
@@ -138,12 +158,33 @@ namespace MuhDefense
             }
         }
 
+        /// <summary>Ein paar Bäume rund um das Spielfeld.</summary>
+        void BuildTrees()
+        {
+            var rng = new System.Random(def.Id != null ? def.Id.GetHashCode() : 1);
+            for (int i = 0; i < 18; i++)
+            {
+                float x, z;
+                do
+                {
+                    x = (float)rng.NextDouble() * (def.Width + 8f) - 4f;
+                    z = (float)rng.NextDouble() * (def.Height + 8f) - 4f;
+                } while (x > -1.3f && x < def.Width + 1.3f && z > -1.3f && z < def.Height + 1.3f);
+                var tree = new GameObject("Baum").transform;
+                tree.SetParent(transform, false);
+                tree.localPosition = new Vector3(x, -0.2f, z);
+                tree.localRotation = Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f);
+                ModelLibrary.Spawn("Baum", tree, 1.8f + (float)rng.NextDouble() * 0.8f);
+            }
+        }
+
         void BuildUfo()
         {
             Vector2Int entry = def.Waypoints[0];
             ufo = new GameObject("Ufo").transform;
             ufo.SetParent(transform, false);
             ufo.localPosition = new Vector3(entry.x + 0.5f, 2.2f, entry.y + 0.5f);
+            if (ModelLibrary.Spawn("Ufo", ufo, 1.8f, ModelLibrary.Fit.Footprint) != null) return;
             Visuals.Prim(PrimitiveType.Sphere, ufo, Vector3.zero, new Vector3(1.6f, 0.3f, 1.6f), new Color(0.6f, 0.65f, 0.7f), "Untertasse");
             Visuals.Prim(PrimitiveType.Sphere, ufo, new Vector3(0f, 0.15f, 0f), new Vector3(0.7f, 0.5f, 0.7f), new Color(0.5f, 0.9f, 1f), "Kuppel");
             for (int i = 0; i < 6; i++)

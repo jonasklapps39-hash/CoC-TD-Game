@@ -32,9 +32,15 @@ Der komplette Spielkreislauf ist als Prototyp spielbar: **Level spielen → Hof 
 - Werkstätten schalten Türme frei: höchste Upgrade-Stufe im Level = Werkstatt-Stufe + 1 (Werkstatt Stufe 4 = alle Upgrades).
 - Ein Level wird freigeschaltet, wenn das vorherige geschafft ist.
 
-Grafik bewusst nur aus Unity-Grundkörpern (Platzhalter), UI als einfache IMGUI-Oberfläche. Zeiten und Kosten sind für schnelles Testen kurz gehalten.
+**Grafik (Stil 7, Bloons-TD6-Look) – im Umbau**
+- Eigener Shader `MuhDefense/Toon` (Cel-Shading und Umrisslinien) für alles im Spiel
+- Modelle aus Blender für Kuh, Grünling, Flitzer, Brocken, Boss, die 3 Türme, Ufo und Bäume (`Assets/Resources/Models`)
+- Die Modelle entstehen per Skript: `blender -b -P tools/blender/build_models.py -- Assets/Resources/Models vorschau.png`
+- Hof-Gebäude und Bedienoberfläche folgen in den nächsten Schritten
 
-Noch **nicht** enthalten: Helden, weitere Türme, Diamanten und Shop, Talentbaum für Sterne, echte 3D-Modelle, Sound.
+Zeiten und Kosten sind für schnelles Testen kurz gehalten.
+
+Noch **nicht** enthalten: Helden, weitere Türme, Diamanten und Shop, Talentbaum für Sterne, Sound.
 
 ## Starten
 

@@ -23,7 +23,7 @@ namespace MuhDefense
         void Update()
         {
             if (cam == null) cam = Camera.main;
-            if (cam != null) UiKit.FitCamera(cam, level.Def.Width, level.Def.Height);
+            if (cam != null) UiKit.FitCamera(cam, level.Def.Width, level.Def.Height, 62f);
         }
 
         void OnGUI()

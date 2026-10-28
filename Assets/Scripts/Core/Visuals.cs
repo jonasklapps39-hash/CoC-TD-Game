@@ -4,44 +4,93 @@ using UnityEngine;
 namespace MuhDefense
 {
     /// <summary>
-    /// Hilfsfunktionen, um Platzhalter-Grafik aus Unity-Grundkörpern zu bauen.
-    /// Wird später durch richtige 3D-Modelle (Prefabs) ersetzt.
+    /// Grafik-Hilfen: Materialien im Grafikstil 7 (Shader "MuhDefense/Toon" mit Cel-Shading und Umrisslinien)
+    /// und Grundkörper für Kleinteile. Figuren und Türme kommen als Modelle aus <see cref="ModelLibrary"/>.
     /// </summary>
     public static class Visuals
     {
-        static Material baseMaterial;
-        static Material lineMaterial;
-        static readonly Dictionary<Color, Material> cache = new Dictionary<Color, Material>();
+        const string ToonShaderName = "MuhDefense/Toon";
 
-        /// <summary>
-        /// Kopie des Standard-Materials eines Grundkörpers. Funktioniert so mit der
-        /// Built-in-Pipeline und mit URP, ohne einen Shader per Namen suchen zu müssen.
-        /// </summary>
-        static Material BaseMaterial
+        static Shader toonShader;
+        static bool toonShaderSearched;
+        static Material fallbackMaterial;
+        static Material lineMaterial;
+        static Material vertexColorMaterial;
+        static readonly Dictionary<(Color, bool), Material> cache = new Dictionary<(Color, bool), Material>();
+
+        /// <summary>Der Toon-Shader, oder null, falls er (noch) nicht vorhanden ist.</summary>
+        static Shader ToonShader
         {
             get
             {
-                if (baseMaterial == null)
+                if (!toonShaderSearched)
                 {
-                    var tmp = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    baseMaterial = new Material(tmp.GetComponent<Renderer>().sharedMaterial);
-                    Object.DestroyImmediate(tmp);
+                    toonShader = Shader.Find(ToonShaderName);
+                    toonShaderSearched = true;
+                    if (toonShader == null) Debug.LogWarning("Shader " + ToonShaderName + " nicht gefunden – nutze Standard-Material.");
                 }
-                return baseMaterial;
+                return toonShader;
             }
         }
 
-        public static Material Mat(Color color)
+        /// <summary>Ersatz, falls der Toon-Shader fehlt: Kopie des Standard-Materials eines Grundkörpers.</summary>
+        static Material FallbackMaterial
         {
-            if (!cache.TryGetValue(color, out var mat) || mat == null)
+            get
             {
-                mat = new Material(BaseMaterial) { color = color };
-                cache[color] = mat;
+                if (fallbackMaterial == null)
+                {
+                    var tmp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    fallbackMaterial = new Material(tmp.GetComponent<Renderer>().sharedMaterial);
+                    Object.DestroyImmediate(tmp);
+                }
+                return fallbackMaterial;
+            }
+        }
+
+        /// <param name="outline">Mit dunkler Umrisslinie (aus für Bodenplatten, damit kein Gitter entsteht).</param>
+        public static Material Mat(Color color, bool outline = true)
+        {
+            if (!cache.TryGetValue((color, outline), out var mat) || mat == null)
+            {
+                if (ToonShader != null)
+                {
+                    mat = new Material(ToonShader);
+                    mat.SetColor("_Color", color);
+                    mat.SetFloat("_OutlineWidth", outline ? 2.2f : 0f);
+                }
+                else
+                {
+                    mat = new Material(FallbackMaterial) { color = color };
+                }
+                cache[(color, outline)] = mat;
             }
             return mat;
         }
 
-        public static GameObject Prim(PrimitiveType type, Transform parent, Vector3 localPos, Vector3 scale, Color color, string name = null)
+        /// <summary>Material für die Blender-Modelle: Farbe kommt aus den Vertexfarben.</summary>
+        public static Material VertexColorMaterial
+        {
+            get
+            {
+                if (vertexColorMaterial == null)
+                {
+                    if (ToonShader != null)
+                    {
+                        vertexColorMaterial = new Material(ToonShader);
+                        vertexColorMaterial.SetFloat("_UseVertexColor", 1f);
+                        vertexColorMaterial.SetFloat("_OutlineWidth", 2.4f);
+                    }
+                    else
+                    {
+                        vertexColorMaterial = new Material(FallbackMaterial);
+                    }
+                }
+                return vertexColorMaterial;
+            }
+        }
+
+        public static GameObject Prim(PrimitiveType type, Transform parent, Vector3 localPos, Vector3 scale, Color color, string name = null, bool outline = true)
         {
             var go = GameObject.CreatePrimitive(type);
             if (name != null) go.name = name;
@@ -50,7 +99,7 @@ namespace MuhDefense
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPos;
             go.transform.localScale = scale;
-            go.GetComponent<Renderer>().sharedMaterial = Mat(color);
+            go.GetComponent<Renderer>().sharedMaterial = Mat(color, outline);
             return go;
         }
 

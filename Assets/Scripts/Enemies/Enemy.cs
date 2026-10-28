@@ -311,6 +311,17 @@ namespace MuhDefense
             if (flame != null) flame.SetActive(on);
         }
 
+        static string ModelName(EnemyKind kind)
+        {
+            switch (kind)
+            {
+                case EnemyKind.Flitzer: return "Flitzer";
+                case EnemyKind.Brocken: return "Brocken";
+                case EnemyKind.Boss: return "Boss";
+                default: return "Gruenling";
+            }
+        }
+
         void BuildModel()
         {
             model = new GameObject("Modell").transform;
@@ -319,6 +330,9 @@ namespace MuhDefense
             root.SetParent(model, false);
             root.localScale = Vector3.one * Type.Scale;
 
+            if (ModelLibrary.Spawn(ModelName(Type.Kind), root, 1.0f) != null) return;
+
+            // Ersatz aus Grundkörpern, falls das Modell fehlt
             Color body = Type.Color;
             Color dark = Color.Lerp(body, Color.black, 0.5f);
             var black = new Color(0.05f, 0.05f, 0.05f);
