@@ -307,7 +307,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - **Low-Poly-3D**, kräftige Farben, weiche Schatten, Comic-Proportionen
 - Kamera: schräge Draufsicht, auf dem Hof frei zoom- und schiebbar
 - **Querformat** – auf dem Hof und in den Levels (mehr Platz für Wege und Türme, wie in BTD6)
-- Keine Spielgeschwindigkeits-Erhöhung (2x) in der ersten Version
+- Doppelte Spielgeschwindigkeit (2x) in den Levels – kommt im nächsten Update
 - Speicherstand lokal, später optional Cloud-Speicherung über Google Play Games
 - Android-App: IL2CPP, ARM64, Veröffentlichung als App Bundle (.aab) im Google Play Store
 
@@ -328,10 +328,14 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 
 - **Android-App** (Google Play Store), iOS eventuell später
 - **Querformat** für das ganze Spiel
-- **Keine doppelte Geschwindigkeit** in der ersten Version (kann später ergänzt werden)
+- **Doppelte Geschwindigkeit (2x)** in den Levels – geplant fürs nächste Update
 - **Name:** vorerst egal, „Muh Defense“ bleibt Arbeitstitel
 
-## 15. Offene Fragen
+## 15. Für das nächste Update vorgemerkt
+
+- [ ] Knopf für doppelte Geschwindigkeit (1x / 2x) in den Levels
+
+## 16. Offene Fragen
 
 - Sollen Aliens später doch auch den eigenen Hof angreifen (z. B. als Ereignis)?
 - Endlos-Modus für Fortgeschrittene?
