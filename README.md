@@ -23,6 +23,8 @@ Der komplette Spielkreislauf ist als Prototyp spielbar: **Level spielen → Hof 
 - 3 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher
 - 4 Aliens: Grünling, Flitzer, Brocken (gepanzert), Oberbrocken Gorg (Boss)
 - Aliens schnappen sich Kühe von der Weide. Sterne: 3 ohne Verluste, 2 bei höchstens 2 verlorenen Kühen, sonst 1.
+- Tempo-Knopf (1x/2x) und Pause-Menü (Weiterspielen, Neu starten, Level verlassen)
+- Level 1 ist ein Tutorial: vor Welle 3 gibt es das Heuballen-Katapult, vor Welle 6 den Eismilch-Sprüher geschenkt
 
 **Verbindung**
 - Levels bringen Mais, Milch und Sterne für den Hof (anteilig nach Sternen).

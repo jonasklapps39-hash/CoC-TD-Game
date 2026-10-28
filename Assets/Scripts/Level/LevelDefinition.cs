@@ -34,6 +34,22 @@ namespace MuhDefense
         }
     }
 
+    /// <summary>Tutorial: ein Turm, den man in diesem Level vor einer bestimmten Welle geschenkt bekommt.</summary>
+    public class TowerGift
+    {
+        /// <summary>Der Turm kommt in der Bauphase vor dieser Welle (1 = vor der ersten Welle).</summary>
+        public int BeforeWave;
+        public TowerType Tower;
+        /// <summary>Bis zu dieser Stufe darf der geschenkte Turm verbessert werden.</summary>
+        public int MaxLevel = 2;
+
+        public TowerGift(int beforeWave, TowerType tower)
+        {
+            BeforeWave = beforeWave;
+            Tower = tower;
+        }
+    }
+
     /// <summary>
     /// Alle Daten eines Levels. Später als ScriptableObject im Editor bearbeitbar;
     /// für den Prototyp reicht eine Definition im Code.
@@ -58,6 +74,8 @@ namespace MuhDefense
         /// <summary>Belohnung für den Hof bei 3 Sternen (bei weniger Sternen anteilig).</summary>
         public int RewardCorn;
         public int RewardMilk;
+        /// <summary>Türme, die man in diesem Level geschenkt bekommt (nur im Tutorial-Level).</summary>
+        public TowerGift[] TowerGifts = new TowerGift[0];
     }
 
     public static class Levels
@@ -85,6 +103,11 @@ namespace MuhDefense
             Waves = StandardWaves(),
             RewardCorn = 300,
             RewardMilk = 300,
+            TowerGifts = new[]
+            {
+                new TowerGift(3, TowerType.Heuballen),
+                new TowerGift(6, TowerType.Eismilch),
+            },
         };
 
         static LevelDefinition Level2() => new LevelDefinition

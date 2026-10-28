@@ -12,6 +12,7 @@ namespace MuhDefense
         LevelManager level;
         Camera cam;
         readonly List<Rect> blockers = new List<Rect>();
+        bool confirmLeave;
 
         public void Init(LevelManager level)
         {
@@ -42,11 +43,18 @@ namespace MuhDefense
                 case LevelState.Won: DrawEndScreen(true); break;
                 case LevelState.Lost: DrawEndScreen(false); break;
             }
+            if (level.Paused) DrawPauseMenu();
+            else if (level.GiftedTower != null) DrawGift();
 
             if (UiKit.EscapePressed())
             {
-                level.CancelPlacing();
-                level.Select(null);
+                if (level.Paused) ResumeGame();
+                else if (level.PlacingType != null || level.SelectedTower != null)
+                {
+                    level.CancelPlacing();
+                    level.Select(null);
+                }
+                else level.SetPaused(true);
             }
             else if (UiKit.TryGetWorldClick(rawMouse, blockers, cam, out var world))
             {
@@ -78,6 +86,14 @@ namespace MuhDefense
 
             GUILayout.BeginArea(new Rect(r.x + 12f, r.y + 10f, r.width - 24f, r.height - 20f));
             bool playing = level.State == LevelState.Building || level.State == LevelState.WaveRunning;
+
+            GUI.enabled = playing;
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Menü", UiKit.Button, GUILayout.Height(40f))) level.SetPaused(true);
+            bool fast = LevelManager.GameSpeed > 1f;
+            if (GUILayout.Button(fast ? "Tempo: 2x" : "Tempo: 1x", fast ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(40f))) level.ToggleSpeed();
+            GUILayout.EndHorizontal();
+            GUI.enabled = true;
 
             GUILayout.Label("Türme", UiKit.Title);
             foreach (var type in level.AvailableTowers)
@@ -175,6 +191,56 @@ namespace MuhDefense
                 c.a = 1f - k;
                 UiKit.ShadowLabel(p, ft.Text, c);
             }
+        }
+
+        void ResumeGame()
+        {
+            confirmLeave = false;
+            level.SetPaused(false);
+        }
+
+        void DrawPauseMenu()
+        {
+            Rect box = UiKit.DrawOverlay(blockers, 460f, confirmLeave ? 300f : 380f);
+            GUILayout.BeginArea(new Rect(box.x + 24f, box.y + 20f, box.width - 48f, box.height - 40f));
+
+            if (confirmLeave)
+            {
+                GUILayout.Label("Level verlassen?", UiKit.Big);
+                GUILayout.Label("Dein Fortschritt in diesem Level geht verloren und du bekommst keine Belohnung.", UiKit.Center);
+                GUILayout.FlexibleSpace();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Abbrechen", UiKit.Button, GUILayout.Height(56f))) confirmLeave = false;
+                if (GUILayout.Button("Verlassen", UiKit.BigButton, GUILayout.Height(56f))) level.BackToFarm();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("Pause", UiKit.Big);
+                GUILayout.Space(10f);
+                if (GUILayout.Button("Weiterspielen", UiKit.BigButton, GUILayout.Height(60f))) ResumeGame();
+                GUILayout.Space(6f);
+                if (GUILayout.Button("Neu starten", UiKit.Button, GUILayout.Height(52f))) level.Restart();
+                GUILayout.Space(6f);
+                if (GUILayout.Button("Level verlassen", UiKit.Button, GUILayout.Height(52f))) confirmLeave = true;
+            }
+            GUILayout.EndArea();
+        }
+
+        void DrawGift()
+        {
+            var tower = level.GiftedTower;
+            Rect box = UiKit.DrawOverlay(blockers, 520f, 320f);
+            GUILayout.BeginArea(new Rect(box.x + 24f, box.y + 20f, box.width - 48f, box.height - 40f));
+            GUILayout.Label("Neuer Turm!", UiKit.Big);
+            GUILayout.Label(tower.Name, UiKit.Center);
+            GUILayout.Space(6f);
+            GUILayout.Label(tower.Description + $"
+
+Kosten: {tower.Cost} Münzen. Du findest ihn rechts in der Turm-Liste.", UiKit.Label);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Super!", UiKit.BigButton, GUILayout.Height(56f))) level.DismissGift();
+            GUILayout.EndArea();
         }
 
         void DrawIntro()

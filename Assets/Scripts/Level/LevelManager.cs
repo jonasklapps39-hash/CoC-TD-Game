@@ -45,6 +45,13 @@ namespace MuhDefense
         public Tower SelectedTower { get; private set; }
         public TowerType PlacingType { get; private set; }
 
+        /// <summary>Spielgeschwindigkeit (1 oder 2). Wird für die Sitzung gemerkt.</summary>
+        public static float GameSpeed { get; private set; } = 1f;
+        /// <summary>Pause-Menü ist offen.</summary>
+        public bool Paused { get; private set; }
+        /// <summary>Tutorial: gerade geschenkter Turm, der noch vorgestellt wird.</summary>
+        public TowerType GiftedTower { get; private set; }
+
         public readonly List<Enemy> Enemies = new List<Enemy>();
         public readonly List<Tower> Towers = new List<Tower>();
         public readonly List<Cow> Cows = new List<Cow>();
@@ -83,6 +90,7 @@ namespace MuhDefense
             }
 
             gameObject.AddComponent<GameUI>().Init(this);
+            ApplyTimeScale();
         }
 
         /// <summary>Höchste Turm-Stufe in diesem Level (vom Hof bestimmt), 0 = nicht freigeschaltet.</summary>
@@ -96,6 +104,9 @@ namespace MuhDefense
 
         void Update()
         {
+            // Jedes Bild setzen: Beim Neustart setzt das alte Level beim Zerstören die Zeit sonst auf 1x zurück.
+            ApplyTimeScale();
+
             for (int i = FloatingTexts.Count - 1; i >= 0; i--)
             {
                 FloatingTexts[i].Age += Time.deltaTime;
@@ -112,7 +123,63 @@ namespace MuhDefense
 
         public void BeginLevel()
         {
-            if (State == LevelState.Intro) State = LevelState.Building;
+            if (State != LevelState.Intro) return;
+            State = LevelState.Building;
+            GrantTowerGifts();
+        }
+
+        // ---------------------------------------------------------------- Geschwindigkeit und Pause
+
+        public void ToggleSpeed()
+        {
+            GameSpeed = GameSpeed > 1f ? 1f : 2f;
+            ApplyTimeScale();
+        }
+
+        public void SetPaused(bool paused)
+        {
+            if (paused && State != LevelState.Building && State != LevelState.WaveRunning) return;
+            Paused = paused;
+            if (paused)
+            {
+                CancelPlacing();
+                Select(null);
+            }
+            ApplyTimeScale();
+        }
+
+        void ApplyTimeScale()
+        {
+            Time.timeScale = Paused ? 0f : GameSpeed;
+        }
+
+        void OnDestroy()
+        {
+            // Der Hof läuft immer in normaler Geschwindigkeit.
+            Time.timeScale = 1f;
+        }
+
+        // ---------------------------------------------------------------- Tutorial
+
+        /// <summary>Schenkt Türme, die vor der nächsten Welle fällig sind (Tutorial in Level 1).</summary>
+        void GrantTowerGifts()
+        {
+            foreach (var gift in Def.TowerGifts)
+            {
+                if (gift.BeforeWave != WavesStarted + 1 || MaxTowerLevel(gift.Tower) > 0) continue;
+                towerMaxLevels[gift.Tower] = gift.MaxLevel;
+                AvailableTowers.Clear();
+                foreach (var type in TowerType.All)
+                {
+                    if (MaxTowerLevel(type) > 0) AvailableTowers.Add(type);
+                }
+                GiftedTower = gift.Tower;
+            }
+        }
+
+        public void DismissGift()
+        {
+            GiftedTower = null;
         }
 
         public bool HasMoreWaves => WavesStarted < Def.Waves.Length;
@@ -160,6 +227,7 @@ namespace MuhDefense
             if (HasMoreWaves)
             {
                 State = LevelState.Building;
+                GrantTowerGifts();
                 return;
             }
 
