@@ -307,9 +307,7 @@ namespace MuhDefense
             GUILayout.Label("Neuer Turm!", UiKit.Big);
             GUILayout.Label(tower.Name, UiKit.Center);
             GUILayout.Space(6f);
-            GUILayout.Label(tower.Description + $"
-
-Kosten: {tower.Cost} Münzen. Du findest ihn rechts in der Turm-Liste.", UiKit.Label);
+            GUILayout.Label(tower.Description + $"\n\nKosten: {tower.Cost} Münzen. Du findest ihn rechts in der Turm-Liste.", UiKit.Label);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Super!", UiKit.BigButton, GUILayout.Height(56f))) level.DismissGift();
             GUILayout.EndArea();
