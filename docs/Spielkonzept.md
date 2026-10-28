@@ -335,6 +335,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 
 - [ ] Knopf für doppelte Geschwindigkeit (1x / 2x) in den Levels
 - [ ] Level 1 als Tutorial: Man startet mit dem Mistgabel-Bauern, ab Welle 3 gibt es das Heuballen-Katapult und ab Welle 6 den Eismilch-Sprüher als Geschenk – mit kurzer Einblendung, was der neue Turm kann. Gilt nur in Level 1; danach schalten wie bisher die Werkstätten auf dem Hof die Türme frei.
+- [ ] Level vorzeitig beenden: Menü-Knopf im Level (pausiert das Spiel) mit „Weiterspielen“, „Neu starten“ und „Level verlassen“ (mit Sicherheitsabfrage, zurück zum Hof ohne Belohnung)
 
 ## 16. Offene Fragen
 
