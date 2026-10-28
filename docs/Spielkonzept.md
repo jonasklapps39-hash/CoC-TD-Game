@@ -9,7 +9,7 @@ Der Spieler baut seinen eigenen Bauernhof auf und verteidigt in Levels die Kühe
 
 - **Plattform:** Android (Google Play Store); iOS eventuell später
 - **Engine:** Unity 6
-- **Stil:** Low-Poly-3D im Comic-Look, mit leicht schräger Draufsicht (wie Clash of Clans)
+- **Stil:** Cartoon-3D im Look von Bloons TD6 (Stil 7): Umrisslinien, Cel-Shading, Figuren mit Attitüde
 - **Ton:** lustig, schräg, familienfreundlich
 - **Modus:** Einzelspieler, kein Multiplayer
 - **Ausrichtung:** Querformat
@@ -155,7 +155,7 @@ Werkstatt Stufe 1 schaltet den ersten Turm frei, Stufe 3 den zweiten, Stufe 5 de
 
 ## 8. Türme (15)
 
-Jeder Turm hat im Level **zwei Ausbaupfade mit je 4 Stufen**. Man kann einen Pfad komplett ausbauen und den anderen bis Stufe 2 (ähnlich wie in BTD6, aber einfacher).
+Jeder Turm hat im Level **drei Ausbaupfade mit je 5 Stufen** (wie in Bloons TD6). Ein Pfad darf bis Stufe 5, ein zweiter bis Stufe 2, der dritte bleibt dann gesperrt. Die Pfade A und B unten sind erste Ideen, der dritte Pfad wird beim Ausarbeiten jedes Turms ergänzt. Die ausgearbeiteten Pfade der ersten drei Türme stehen in der Update-Liste (Kapitel 15).
 
 ### Kategorie: Basis
 
@@ -304,7 +304,15 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 ## 12. Stil und Technik
 
 - **Unity 6** mit URP (Universal Render Pipeline) für gute Optik bei guter Leistung auf Handys
-- **Low-Poly-3D**, kräftige Farben, weiche Schatten, Comic-Proportionen
+- **Grafikstil 7 („Bloons-TD6-Look“)**, festgelegt nach Probebildern aus Blender:
+  - dunkle Umrisslinien um Figuren und Gegenstände
+  - Cel-Shading mit wenigen weichen Farbstufen statt realistischer Schatten
+  - Gesichter mit Attitüde: große Augen, schräge Lider, dicke Augenbrauen – frech statt kindlich
+  - satte, warme Farben, gemalt wirkender Boden, Weg aus Steinplatten
+  - im Level steile Draufsicht von schräg oben
+  - Bedienoberfläche: dicke runde Schrift mit Umrandung, runde Knöpfe mit Goldrand, blaue Turm-Karten, grüner Play-Knopf
+  - eigene Figuren (Bauer, Kühe, Aliens) – keine Figuren von Ninja Kiwi
+- Modelle werden in **Blender** per Skript gebaut (`tools/blender/`), in Unity sorgt ein eigener Shader für Umrisse und Cel-Shading
 - Kamera: schräge Draufsicht, auf dem Hof frei zoom- und schiebbar
 - **Querformat** – auf dem Hof und in den Levels (mehr Platz für Wege und Türme, wie in BTD6)
 - Doppelte Spielgeschwindigkeit (2x) in den Levels
@@ -327,6 +335,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 ## 14. Entscheidungen
 
 - **Android-App** (Google Play Store), iOS eventuell später
+- **Grafikstil 7 (Bloons-TD6-Look)**, siehe Kapitel 12
 - **Querformat** für das ganze Spiel
 - **Doppelte Geschwindigkeit (2x)** in den Levels
 - **Name:** vorerst egal, „Muh Defense“ bleibt Arbeitstitel
@@ -336,6 +345,47 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] Knopf für doppelte Geschwindigkeit (1x / 2x) in den Levels
 - [x] Level 1 als Tutorial: Man startet mit dem Mistgabel-Bauern, ab Welle 3 gibt es das Heuballen-Katapult und ab Welle 6 den Eismilch-Sprüher als Geschenk – mit kurzer Einblendung, was der neue Turm kann. Gilt nur in Level 1; danach schalten wie bisher die Werkstätten auf dem Hof die Türme frei.
 - [x] Level vorzeitig beenden: Menü-Knopf im Level (pausiert das Spiel) mit „Weiterspielen“, „Neu starten“ und „Level verlassen“ (mit Sicherheitsabfrage, zurück zum Hof ohne Belohnung)
+- [ ] **Upgrade-System wie in Bloons TD6** (Details unten)
+- [ ] **Grafik auf Stil 7 umstellen:** Figuren in Blender bauen, Umriss- und Cel-Shading-Shader in Unity, neue Bedienoberfläche
+
+### Upgrade-System (geplant)
+
+**Regeln**
+- Jeder Turm hat **3 Pfade mit je 5 Stufen**. Ein Pfad darf bis Stufe 5, ein zweiter bis Stufe 2, der dritte bleibt gesperrt (wie in Bloons TD6). So entstehen Spezialisierungen, zum Beispiel ein schneller Scharfschütze oder ein langsamer Panzerknacker.
+- Upgrades kosten Münzen im Level und werden teurer, je höher die Stufe.
+- Stufe 5 ist die Spezialisierung mit eigenem Aussehen und bei manchen Türmen einer **Fähigkeit** (Knopf zum Auslösen, mit Abklingzeit).
+- **Verbindung zum Hof:** Die Werkstatt-Stufe bestimmt, bis zu welcher Upgrade-Stufe man im Level kommt (Werkstatt 1 → bis Stufe 2, 2 → 3, 3 → 4, 4 → 5). Die Werkstätten bekommen dafür 4 Stufen.
+- **Upgrade-Fenster** wie in Bloons TD6: Antippen eines Turms öffnet drei Spalten nebeneinander, jede mit Symbol, Name, Preis und Beschreibung der nächsten Stufe; gesperrte Pfade sind ausgegraut.
+- Am Turm sieht man die gewählten Upgrades (zum Beispiel goldene Gabel, brennende Ballen).
+- Jeder Turm kann zusätzlich **zielen auf**: Erster, Letzter, Stärkster, Nächster.
+
+**Mistgabel-Bauer**
+| Stufe | Pfad 1: Schärfe | Pfad 2: Tempo | Pfad 3: Weitblick |
+|---|---|---|---|
+| 1 | Spitze Zinken: Gabel trifft 2 Aliens | Flinke Hände: +20 % Wurftempo | Fernglas: +25 % Reichweite |
+| 2 | Stahlgabel: +2 Schaden | Doppelwurf: 2 Gabeln pro Wurf | Hochsitz: sieht getarnte Aliens |
+| 3 | Gabel-Hagel: 3 Gabeln im Fächer | Kaffeepause: +50 % Wurftempo | Weitwurf: sehr große Reichweite, +3 Schaden |
+| 4 | Goldene Gabel: durchbohrt Panzer, doppelter Schaden gegen Brocken | Gabel-Maschine: extrem schnelles Werfen | Scharfschütze: unbegrenzte Reichweite, hoher Einzelschaden |
+| 5 | **Gabelsturm** (Fähigkeit): Gabelregen über die ganze Karte | **Bauernaufstand** (Fähigkeit): alle Mistgabel-Bauern 10 s doppelt so schnell | **Meisterjäger:** kritische Treffer mit fünffachem Schaden |
+
+**Heuballen-Katapult**
+| Stufe | Pfad 1: Wucht | Pfad 2: Feuer | Pfad 3: Mechanik |
+|---|---|---|---|
+| 1 | Große Ballen: +30 % Flächenradius | Glimmende Ballen: Treffer brennen kurz | Schnellspanner: +20 % Tempo |
+| 2 | Schwere Ballen: +6 Schaden | Brandfläche: hinterlässt Feuer auf dem Weg | Weitschuss: +30 % Reichweite |
+| 3 | Riesenballen: rollt ein Stück den Weg entlang | Strohfeuer: Feuer breitet sich aus | Doppelkatapult: 2 Ballen pro Schuss |
+| 4 | Strohwalze: rollt den ganzen Weg zurück | Glutkern: Feuer schmilzt Panzer | Ballen-Artillerie: sehr schnelles Feuer |
+| 5 | **Heulawine** (Fähigkeit): riesige Ballen walzen alles platt | **Inferno:** große Feuerflächen, Brocken brennen doppelt | **Erntemaschine:** feuert in alle Richtungen |
+
+**Eismilch-Sprüher**
+| Stufe | Pfad 1: Kälte | Pfad 2: Druck | Pfad 3: Sauermilch |
+|---|---|---|---|
+| 1 | Eiskalt: stärkere Verlangsamung | Druckpumpe: +25 % Reichweite | Sauermilch: Schaden über Zeit |
+| 2 | Tiefkühltruhe: friert Aliens kurz ein | Sprühnebel: wirkt auch auf Fluggegner | Joghurt-Säure: schwächt Panzer |
+| 3 | Permafrost: gefrorene Aliens nehmen mehr Schaden | Milchpfützen: Aliens rutschen und werden langsamer | Käsekleber: Aliens bleiben kleben |
+| 4 | Gletscher: friert auch große Aliens ein | Hochdruck: stößt Aliens zurück | Stinkkäse: Aliens laufen ein Stück zurück |
+| 5 | **Eiszeit** (Fähigkeit): friert alle Aliens auf der Karte ein | **Milch-Monsun:** riesige Reichweite, ständiger Rückstoß | **Käse-Imperium:** Aliens in Reichweite nehmen dauerhaft mehr Schaden |
+
 
 ## 16. Offene Fragen
 
