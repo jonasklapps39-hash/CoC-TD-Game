@@ -4,34 +4,24 @@ namespace MuhDefense
 {
     /// <summary>
     /// Startet den Prototyp automatisch, sobald in Unity "Play" gedrückt wird –
-    /// in jeder Szene, die noch keinen <see cref="LevelManager"/> enthält.
-    /// Kamera, Licht und Level werden komplett per Code aufgebaut, es sind also
+    /// in jeder Szene, die noch keinen Hof und kein Level enthält.
+    /// Kamera, Licht, Hof und Level werden komplett per Code aufgebaut, es sind also
     /// (noch) keine Szenen, Prefabs oder Assets nötig.
     /// </summary>
     public static class GameBootstrap
     {
         public const float CameraAngle = 55f;
 
-        static GameObject levelRoot;
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoStart()
         {
             if (Object.FindFirstObjectByType<LevelManager>() != null) return;
+            if (Object.FindFirstObjectByType<FarmManager>() != null) return;
 
             ConfigureDevice();
             SetupCameras();
             SetupLight();
-            StartLevel();
-        }
-
-        /// <summary>Baut das Level (neu) auf. Wird auch für "Nochmal spielen" genutzt.</summary>
-        public static void StartLevel()
-        {
-            if (levelRoot != null) Object.Destroy(levelRoot);
-            levelRoot = new GameObject("MuhDefense Level");
-            var level = levelRoot.AddComponent<LevelManager>();
-            level.Init(Levels.Level1());
+            GameFlow.ShowFarm();
         }
 
         static void ConfigureDevice()

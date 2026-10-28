@@ -7,18 +7,31 @@ Handyspiel, das Hof-Aufbau im Stil von Clash of Clans mit Tower Defense im Stil 
 
 Das vollständige Spielkonzept steht in [docs/Spielkonzept.md](docs/Spielkonzept.md).
 
-## Aktueller Stand: Prototyp Tower Defense (Etappe 1)
+## Aktueller Stand: Hof + Tower Defense (Etappe 1–3)
 
-Ein spielbares Level, mit dem wir prüfen, ob das Tower-Defense-Gameplay Spaß macht:
+Der komplette Spielkreislauf ist als Prototyp spielbar: **Level spielen → Hof ausbauen → stärkere Türme → nächstes Level.**
 
-- 1 Level („Heimattal 1 – Heinz' Weide“) mit 10 Wellen und einem Boss in der letzten Welle
-- 3 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher – jeweils mit 3 Stufen, verkaufbar
+**Hof (Base, wie in Clash of Clans)**
+- Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 3 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen)
+- Maisfelder und Kühe produzieren in Echtzeit Mais und Milch – auch während eines Levels oder wenn das Spiel geschlossen ist. Antippen sammelt ein.
+- Bauen und Verbessern kostet Rohstoffe und Bauzeit. Jeder Knecht baut ein Gebäude gleichzeitig.
+- Das Bauernhaus begrenzt Anzahl und Stufe der anderen Gebäude.
+- Gebäude lassen sich verschieben. Der Hof wird automatisch gespeichert.
+
+**Levels (Tower Defense, wie in Bloons TD6)**
+- Weltkarte mit 3 Levels im Heimattal, jeweils 10 Wellen mit Boss
+- 3 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher
 - 4 Aliens: Grünling, Flitzer, Brocken (gepanzert), Oberbrocken Gorg (Boss)
-- 10 Kühe auf der Weide: Aliens schnappen sich eine Kuh und tragen sie zurück zum Ufo. Wird das Alien vorher besiegt, läuft die Kuh zurück.
-- Sterne-Wertung: 3 Sterne ohne Verluste, 2 Sterne bei höchstens 2 verlorenen Kühen, 1 Stern sonst
-- Grafik bewusst nur aus Unity-Grundkörpern (Platzhalter), UI als einfache IMGUI-Oberfläche
+- Aliens schnappen sich Kühe von der Weide. Sterne: 3 ohne Verluste, 2 bei höchstens 2 verlorenen Kühen, sonst 1.
 
-Noch **nicht** enthalten: Hof-Aufbau, Helden, weitere Türme, echte 3D-Modelle, Sound.
+**Verbindung**
+- Levels bringen Mais, Milch und Sterne für den Hof (anteilig nach Sternen).
+- Werkstätten schalten Türme frei: höchste Turm-Stufe im Level = Werkstatt-Stufe + 1.
+- Ein Level wird freigeschaltet, wenn das vorherige geschafft ist.
+
+Grafik bewusst nur aus Unity-Grundkörpern (Platzhalter), UI als einfache IMGUI-Oberfläche. Zeiten und Kosten sind für schnelles Testen kurz gehalten.
+
+Noch **nicht** enthalten: Helden, weitere Türme, Diamanten und Shop, Talentbaum für Sterne, echte 3D-Modelle, Sound.
 
 ## Starten
 
@@ -41,18 +54,27 @@ Tipp: Im Game-Fenster ein Querformat wie *1920×1080* einstellen.
 
 ## Steuerung
 
+**Hof**
+- Gebäude antippen → Infos, verbessern, verschieben, einsammeln
+- „Bauen“ → Gebäude wählen → auf den Hof tippen (grün = frei) → „Bestätigen“
+- „Zur Weltkarte“ → Level wählen
+
+**Level**
 - Turm in der Seitenleiste wählen → auf ein hell markiertes Feld tippen
 - Auf einen Turm tippen → verbessern oder verkaufen
 - „Welle starten“, wenn du bereit bist
+
+**Zum Testen:** Menü **Muh Defense → Spielstand löschen** setzt den Hof zurück.
 
 ## Code-Übersicht
 
 | Ordner | Inhalt |
 |---|---|
-| `Assets/Scripts/Core` | Start des Spiels, Kamera, Hilfen für Platzhalter-Grafik |
+| `Assets/Scripts/Core` | Start des Spiels, Wechsel zwischen Hof und Level, Kamera, Platzhalter-Grafik |
+| `Assets/Scripts/Farm` | Hof: Gebäudetypen, Spiellogik und Spielstand (`FarmState`), Darstellung |
 | `Assets/Scripts/Level` | Level-Daten und Wellen, Spiellogik (`LevelManager`), Spielfeld, Kühe |
 | `Assets/Scripts/Enemies` | Alien-Arten und ihr Verhalten |
 | `Assets/Scripts/Towers` | Turm-Arten, Türme, Geschosse |
-| `Assets/Scripts/UI` | Bedienoberfläche |
+| `Assets/Scripts/UI` | Bedienoberflächen von Hof und Level |
 
-Werte zum Ausbalancieren (Kosten, Schaden, Leben, Wellen) stehen in `TowerType.cs`, `EnemyType.cs` und `LevelDefinition.cs`.
+Werte zum Ausbalancieren stehen in `FarmBuildingType.cs` (Hof), `TowerType.cs`, `EnemyType.cs` und `LevelDefinition.cs` (Levels).

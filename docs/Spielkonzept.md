@@ -315,9 +315,9 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 
 ## 13. Vorschlag für die Entwicklung in Etappen
 
-1. **Prototyp Tower Defense:** ein Level, 3 Türme, 3 Aliens, Sterne-Wertung – um zu prüfen, ob es Spaß macht *(in Arbeit, siehe README)*
-2. **Prototyp Hof:** Bauernhaus, Maisfeld, Kuhstall, Lager, Knechte, Upgrades mit Bauzeit
-3. **Verbindung:** Belohnungen aus Levels, Werkstätten schalten Türme frei
+1. **Prototyp Tower Defense:** ein Level, 3 Türme, 3 Aliens, Sterne-Wertung – um zu prüfen, ob es Spaß macht *(erledigt)*
+2. **Prototyp Hof:** Bauernhaus, Maisfeld, Kuhstall, Lager, Knechte, Upgrades mit Bauzeit *(erledigt)*
+3. **Verbindung:** Belohnungen aus Levels, Werkstätten schalten Türme frei *(erledigt – im Prototyp schaltet jede Werkstatt vorerst einen Turm frei, höchste Turm-Stufe = Werkstatt-Stufe + 1)*
 4. **Vertical Slice:** Gebiet 1 komplett (10 Levels), 6 Türme, Bauer Heinz, Grafik in Zielqualität
 5. **Ausbau:** restliche Türme, Helden, Gebiete, Shop
 6. **Soft Launch** in einem Testmarkt, dann weltweiter Start

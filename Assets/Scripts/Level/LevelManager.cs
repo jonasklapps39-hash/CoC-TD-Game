@@ -36,7 +36,11 @@ namespace MuhDefense
         public int CowsLost { get; private set; }
         public int CowsRemaining => Def.CowCount - CowsLost;
         public int Stars { get; private set; }
-        public int BestStars => PlayerPrefs.GetInt(StarsKey, 0);
+        public int BestStars => GameFlow.Farm.BestStars(Def.Id);
+        /// <summary>Belohnung für den Hof, sobald das Level gewonnen ist.</summary>
+        public LevelReward Reward { get; private set; }
+        /// <summary>Türme, die durch die Werkstätten auf dem Hof freigeschaltet sind.</summary>
+        public readonly List<TowerType> AvailableTowers = new List<TowerType>();
 
         public Tower SelectedTower { get; private set; }
         public TowerType PlacingType { get; private set; }
@@ -49,15 +53,19 @@ namespace MuhDefense
         MapView map;
         Vector3[] pathWorld;
         int pendingGroups;
-
-        string StarsKey => "stars_" + Def.Name;
+        Dictionary<TowerType, int> towerMaxLevels;
 
         public static Vector3 CellCenter(Vector2Int c) => new Vector3(c.x + 0.5f, 0f, c.y + 0.5f);
 
-        public void Init(LevelDefinition def)
+        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout)
         {
             Def = def;
             Money = def.StartMoney;
+            towerMaxLevels = towerLoadout;
+            foreach (var type in TowerType.All)
+            {
+                if (MaxTowerLevel(type) > 0) AvailableTowers.Add(type);
+            }
 
             map = new GameObject("Karte").AddComponent<MapView>();
             map.transform.SetParent(transform, false);
@@ -76,6 +84,9 @@ namespace MuhDefense
 
             gameObject.AddComponent<GameUI>().Init(this);
         }
+
+        /// <summary>Höchste Turm-Stufe in diesem Level (vom Hof bestimmt), 0 = nicht freigeschaltet.</summary>
+        public int MaxTowerLevel(TowerType type) => towerMaxLevels.TryGetValue(type, out int max) ? max : 0;
 
         public Vector3 RandomPastureSpot()
         {
@@ -111,7 +122,7 @@ namespace MuhDefense
             if (State != LevelState.Building || !HasMoreWaves) return;
 
             var wave = Def.Waves[WavesStarted];
-            float hpMultiplier = 1f + Def.HpGrowthPerWave * WavesStarted;
+            float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted);
             WavesStarted++;
             State = LevelState.WaveRunning;
             pendingGroups = wave.Groups.Length;
@@ -154,11 +165,7 @@ namespace MuhDefense
 
             State = LevelState.Won;
             Stars = CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1;
-            if (Stars > BestStars)
-            {
-                PlayerPrefs.SetInt(StarsKey, Stars);
-                PlayerPrefs.Save();
-            }
+            Reward = GameFlow.CompleteLevel(Def, Stars);
             CancelPlacing();
             Select(null);
         }
@@ -174,7 +181,22 @@ namespace MuhDefense
 
         public void Restart()
         {
-            GameBootstrap.StartLevel();
+            GameFlow.StartLevel(Def);
+        }
+
+        public void BackToFarm()
+        {
+            GameFlow.ShowFarm();
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) GameFlow.Farm.Save();
+        }
+
+        void OnApplicationQuit()
+        {
+            GameFlow.Farm.Save();
         }
 
         // ---------------------------------------------------------------- Aliens und Kühe
@@ -245,7 +267,7 @@ namespace MuhDefense
 
         public void BeginPlacing(TowerType type)
         {
-            if (Money < type.Cost) return;
+            if (Money < type.Cost || MaxTowerLevel(type) <= 0) return;
             Select(null);
             PlacingType = type;
             map.ShowBuildable(true, IsBuildable);
@@ -270,7 +292,7 @@ namespace MuhDefense
             Money -= type.Cost;
             var tower = new GameObject("Turm").AddComponent<Tower>();
             tower.transform.SetParent(transform, false);
-            tower.Init(this, type, cell);
+            tower.Init(this, type, cell, MaxTowerLevel(type));
             Towers.Add(tower);
             return true;
         }

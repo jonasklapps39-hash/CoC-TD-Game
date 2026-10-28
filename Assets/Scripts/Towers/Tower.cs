@@ -10,6 +10,10 @@ namespace MuhDefense
         public Vector2Int Cell { get; private set; }
         /// <summary>Insgesamt ausgegebene Münzen (für den Verkaufswert).</summary>
         public int Invested { get; private set; }
+        /// <summary>Höchste Stufe in diesem Level – bestimmt durch die Werkstatt auf dem Hof.</summary>
+        public int AllowedMaxLevel { get; private set; } = TowerType.MaxLevel;
+        /// <summary>Der Turm könnte höher, aber die Werkstatt auf dem Hof ist noch nicht weit genug.</summary>
+        public bool LimitedByWorkshop => Level >= AllowedMaxLevel && Level < TowerType.MaxLevel;
 
         public float Range => Type.Range[Level - 1];
         public float Damage => Type.Damage[Level - 1];
@@ -17,7 +21,7 @@ namespace MuhDefense
         public float Splash => Type.Splash[Level - 1];
         public float Slow => Type.Slow[Level - 1];
         public int SellValue => Mathf.RoundToInt(Invested * 0.7f);
-        public int? NextUpgradeCost => Level < TowerType.MaxLevel ? Type.UpgradeCosts[Level - 1] : (int?)null;
+        public int? NextUpgradeCost => Level < AllowedMaxLevel ? Type.UpgradeCosts[Level - 1] : (int?)null;
 
         LevelManager level;
         float cooldown;
@@ -25,9 +29,10 @@ namespace MuhDefense
         Transform pips;
         LineRenderer rangeCircle;
 
-        public void Init(LevelManager level, TowerType type, Vector2Int cell)
+        public void Init(LevelManager level, TowerType type, Vector2Int cell, int allowedMaxLevel)
         {
             this.level = level;
+            AllowedMaxLevel = Mathf.Clamp(allowedMaxLevel, 1, TowerType.MaxLevel);
             Type = type;
             Cell = cell;
             Invested = type.Cost;
