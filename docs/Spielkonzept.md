@@ -358,6 +358,10 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Held Bauer Heinz:** Stufe 1–10, Ladung Schrot, Traktor-Raserei
 - [x] **Neue Türme:** Bienenstock, Windmühle, Wetterhahn, Hofladen (+ Werkstatt Hofladen-Kontor)
 - [x] **Effekte und Sound:** Partikel, per Code erzeugte Geräusche und Musik, Schalter für Musik/Ton
+- [x] **Drag & Drop:** Türme und Gebäude per Ziehen platzieren und verschieben
+- [x] **Talentbaum „Bauernwissen“:** 12 Talente in 3 Spalten (Wirtschaft, Türme, Held und Herde), bezahlt mit Sternen
+- [x] **Diamanten und Shop:** Diamanten für neue Sterne und erstes Schaffen eines Levels; ausgeben für „Sofort fertig“, zusätzliche Knechte, Rohstoffpakete und Kuh-Skins
+- [x] **Helden Oma Gertrud und Berta** + Gebäude **Heldenhütte** (Held wählen, jede Stufe lässt den Helden höher starten); Gertrud ab 12 Sternen oder für 100 Diamanten, Berta ab 20 Sternen oder für 150 Diamanten
 
 ### Upgrade-System
 

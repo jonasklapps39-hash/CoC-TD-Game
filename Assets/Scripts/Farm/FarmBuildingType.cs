@@ -20,6 +20,7 @@ namespace MuhDefense
         Zimmerei,
         Tueftlerschuppen,
         HofladenKontor,
+        Heldenhuette,
     }
 
     /// <summary>Ein Turm, den eine Werkstatt ab einer bestimmten Stufe freischaltet.</summary>
@@ -210,9 +211,21 @@ namespace MuhDefense
             Unlocks = new[] { new TowerUnlock(TowerType.Wetterhahn, 1), new TowerUnlock(TowerType.Hofladen, 2) },
         };
 
+        public static readonly FarmBuildingType Heldenhuette = new FarmBuildingType
+        {
+            Kind = FarmBuildingKind.Heldenhuette,
+            Name = "Heldenhütte",
+            Description = "Hier wählst du deinen Helden und schaltest neue frei. Jede Stufe lässt den Helden im Level eine Stufe höher starten.",
+            MaxLevel = 5,
+            CostResource = Resource.Milch,
+            Costs = new[] { 600, 1200, 2200, 3500, 5000 },
+            BuildSeconds = new[] { 30, 90, 180, 300, 420 },
+            MaxCount = new[] { 0, 1, 1, 1, 1 },
+        };
+
         public static readonly FarmBuildingType[] All =
         {
-            Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthuette, Schmiede, Zimmerei, Tueftlerschuppen, HofladenKontor,
+            Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthuette, Schmiede, Zimmerei, Tueftlerschuppen, HofladenKontor, Heldenhuette,
         };
 
         public static FarmBuildingType Get(string id)

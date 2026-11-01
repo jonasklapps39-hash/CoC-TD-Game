@@ -51,6 +51,8 @@ namespace MuhDefense
         public Hero Hero { get; private set; }
         public bool PlacingHero { get; private set; }
         public bool HeroSelected { get; private set; }
+        /// <summary>Gewählter Held (in der Heldenhütte auf dem Hof).</summary>
+        public HeroType HeroChoice { get; private set; } = HeroType.Heinz;
 
         /// <summary>Spielgeschwindigkeit (1 oder 2). Wird für die Sitzung gemerkt.</summary>
         public static float GameSpeed { get; private set; } = 1f;
@@ -77,9 +79,10 @@ namespace MuhDefense
 
         public static Vector3 CellCenter(Vector2Int c) => new Vector3(c.x + 0.5f, 0f, c.y + 0.5f);
 
-        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout, LevelBonuses bonuses = null)
+        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout, LevelBonuses bonuses = null, HeroType hero = null)
         {
             Def = def;
+            HeroChoice = hero ?? HeroType.Heinz;
             Bonuses = bonuses ?? new LevelBonuses();
             Money = def.StartMoney + Bonuses.StartMoney;
             towerMaxLevels = towerLoadout;
@@ -146,6 +149,13 @@ namespace MuhDefense
             foreach (var t in Towers)
             {
                 if (t.Stats.SupportRateBonus > best && Supports(t, tower)) best = t.Stats.SupportRateBonus;
+            }
+            // Oma Gertrud: „Kaffee und Kuchen“ für Türme in ihrer Reichweite
+            if (Hero != null && Hero.Stats.SupportRateBonus > best)
+            {
+                Vector3 d = Hero.transform.position - tower.transform.position;
+                d.y = 0f;
+                if (d.magnitude <= Hero.Stats.Range) best = Hero.Stats.SupportRateBonus;
             }
             return best;
         }
@@ -353,6 +363,8 @@ namespace MuhDefense
         /// <summary>Gibt dem Alien die nächste freie Kuh auf der Weide, falls es eine gibt.</summary>
         public Cow TryGrabCow(Enemy enemy)
         {
+            // Berta: in ihrem Schutzkreis kann kein Alien eine Kuh schnappen
+            if (Hero != null && Hero.Type.Kind == HeroKind.Berta && Hero.InRange(enemy)) return null;
             Cow best = null;
             float bestDist = float.MaxValue;
             foreach (var cow in Cows)
@@ -446,7 +458,7 @@ namespace MuhDefense
             }
             Hero = new GameObject("Held").AddComponent<Hero>();
             Hero.transform.SetParent(transform, false);
-            Hero.Init(this, cell);
+            Hero.Init(this, cell, HeroChoice);
             Hero.SetStartLevel(1 + Bonuses.HeroStartLevels);
             Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.3f, new Color(1f, 0.85f, 0.3f), 10, 2.5f);
             GameAudio.Play(SoundId.Build);
@@ -460,14 +472,14 @@ namespace MuhDefense
             Hero.SetSelected(true);
         }
 
-        public void UseHeroBlast()
+        public void UseHeroAbility1()
         {
-            if (State == LevelState.WaveRunning && Hero != null) Hero.UseBlast();
+            if (State == LevelState.WaveRunning && Hero != null) Hero.UseAbility1();
         }
 
-        public void UseHeroTractor()
+        public void UseHeroAbility2()
         {
-            if (State == LevelState.WaveRunning && Hero != null) Hero.UseTractor();
+            if (State == LevelState.WaveRunning && Hero != null) Hero.UseAbility2();
         }
 
         /// <summary>Preis eines Turms in diesem Level (mit Talent-Rabatt).</summary>
@@ -535,7 +547,7 @@ namespace MuhDefense
             float range;
             if (PlacingHero)
             {
-                ModelLibrary.Spawn("BauerHeinz", placementGhost.transform, 1.15f);
+                ModelLibrary.Spawn(HeroChoice.ModelName, placementGhost.transform, HeroChoice.Kind == HeroKind.Berta ? 0.85f : 1.15f);
                 range = 2.6f;
             }
             else

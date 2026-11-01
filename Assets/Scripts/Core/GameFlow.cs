@@ -45,7 +45,10 @@ namespace MuhDefense
             Farm.Tick();
             Farm.Save();
             var go = ReplaceRoot("MuhDefense Level");
-            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), Farm.LevelBonuses);
+            var bonuses = Farm.LevelBonuses;
+            // Heldenhütte: jede Stufe lässt den Helden eine Stufe höher starten
+            bonuses.HeroStartLevels += Mathf.Max(0, Farm.HeroHutLevel - 1);
+            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), bonuses, Farm.SelectedHero);
         }
 
         /// <summary>Welche Türme im Level verfügbar sind und bis zu welcher Stufe – bestimmt durch die Werkstätten auf dem Hof.</summary>

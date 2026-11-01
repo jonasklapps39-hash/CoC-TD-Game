@@ -175,8 +175,8 @@ namespace MuhDefense
                 GUI.enabled = Playing;
                 Rect heroRect = GUILayoutUtility.GetRect(10f, 56f, GUILayout.Height(56f));
                 RememberPress(heroRect, null, true);
-                if (UiKit.BtnRect(heroRect, level.PlacingHero ? "Platz wählen …" : "Held: Bauer Heinz",
-                        level.PlacingHero ? UiKit.ActiveButton : UiKit.YellowButton, UiKit.Icon("BauerHeinz")))
+                if (UiKit.BtnRect(heroRect, level.PlacingHero ? "Platz wählen …" : $"Held: {level.HeroChoice.Name}",
+                        level.PlacingHero ? UiKit.ActiveButton : UiKit.YellowButton, UiKit.Icon(level.HeroChoice.ModelName)))
                 {
                     if (level.PlacingHero) level.CancelPlacing();
                     else level.BeginPlacingHero();
@@ -257,10 +257,15 @@ namespace MuhDefense
         {
             int shown = 0;
             var hero = level.Hero;
-            if (hero != null && hero.HasBlast)
+            if (hero != null && hero.HasAbility1)
             {
-                AbilityButton("Ladung Schrot", UiKit.Icon("BauerHeinz"), hero.BlastReady, hero.BlastCooldownLeft, level.UseHeroBlast);
-                if (hero.HasTractor) AbilityButton("Traktor", UiKit.Icon("Traktor"), hero.TractorReady, hero.TractorCooldownLeft, level.UseHeroTractor);
+                var heroIcon = UiKit.Icon(hero.Type.ModelName);
+                AbilityButton(hero.Type.Ability1Name, heroIcon, hero.Ability1Ready, hero.Ability1CooldownLeft, level.UseHeroAbility1);
+                if (hero.HasAbility2)
+                {
+                    var icon2 = hero.Type.Kind == HeroKind.Heinz ? UiKit.Icon("Traktor") : heroIcon;
+                    AbilityButton(hero.Type.Ability2Name, icon2, hero.Ability2Ready, hero.Ability2CooldownLeft, level.UseHeroAbility2);
+                }
             }
             foreach (var tower in level.Towers)
             {
@@ -362,10 +367,10 @@ namespace MuhDefense
             var r = BottomPanel(height);
             GUILayout.BeginArea(new Rect(r.x + 14f, r.y + 12f, r.width - 28f, r.height - 24f));
             GUILayout.BeginHorizontal();
-            var icon = UiKit.Icon("BauerHeinz");
+            var icon = UiKit.Icon(hero.Type.ModelName);
             if (icon != null) GUILayout.Label(icon, GUILayout.Width(120f), GUILayout.Height(150f));
             GUILayout.BeginVertical(GUILayout.Width(280f));
-            UiKit.Heading($"{Hero.HeroName} – Stufe {hero.Level}", UiKit.Title, GUILayout.Height(34f));
+            UiKit.Heading($"{hero.Type.Name} – Stufe {hero.Level}", UiKit.Title, GUILayout.Height(34f));
             Rect bar = GUILayoutUtility.GetRect(260f, 18f);
             UiKit.DrawBar(bar, hero.XpProgress, new Color(1f, 0.8f, 0.25f));
             GUILayout.Label(hero.Level >= Hero.MaxLevel ? "Höchste Stufe erreicht" : "Erfahrung durch besiegte Aliens und geschaffte Wellen", UiKit.Small);
@@ -373,11 +378,9 @@ namespace MuhDefense
             GUILayout.EndVertical();
             GUILayout.Space(16f);
             GUILayout.BeginVertical();
-            var st = hero.Stats;
-            GUILayout.Label($"Schrotflinte: {st.Projectiles} Kugeln à {st.Damage:0} Schaden, {st.FireRate:0.0} Schüsse/s, Reichweite {st.Range:0.0}" +
-                            (st.SeesCamo ? ", sieht Getarnte" : "") + (st.ArmorPiercing ? ", durchschlägt Panzer" : ""), UiKit.Small);
-            GUILayout.Label(hero.HasBlast ? $"Ladung Schrot: {hero.BlastDamage:0} Schaden an allen Aliens in Reichweite" : $"Ab Stufe {Hero.BlastLevel}: Ladung Schrot", UiKit.Small);
-            GUILayout.Label(hero.HasTractor ? $"Traktor-Raserei: überrollt alle Aliens am Boden ({hero.TractorDamage:0} Schaden)" : $"Ab Stufe {Hero.TractorLevel}: Traktor-Raserei", UiKit.Small);
+            GUILayout.Label(hero.AttackText, UiKit.Small);
+            GUILayout.Label(hero.HasAbility1 ? hero.Ability1Text : $"Ab Stufe {Hero.Ability1Level}: {hero.Type.Ability1Name}", UiKit.Small);
+            GUILayout.Label(hero.HasAbility2 ? hero.Ability2Text : $"Ab Stufe {Hero.Ability2Level}: {hero.Type.Ability2Name}", UiKit.Small);
             GUILayout.FlexibleSpace();
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f), GUILayout.Width(150f))) level.Select(null);
             GUILayout.EndVertical();

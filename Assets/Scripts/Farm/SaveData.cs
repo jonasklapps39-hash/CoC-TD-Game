@@ -23,6 +23,9 @@ namespace MuhDefense
         public int ExtraBuilders;
         public string CowSkin = "standard";
         public List<string> OwnedSkins = new List<string> { "standard" };
+        public string SelectedHero = "Heinz";
+        /// <summary>Mit Diamanten freigeschaltete Helden (über Sterne freigeschaltete zählen automatisch).</summary>
+        public List<string> UnlockedHeroes = new List<string> { "Heinz" };
     }
 
     [Serializable]

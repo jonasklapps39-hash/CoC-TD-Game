@@ -5,6 +5,8 @@ namespace MuhDefense
     /// <summary>Kleine Partikel-Effekte aus Grundkörpern (Funken, Splitter, Stroh), passend zum Toon-Look.</summary>
     public static class Effects
     {
+        public static void Beam(Transform parent, Vector3 from, Vector3 to, Color color) => BeamEffect.Spawn(parent, from, to, color);
+
         /// <summary>Wirft <paramref name="count"/> kleine Teilchen in alle Richtungen nach oben.</summary>
         public static void Burst(Transform parent, Vector3 position, Color color, int count, float speed = 2.5f, float size = 0.09f)
         {
@@ -20,6 +22,44 @@ namespace MuhDefense
                 p.velocity = dir.normalized * speed * Random.Range(0.6f, 1.2f);
                 p.lifetime = Random.Range(0.4f, 0.75f);
             }
+        }
+    }
+
+    /// <summary>Kurzer Lichtstrahl (Bertas Laseraugen).</summary>
+    public class BeamEffect : MonoBehaviour
+    {
+        LineRenderer line;
+        float age;
+        const float Lifetime = 0.12f;
+        static Material material;
+        Color color;
+
+        public static void Spawn(Transform parent, Vector3 from, Vector3 to, Color color)
+        {
+            var go = new GameObject("Strahl");
+            go.transform.SetParent(parent, false);
+            var b = go.AddComponent<BeamEffect>();
+            b.color = color;
+            b.line = go.AddComponent<LineRenderer>();
+            if (material == null) material = new Material(Shader.Find("Sprites/Default"));
+            b.line.sharedMaterial = material;
+            b.line.positionCount = 2;
+            b.line.SetPosition(0, from);
+            b.line.SetPosition(1, to);
+            b.line.widthMultiplier = 0.08f;
+            b.line.startColor = color;
+            b.line.endColor = color;
+            b.line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        void Update()
+        {
+            age += Time.deltaTime;
+            var c = color;
+            c.a = 1f - age / Lifetime;
+            line.startColor = c;
+            line.endColor = c;
+            if (age >= Lifetime) Destroy(gameObject);
         }
     }
 

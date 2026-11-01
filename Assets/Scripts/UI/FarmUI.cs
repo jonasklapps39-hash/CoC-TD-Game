@@ -100,6 +100,7 @@ namespace MuhDefense
             if (farm.MapOpen) DrawWorldMap();
             if (farm.TalentsOpen) DrawTalents();
             if (farm.GemShopOpen) DrawGemShop();
+            if (farm.HeroesOpen) DrawHeroes();
 
             if (UiKit.EscapePressed())
             {
@@ -249,6 +250,10 @@ namespace MuhDefense
                 GUI.enabled = true;
             }
 
+            if (type == FarmBuildingType.Heldenhuette && b.Level > 0)
+            {
+                if (UiKit.IconBtn("Helden wählen", UiKit.Icon(State.SelectedHero.ModelName), UiKit.YellowButton, GUILayout.Height(52f))) farm.HeroesOpen = true;
+            }
             if (UiKit.Btn("Verschieben", UiKit.Button, GUILayout.Height(40f))) farm.BeginMoving();
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.Select(null);
         }
@@ -268,6 +273,10 @@ namespace MuhDefense
                 string res = FarmBuildingType.ResourceName(type.ProducedResource);
                 lines.Add($"Produktion: {State.ProductionPerMinute(b):0} {res} pro Minute");
                 lines.Add($"Gesammelt: {(int)b.Stored} / {(int)State.ProducerCapacity(b)}");
+            }
+            if (type == FarmBuildingType.Heldenhuette)
+            {
+                lines.Add($"Held startet im Level auf Stufe {b.Level}. Gewählt: {State.SelectedHero.Name}");
             }
             if (type.IsStorage)
             {
@@ -318,6 +327,72 @@ namespace MuhDefense
                 GUILayout.Space(4f);
             }
             GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        /// <summary>Heldenhütte: Helden wählen und freischalten (mit Sternen oder Diamanten).</summary>
+        void DrawHeroes()
+        {
+            Rect box = UiKit.DrawOverlay(blockers, 900f, 560f);
+            GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
+            GUILayout.BeginHorizontal();
+            UiKit.Heading("Helden", UiKit.Title, GUILayout.Height(40f));
+            GUILayout.FlexibleSpace();
+            var gem = UiKit.Icon("Diamant");
+            if (gem != null) GUILayout.Label(gem, GUILayout.Width(40f), GUILayout.Height(40f));
+            UiKit.Heading(State.Gems.ToString(), UiKit.Title, GUILayout.Width(90f), GUILayout.Height(40f));
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.HeroesOpen = false;
+            GUILayout.EndHorizontal();
+            GUILayout.Label($"Der gewählte Held kommt mit ins Level. Er startet dort auf Stufe {Mathf.Max(1, State.HeroHutLevel)} (Stufe der Heldenhütte).", UiKit.Small);
+            GUILayout.Space(6f);
+
+            GUILayout.BeginHorizontal();
+            foreach (var h in HeroType.All)
+            {
+                bool unlocked = State.IsHeroUnlocked(h);
+                bool selected = State.SelectedHero == h;
+                GUILayout.BeginVertical(selected ? UiKit.ActiveButton : UiKit.Card, GUILayout.Width((box.width - 64f) / 3f));
+                UiKit.Heading(h.Name, UiKit.Title, GUILayout.Height(30f));
+                GUILayout.Label(h.Role, UiKit.Small);
+                var icon = UiKit.Icon(h.ModelName);
+                if (icon != null)
+                {
+                    Rect ir = GUILayoutUtility.GetRect(10f, 150f, GUILayout.Height(150f));
+                    if (!unlocked) GUI.color = new Color(0.35f, 0.35f, 0.4f);
+                    GUI.DrawTexture(ir, icon, ScaleMode.ScaleToFit);
+                    GUI.color = Color.white;
+                }
+                GUILayout.Label(h.Description, UiKit.Small, GUILayout.Height(54f));
+                GUILayout.Label($"Fähigkeiten: {h.Ability1Name} (ab Stufe {Hero.Ability1Level}), {h.Ability2Name} (ab Stufe {Hero.Ability2Level})", UiKit.Small, GUILayout.Height(40f));
+                GUILayout.FlexibleSpace();
+                if (selected)
+                {
+                    UiKit.Heading("Gewählt", UiKit.Title, GUILayout.Height(40f));
+                }
+                else if (unlocked)
+                {
+                    if (UiKit.Btn("Wählen", UiKit.YellowButton, GUILayout.Height(44f)))
+                    {
+                        State.SelectHero(h);
+                        State.Save();
+                        GameAudio.Play(SoundId.Click);
+                    }
+                }
+                else
+                {
+                    GUILayout.Label($"Frei ab {h.UnlockStars} Sternen (du hast {State.TotalStars}) – oder sofort:", UiKit.Small);
+                    GUI.enabled = State.Gems >= h.UnlockGems;
+                    if (UiKit.IconBtn(h.UnlockGems.ToString(), gem, UiKit.ActiveButton, GUILayout.Height(44f)) && State.UnlockHeroWithGems(h))
+                    {
+                        State.SelectHero(h);
+                        State.Save();
+                        GameAudio.Play(SoundId.LevelUp);
+                    }
+                    GUI.enabled = true;
+                }
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }
 

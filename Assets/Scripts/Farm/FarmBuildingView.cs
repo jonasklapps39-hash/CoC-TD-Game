@@ -202,6 +202,14 @@ namespace MuhDefense
                     Box(root, new Vector3(0.6f, 0.25f, -0.6f), new Vector3(0.3f, 0.25f, 0.3f), Straw, "Heuballen");
                     break;
 
+                case FarmBuildingKind.Heldenhuette:
+                    Plate(root, s, new Color(0.5f, 0.42f, 0.3f));
+                    Box(root, new Vector3(0f, 0.36f, 0.15f), new Vector3(1.3f, 0.72f, 1.1f), Wood, "Hütte");
+                    MakeRoof(root, new Vector3(0f, 0.72f, 0.15f), 1.5f, 1.25f, new Color(0.25f, 0.35f, 0.7f));
+                    Box(root, new Vector3(0.55f, 0.6f, -0.55f), new Vector3(0.05f, 1.2f, 0.05f), DarkWood, "Fahnenmast");
+                    Box(root, new Vector3(0.72f, 1.05f, -0.55f), new Vector3(0.32f, 0.22f, 0.03f), new Color(1f, 0.8f, 0.2f), "Fahne");
+                    break;
+
                 case FarmBuildingKind.HofladenKontor:
                     Plate(root, s, new Color(0.5f, 0.42f, 0.3f));
                     Box(root, new Vector3(0f, 0.36f, 0.15f), new Vector3(1.3f, 0.72f, 1.1f), new Color(0.92f, 0.86f, 0.72f), "Laden");

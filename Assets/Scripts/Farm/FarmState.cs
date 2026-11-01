@@ -71,6 +71,8 @@ namespace MuhDefense
             if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
             if (Data.Talents == null) Data.Talents = new List<string>();
             if (Data.SeenEnemies == null) Data.SeenEnemies = new List<string>();
+            if (Data.UnlockedHeroes == null) Data.UnlockedHeroes = new List<string> { "Heinz" };
+            if (string.IsNullOrEmpty(Data.SelectedHero)) Data.SelectedHero = "Heinz";
         }
 
         public void Save()
@@ -465,6 +467,45 @@ namespace MuhDefense
         public void SelectSkin(CowSkin skin)
         {
             if (OwnsSkin(skin.Id)) Data.CowSkin = skin.Id;
+        }
+
+        // ---------------------------------------------------------------- Helden
+
+        public bool IsHeroUnlocked(HeroType h) => h.UnlockStars == 0 || Data.UnlockedHeroes.Contains(h.Id) || TotalStars >= h.UnlockStars;
+
+        public bool UnlockHeroWithGems(HeroType h)
+        {
+            if (IsHeroUnlocked(h) || !SpendGems(h.UnlockGems)) return false;
+            Data.UnlockedHeroes.Add(h.Id);
+            return true;
+        }
+
+        public void SelectHero(HeroType h)
+        {
+            if (IsHeroUnlocked(h)) Data.SelectedHero = h.Id;
+        }
+
+        /// <summary>Gewählter Held (ohne Heldenhütte immer Bauer Heinz).</summary>
+        public HeroType SelectedHero
+        {
+            get
+            {
+                var h = HeroType.Get(Data.SelectedHero);
+                return HeroHutLevel > 0 && IsHeroUnlocked(h) ? h : HeroType.Heinz;
+            }
+        }
+
+        public int HeroHutLevel
+        {
+            get
+            {
+                int best = 0;
+                foreach (var b in Data.Buildings)
+                {
+                    if (b.Type == FarmBuildingType.Heldenhuette.Id) best = Mathf.Max(best, b.Level);
+                }
+                return best;
+            }
         }
 
         // ---------------------------------------------------------------- Talentbaum

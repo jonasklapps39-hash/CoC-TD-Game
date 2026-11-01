@@ -262,13 +262,14 @@ namespace MuhDefense
             slowTimer = Mathf.Max(slowTimer, duration);
         }
 
-        public void Freeze(float duration, float vulnerability, bool canFreezeBig)
+        /// <param name="showIce">Eisblock zeigen (aus z. B. bei „verzückt stehen bleiben“).</param>
+        public void Freeze(float duration, float vulnerability, bool canFreezeBig, bool showIce = true)
         {
             if (IsBig && !canFreezeBig) return;
             if (IsBoss) duration *= 0.5f;
             freezeTimer = Mathf.Max(freezeTimer, duration);
             frozenVulnerability = Mathf.Max(frozenVulnerability, vulnerability);
-            SetIce(true);
+            if (showIce) SetIce(true);
         }
 
         public void ApplyDot(float dps, float duration)

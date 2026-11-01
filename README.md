@@ -13,6 +13,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 
 **Hof (Base, wie in Clash of Clans)**
 - Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 4 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen, Hofladen-Kontor)
+- Heldenhütte (Held wählen), Talentbaum „Bauernwissen“ (Sterne gegen dauerhafte Boni), Diamanten-Shop
 - Mais und Milch werden in Echtzeit produziert, auch während eines Levels oder wenn das Spiel geschlossen ist
 - Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern
 
@@ -20,7 +21,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - Weltkarte mit 5 Levels im Heimattal (Level 1 als Tutorial)
 - 7 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher, Bienenstock, Windmühle, Wetterhahn, Hofladen
 - Upgrade-System wie in Bloons TD6: je 3 Pfade mit 5 Stufen (105 Upgrades), Fähigkeiten auf Stufe 5, Zielmodus
-- Held **Bauer Heinz**: Stufe 1–10, Fähigkeiten „Ladung Schrot“ und „Traktor-Raserei“
+- 3 Helden (Stufe 1–10, je 2 Fähigkeiten): **Bauer Heinz** (Schrotflinte), **Oma Gertrud** (Kekse, macht Türme schneller), **Berta** (Laseraugen, schützt Kühe)
 - 7 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Boss Oberbrocken Gorg
 - Tempo 1x/2x, Pause-Menü, Sterne-Wertung nach geretteten Kühen
 
@@ -36,7 +37,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 
 Zeiten und Kosten sind für schnelles Testen kurz gehalten.
 
-Noch **nicht** enthalten: weitere Helden (Oma Gertrud, Berta), weitere Türme aus dem Konzept, Diamanten und Shop, Talentbaum für Sterne.
+Noch **nicht** enthalten: weitere Türme aus dem Konzept, echte Käufe von Diamanten (Diamanten gibt es nur im Spiel).
 
 ## Starten
 

@@ -337,6 +337,84 @@ def build_heinz():
         tube((0.12 + d, -0.5, 0.74), 0.022, 0.5, DARK_METAL, rot=gun_rot)
 
 
+def build_gertrud():
+    """Oma Gertrud: Dutt, Brille, geblümtes Kleid, Schürze und Nudelholz."""
+    dress = (0.55, 0.3, 0.6)
+    hair = (0.88, 0.88, 0.9)
+    tube((0, 0, 0.32), 0.26, 0.6, dress, r2=0.18, segs=16)
+    for (x, z) in [(-0.12, 0.25), (0.14, 0.4), (-0.05, 0.5), (0.18, 0.18)]:
+        ball((x, -0.2, z), (0.07, 0.03, 0.07), (1.0, 0.85, 0.3))
+    soft_box((0, -0.2, 0.36), (0.3, 0.04, 0.46), WHITE, round_=0.3)
+    for s_ in (-1, 1):
+        soft_box((0.09 * s_, -0.04, 0.03), (0.12, 0.2, 0.08), (0.3, 0.2, 0.15), round_=0.4)
+    ball((0, 0, 0.72), (0.38, 0.32, 0.28), dress)
+    ball((0, -0.02, 0.76), (0.42, 0.34, 0.12), (0.85, 0.3, 0.35))
+    ball((0, 0, 0.98), (0.34, 0.32, 0.36), SKIN, subsurf=2)
+    ball((0, 0.05, 1.12), (0.36, 0.34, 0.2), hair, subsurf=2)
+    ball((0, 0.12, 1.22), (0.18, 0.18, 0.16), hair)
+    ball((0, -0.16, 0.96), (0.08, 0.07, 0.08), CHEEK)
+    blue = (0.35, 0.5, 0.85)
+    eye((-0.07, -0.13, 1.03), 0.1, blue, lid=SKIN, lid_tilt=math.radians(-6), lid_cover=0.3, brow=hair, brow_tilt=math.radians(-8))
+    eye((0.07, -0.13, 1.03), 0.1, blue, lid=SKIN, lid_tilt=math.radians(6), lid_cover=0.3, brow=hair, brow_tilt=math.radians(8))
+    for s_ in (-1, 1):
+        ring((0.07 * s_, -0.18, 1.03), 0.06, 0.008, GOLD, rot=(math.radians(90), 0, 0))
+    ball((0, -0.17, 0.9), (0.1, 0.03, 0.03), (0.6, 0.25, 0.25))
+    for s_ in (-1, 1):
+        ball((0.22 * s_, -0.08, 0.72), (0.1, 0.1, 0.3), dress, rot=(math.radians(-40), math.radians(-10 * s_), 0))
+        ball((0.2 * s_, -0.2, 0.6), (0.09, 0.09, 0.09), SKIN)
+    tube((0, -0.24, 0.6), 0.05, 0.5, (0.85, 0.65, 0.4), rot=(0, math.radians(90), 0))
+    for s_ in (-1, 1):
+        tube((0.3 * s_, -0.24, 0.6), 0.025, 0.12, (0.6, 0.4, 0.25), rot=(0, math.radians(90), 0))
+
+
+def build_berta():
+    """Berta, die Kampfkuh: Kuh mit Panzer-Sattel, leuchtendem Visier und goldenen Hörnern."""
+    soft_box((0, 0.15, 0.7), (0.66, 1.08, 0.6), WHITE, round_=0.4)
+    for (x, y, z, sx, sy, sz) in [(0.3, 0.3, 0.78, 0.12, 0.4, 0.3), (-0.3, 0.4, 0.72, 0.12, 0.34, 0.3)]:
+        ball((x, y, z), (sx, sy, sz), BLACK)
+    soft_box((0, 0.2, 1.02), (0.7, 0.7, 0.14), DARK_METAL, round_=0.3)
+    for s_ in (-1, 1):
+        soft_box((0.34 * s_, 0.2, 0.86), (0.06, 0.66, 0.34), METAL, round_=0.3)
+    ball((0, 0.2, 1.1), (0.16, 0.16, 0.1), GLOW_RED)
+    soft_box((0, -0.55, 0.9), (0.46, 0.46, 0.44), WHITE, round_=0.42)
+    soft_box((0, -0.8, 0.76), (0.42, 0.2, 0.26), PINK, round_=0.45)
+    ball((-0.09, -0.9, 0.78), (0.06, 0.03, 0.07), BLACK, subsurf=0, segs=8)
+    ball((0.09, -0.9, 0.78), (0.06, 0.03, 0.07), BLACK, subsurf=0, segs=8)
+    # Visier mit leuchtenden Augen
+    soft_box((0, -0.78, 1.0), (0.5, 0.06, 0.13), DARK_METAL, round_=0.3)
+    ball((-0.12, -0.81, 1.0), (0.12, 0.04, 0.07), GLOW_RED)
+    ball((0.12, -0.81, 1.0), (0.12, 0.04, 0.07), GLOW_RED)
+    ball((0, -0.62, 1.12), (0.34, 0.12, 0.08), WHITE)
+    for s_ in (-1, 1):
+        tube((0.2 * s_, -0.5, 1.2), 0.06, 0.3, HORN, rot=(0, math.radians(40 * s_), 0), r2=0.012)
+        ball((0.31 * s_, -0.5, 1.32), (0.05, 0.05, 0.05), GOLD)
+        ball((0.3 * s_, -0.5, 1.02), (0.2, 0.08, 0.1), WHITE, rot=(0, math.radians(20 * s_), 0))
+    for lx in (-0.2, 0.2):
+        for ly in (-0.24, 0.54):
+            tube((lx, ly, 0.27), 0.085, 0.44, WHITE)
+            tube((lx, ly, 0.06), 0.095, 0.1, DARK_METAL)
+    ring((0, -0.92, 0.7), 0.07, 0.016, GOLD, rot=(math.radians(90), 0, 0))
+    tube((0, 0.72, 0.74), 0.025, 0.42, WHITE, rot=(math.radians(-35), 0, 0))
+    ball((0, 0.85, 0.55), (0.08, 0.08, 0.12), BLACK)
+
+
+def build_hero_hall():
+    """Heldenhütte: Holzhalle mit blauem Dach, Fahne mit Stern und Übungspuppe."""
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    soft_box((0, 0.2, 0.5), (1.4, 1.0, 0.8), WOOD, round_=0.15)
+    roof((0, 0.2, 0.9), 1.4, 1.0, (0.25, 0.38, 0.75), 0.12)
+    soft_box((0, -0.31, 0.42), (0.45, 0.05, 0.58), DARK_WOOD, round_=0.3)
+    soft_box((0, -0.34, 0.92), (0.36, 0.04, 0.2), GOLD, round_=0.3)
+    tube((0.62, -0.55, 0.65), 0.03, 1.2, DARK_WOOD, segs=8)
+    soft_box((0.8, -0.55, 1.08), (0.36, 0.03, 0.26), (0.9, 0.2, 0.15), round_=0.2)
+    ball((0.8, -0.57, 1.08), (0.1, 0.03, 0.1), GOLD)
+    # Übungspuppe aus Stroh
+    tube((-0.6, -0.55, 0.35), 0.03, 0.6, DARK_WOOD, segs=8)
+    ball((-0.6, -0.55, 0.52), (0.26, 0.2, 0.34), STRAW)
+    ball((-0.6, -0.55, 0.78), (0.18, 0.18, 0.18), STRAW)
+    soft_box((-0.6, -0.55, 0.55), (0.5, 0.06, 0.06), DARK_WOOD, round_=0.3)
+
+
 def build_tractor():
     """Traktor für die Traktor-Raserei: rote Karosserie, große Hinterräder."""
     red = (0.82, 0.16, 0.12)
@@ -702,6 +780,9 @@ MODELS = [
     ("KuhUfo", build_cow_ufo, 4000),
     ("BauerHeinz", build_heinz, 6000),
     ("Traktor", build_tractor, 4000),
+    ("OmaGertrud", build_gertrud, 6000),
+    ("Berta", build_berta, 6000),
+    ("Heldenhuette", build_hero_hall, 6000),
     ("MistgabelBauer", build_farmer, 7000),
     ("HeuballenKatapult", build_catapult, 6000),
     ("EismilchSprueher", build_sprayer, 6000),
