@@ -14,14 +14,14 @@ namespace MuhDefense
     {
         public const int Width = 30;
         public const int Height = 18;
-        const int FarmhouseBaseCapacity = 500;
+        const int FarmhouseBaseCapacity = 1000;
         public const int WelcomeGems = 30;
         public const int GemsPerNewStar = 5;
         public const int GemsFirstClear = 10;
         public const int ResourcePackGems = 20;
-        public const int ResourcePackAmount = 600;
+        public const int ResourcePackAmount = 1500;
         public const int MaxExtraBuilders = 2;
-        const int FarmhouseCapacityPerLevel = 250;
+        const int FarmhouseCapacityPerLevel = 500;
 
         static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public static double Now => (DateTime.UtcNow - Epoch).TotalSeconds;

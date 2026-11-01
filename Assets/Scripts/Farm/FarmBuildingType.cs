@@ -99,7 +99,7 @@ namespace MuhDefense
             IsProducer = true,
             ProducedResource = Resource.Mais,
             RatePerMinute = new[] { 20f, 30f, 45f, 65f, 90f },
-            ProducerCapacity = new[] { 100, 200, 350, 550, 800 },
+            ProducerCapacity = new[] { 300, 600, 1050, 1650, 2400 },
         };
 
         public static readonly FarmBuildingType Kuhstall = new FarmBuildingType
@@ -115,7 +115,7 @@ namespace MuhDefense
             IsProducer = true,
             ProducedResource = Resource.Milch,
             RatePerMinute = new[] { 15f, 25f, 38f, 55f, 75f },
-            ProducerCapacity = new[] { 80, 160, 280, 450, 650 },
+            ProducerCapacity = new[] { 240, 480, 840, 1350, 1950 },
         };
 
         public static readonly FarmBuildingType Maissilo = new FarmBuildingType
@@ -201,7 +201,7 @@ namespace MuhDefense
             Description = "Werkstatt für Technik-Türme: Eismilch-Sprüher, ab Stufe 2 Windmühle, Traktor-Tesla und Güllefass. Jede Stufe erlaubt im Level höhere Upgrades.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
-            Costs = new[] { 900, 1800, 3000, 4500, 6000 },
+            Costs = new[] { 600, 1200, 2200, 3500, 5000 },
             BuildSeconds = new[] { 60, 180, 300, 420, 540 },
             MaxCount = new[] { 0, 0, 1, 1, 1 },
             Unlocks = new[]

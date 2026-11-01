@@ -166,7 +166,7 @@ namespace MuhDefense
                     Description = "Der Herrscher von Zorb höchstpersönlich! Er hat einen riesigen Schild und gibt alle paar Sekunden " +
                                   "den Aliens in seiner Nähe ebenfalls einen Schild. Halte ihn mit allem auf, was du hast!",
                     Hp = 2200f, Speed = 0.45f, Armor = 6f, Reward = 400, Scale = 2.4f, IsBoss = true, Big = true,
-                    ShieldHp = 600f, ShieldGiveFraction = 0.4f, ShieldGiveRadius = 2.2f, ShieldGiveInterval = 8f,
+                    ShieldHp = 400f, ShieldGiveFraction = 0.4f, ShieldGiveRadius = 2.2f, ShieldGiveInterval = 8f,
                     Color = new Color(0.55f, 0.25f, 0.75f),
                 }
             },

@@ -200,8 +200,8 @@ namespace MuhDefense
             }
             if (MaxShield > 0f)
             {
-                // Der eigene Schild lädt sich um 30 % wieder auf
-                Shield = Mathf.Min(MaxShield, Shield + MaxShield * 0.3f);
+                // Der eigene Schild lädt sich um 15 % wieder auf
+                Shield = Mathf.Min(MaxShield, Shield + MaxShield * 0.15f);
                 if (shieldRing != null) shieldRing.enabled = Shield > 0f;
             }
             RingEffect.Spawn(level.transform, transform.position, Type.ShieldGiveRadius, new Color(0.45f, 0.95f, 1f, 0.9f), 0.6f);

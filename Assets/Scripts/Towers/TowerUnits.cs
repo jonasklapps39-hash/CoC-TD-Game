@@ -231,7 +231,7 @@ namespace MuhDefense
             }
 
             // Das Alien wehrt sich: stärkere Aliens erschöpfen den Hund schneller
-            float strain = 6f + target.Type.Hp * 0.08f;
+            float strain = 6f + target.MaxHp * 0.06f;
             if (target.IsBig) strain *= 1.5f;
             hp -= strain * dt;
             if (hp <= 0f) Exhausted();

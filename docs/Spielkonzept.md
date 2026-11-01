@@ -386,6 +386,11 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
   - **Bauernstufe** (1–30): Erfahrung für fertige Gebäude, Hindernisse und gewonnene Levels (Schwer = doppelt); jeder Aufstieg bringt Diamanten
   - **Kühe laufen** rund um die Kuhställe über den Hof (mehr Kühe mit höherer Stall-Stufe)
   - Knopf **„Alles einsammeln“**, neue Aufgabe und zwei neue Erfolge (Hindernisse, Bauernstufe)
+- [x] **Großer Balance-Durchgang (nachgerechnet):**
+  - Zu starke Upgrades entschärft (Eier-Huhn Stufe 4/5, Rabenkönig, Milch-Monsun hielt Aliens dauerhaft fest, Gruselscheuche, Popcorn-Explosion)
+  - Schwache Türme gestärkt (Traktor-Tesla, Bienenstock, Hofhund, Windmühle, Güllefass, Kürbis-Mörser, Hofladen-Upgrades rechnen sich jetzt innerhalb eines Levels)
+  - Schwierigkeitskurve gleichmäßiger (Heimattal 3–5, Maisfeld 1–2, Absturzstelle 4–5 leichter; Spitzen in der letzten Welle von Maisfeld 2 und Absturzstelle 2 entfernt; Kaiser-Schild 400 statt 600 und lädt langsamer nach)
+  - Hof: Bauernhaus-Lager doppelt so groß (keine verlorenen Belohnungen am Anfang), Felder und Ställe speichern dreimal so viel (lohnt sich, nach einer Pause zurückzukommen), Tüftlerschuppen günstiger, Rohstoffpaket 1500 statt 600
 
 ### Upgrade-System
 
