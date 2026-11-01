@@ -64,6 +64,10 @@ namespace MuhDefense
         public float HpMultiplier { get; private set; }
         /// <summary>Wie viele Viertel des Lebens schon verloren sind (Ernte-Roboter wirft dann Flitzer ab).</summary>
         int dropsDone;
+        public float Shield { get; private set; }
+        public float MaxShield { get; private set; }
+        float shieldGiveTimer;
+        LineRenderer shieldRing;
 
         public void Init(LevelManager level, EnemyType type, float hpMultiplier, Vector3[] path)
         {
@@ -74,6 +78,8 @@ namespace MuhDefense
             HpMultiplier = hpMultiplier;
             MaxHp = type.Hp * hpMultiplier;
             Hp = MaxHp;
+            if (type.ShieldHp > 0f) GiveShield(type.ShieldHp * hpMultiplier);
+            shieldGiveTimer = type.ShieldGiveInterval;
             name = type.Name;
             transform.position = this.path[0];
             targetIndex = 1;
@@ -104,6 +110,12 @@ namespace MuhDefense
             if (!Alive) return;
 
             if (Type.HealPercent > 0f) UpdateHealing(dt);
+            if (Type.ShieldGiveInterval > 0f) UpdateShieldGiving(dt);
+            if (shieldRing != null && shieldRing.enabled)
+            {
+                shieldRing.transform.localPosition = new Vector3(0f, HoverHeight + 0.5f * Type.Scale, 0f);
+                shieldRing.widthMultiplier = 0.05f + 0.02f * Mathf.Sin(Time.time * 8f);
+            }
             if (hitPunch > 0f) hitPunch = Mathf.Max(0f, hitPunch - dt * 6f);
 
             if (freezeTimer > 0f)
@@ -154,6 +166,39 @@ namespace MuhDefense
                 healed = true;
             }
             if (healed) RingEffect.Spawn(level.transform, transform.position, Type.HealRadius, new Color(0.4f, 1f, 0.5f, 0.9f), 0.5f);
+        }
+
+        /// <summary>Gibt dem Alien einen Schutzschild (Schild-Alien, Alien-Kaiser).</summary>
+        public void GiveShield(float amount)
+        {
+            if (!Alive || amount <= 0f) return;
+            MaxShield = Mathf.Max(MaxShield, amount);
+            Shield = Mathf.Max(Shield, amount);
+            if (shieldRing == null)
+            {
+                shieldRing = Visuals.Circle(transform, 0.5f * Type.Scale, new Color(0.45f, 0.95f, 1f, 0.9f), 0.06f);
+            }
+            shieldRing.enabled = true;
+        }
+
+        void UpdateShieldGiving(float dt)
+        {
+            shieldGiveTimer -= dt;
+            if (shieldGiveTimer > 0f) return;
+            shieldGiveTimer = Type.ShieldGiveInterval;
+            foreach (var e in level.Enemies)
+            {
+                if (e == this || !e.Alive) continue;
+                if (Vector3.Distance(e.transform.position, transform.position) > Type.ShieldGiveRadius) continue;
+                e.GiveShield(e.MaxHp * Type.ShieldGiveFraction);
+            }
+            if (MaxShield > 0f)
+            {
+                // Der eigene Schild lädt sich um 30 % wieder auf
+                Shield = Mathf.Min(MaxShield, Shield + MaxShield * 0.3f);
+                if (shieldRing != null) shieldRing.enabled = Shield > 0f;
+            }
+            RingEffect.Spawn(level.transform, transform.position, Type.ShieldGiveRadius, new Color(0.45f, 0.95f, 1f, 0.9f), 0.6f);
         }
 
         public void Heal(float amount)
@@ -264,6 +309,20 @@ namespace MuhDefense
         public float TakeDamage(float damage, bool armorPiercing = false, float armoredBonus = 1f)
         {
             if (!Alive || damage <= 0f) return 0f;
+            if (Shield > 0f)
+            {
+                // Der Schild schluckt den ganzen Treffer (Panzer zählt hier nicht)
+                Shield -= damage;
+                if (damage >= 1f) hitPunch = 0.5f;
+                if (Shield <= 0f)
+                {
+                    Shield = 0f;
+                    if (shieldRing != null) shieldRing.enabled = false;
+                    Effects.Burst(level.transform, AimPoint, new Color(0.45f, 0.95f, 1f), 10, 3f);
+                    GameAudio.Play(SoundId.Pop);
+                }
+                return 0f;
+            }
             if (IsArmored) damage *= armoredBonus;
             float armor = armorPiercing ? 0f : Mathf.Max(0f, Type.Armor - armorShred);
             float dealt = Mathf.Max(damage - armor, damage * 0.25f);

@@ -1040,6 +1040,48 @@ def build_scarecrow():
     tube((0.32, -0.14, 1.1), 0.02, 0.06, GOLD, rot=(math.radians(90), 0, 0), r2=0.002)
 
 
+def build_shield_alien():
+    """Schild-Alien: blaues Alien mit Schildgenerator auf dem Rücken und Schutzschild in der Hand."""
+    body = (0.3, 0.55, 0.85)
+    dark = (0.12, 0.25, 0.45)
+    build_alien(body, dark, scale=1.0, armor=(0.2, 0.3, 0.5), gun=False)
+    cyan = (0.45, 0.95, 1.0)
+    soft_box((0, 0.24, 0.6), (0.3, 0.14, 0.34), DARK_METAL, round_=0.3)
+    tube((0, 0.26, 0.86), 0.025, 0.2, DARK_METAL)
+    ball((0, 0.26, 0.98), (0.1, 0.1, 0.1), cyan)
+    ring((0, 0.26, 0.98), 0.09, 0.015, cyan, rot=(math.radians(90), 0, 0))
+    # Schild vor dem Körper
+    ball((-0.26, -0.28, 0.52), (0.36, 0.08, 0.46), cyan)
+    ring((-0.26, -0.3, 0.52), 0.18, 0.025, (0.2, 0.5, 0.8), rot=(math.radians(90), 0, 0))
+
+
+def build_emperor():
+    """Alien-Kaiser Zorbax: riesiges Alien auf einem schwebenden Thron, mit Krone, Umhang und Zepter."""
+    purple = (0.55, 0.25, 0.75)
+    dark = (0.28, 0.1, 0.4)
+    # Schwebethron
+    tube((0, 0.05, 0.18), 0.55, 0.14, DARK_METAL, segs=20)
+    ring((0, 0.05, 0.12), 0.5, 0.04, (0.45, 0.95, 1.0))
+    for i in range(6):
+        a = i * math.pi / 3
+        ball((math.cos(a) * 0.45, 0.05 + math.sin(a) * 0.45, 0.1), (0.08, 0.08, 0.05), GLOW_RED)
+    soft_box((0, 0.3, 0.6), (0.7, 0.14, 0.8), dark, round_=0.25)
+    ball((0, 0.3, 1.0), (0.3, 0.14, 0.3), GOLD)
+    build_alien(purple, dark, scale=1.15, armor=(0.75, 0.6, 0.2), crown=True, bulky=True, gun=False)
+    # Zepter
+    tube((0.38, -0.25, 0.6), 0.03, 0.9, GOLD)
+    ball((0.38, -0.25, 1.08), (0.14, 0.14, 0.14), (0.45, 0.95, 1.0))
+    ring((0.38, -0.25, 1.08), 0.11, 0.02, GOLD, rot=(math.radians(90), 0, 0))
+
+
+def build_crystal():
+    """Kristallgruppe an der Absturzstelle (Hindernis)."""
+    tube((0, 0, 0.04), 0.4, 0.08, (0.35, 0.3, 0.38), segs=10)
+    for (x, y, h, r, c, tilt) in [(0, 0, 1.1, 0.16, (0.55, 0.3, 0.95), 0), (0.2, 0.1, 0.7, 0.12, (0.4, 0.85, 1.0), 20),
+                                  (-0.18, 0.08, 0.8, 0.12, (0.8, 0.4, 1.0), -18), (0.05, -0.2, 0.55, 0.1, (0.45, 0.95, 0.9), 12)]:
+        tube((x, y, h / 2), r, h, c, rot=(math.radians(tilt * 0.5), math.radians(tilt), 0), r2=0.01, segs=6)
+
+
 # Name, Bau-Funktion, höchstens Dreiecke
 MODELS = [
     ("Kuh", build_cow, 6000),
@@ -1091,6 +1133,9 @@ MODELS = [
     ("Hundehuette", build_dog_house, 5000),
     ("Hofhund", build_dog, 4000),
     ("Vogelscheuche", build_scarecrow, 5000),
+    ("SchildAlien", build_shield_alien, 5500),
+    ("AlienKaiser", build_emperor, 9000),
+    ("Kristall", build_crystal, 1500),
 ]
 
 # Optional nur einzelne Modelle bauen: ONLY=Name1,Name2

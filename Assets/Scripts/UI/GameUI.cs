@@ -398,6 +398,10 @@ namespace MuhDefense
                 float w = 36f * Mathf.Clamp(enemy.Type.Scale, 1f, 1.8f);
                 float frac = Mathf.Clamp01(enemy.Hp / enemy.MaxHp);
                 UiKit.DrawBar(new Rect(p.x - w / 2f, p.y, w, 7f), frac, Color.Lerp(new Color(0.95f, 0.2f, 0.15f), new Color(0.3f, 0.9f, 0.25f), frac));
+                if (enemy.Shield > 0f)
+                {
+                    UiKit.DrawBar(new Rect(p.x - w / 2f, p.y - 6f, w, 5f), Mathf.Clamp01(enemy.Shield / enemy.MaxShield), new Color(0.45f, 0.9f, 1f));
+                }
             }
 
             foreach (var ft in level.FloatingTexts)
@@ -565,6 +569,10 @@ namespace MuhDefense
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
                     if (reward.CornLost > 0 || reward.MilkLost > 0) GUILayout.Label("Lager voll – baue Silos und Tanks!", UiKit.Center);
+                    if (level.Def == Levels.All[Levels.All.Length - 1])
+                    {
+                        GUILayout.Label("Zorbax ist besiegt und das Mutterschiff fliegt heulend davon. Die Kühe sind gerettet – vorerst …", UiKit.Center);
+                    }
                     if (reward.NewCrown) GUILayout.Label("Krone verdient: auf „Schwer“ geschafft! +1 Stern", UiKit.Center);
                     else if (level.Difficulty == Difficulty.Leicht && level.CowsLost == 0)
                     {

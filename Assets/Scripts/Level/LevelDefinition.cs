@@ -54,6 +54,7 @@ namespace MuhDefense
     {
         Heimattal,
         Maisfeld,
+        Absturzstelle,
     }
 
     /// <summary>Ein Gebiet auf der Weltkarte (Heimattal, Maisfeld-Labyrinth …).</summary>
@@ -97,7 +98,7 @@ namespace MuhDefense
         public TowerGift[] TowerGifts = new TowerGift[0];
         /// <summary>Index in <see cref="Levels.Regions"/>.</summary>
         public int Region;
-        /// <summary>Felder mit Maisstauden: dort kann man nicht bauen (Labyrinth-Wände).</summary>
+        /// <summary>Felder mit Hindernissen (Maisstauden, Kristalle): dort kann man nicht bauen.</summary>
         public RectInt[] Corn = new RectInt[0];
         /// <summary>Text im Start-Fenster (leer = Standardtext).</summary>
         public string Story = "";
@@ -125,6 +126,7 @@ namespace MuhDefense
         const EnemyKind U = EnemyKind.Ufo;
         const EnemyKind M = EnemyKind.Sanitaeter;
         const EnemyKind T = EnemyKind.Teiler;
+        const EnemyKind Q = EnemyKind.SchildAlien;
 
         public static readonly Region[] Regions =
         {
@@ -138,6 +140,12 @@ namespace MuhDefense
                 Name = "Maisfeld-Labyrinth", Theme = MapTheme.Maisfeld, UnlockStars = 12, Icon = "Teiler", BossIcon = "ErnteRoboter",
                 Story = "Gorg ist geschlagen, doch die Aliens haben sich im riesigen Maisfeld von Nachbar Kalle verschanzt. " +
                         "Zwischen den hohen Stauden kannst du nicht bauen – nutze die Lücken klug!",
+            },
+            new Region
+            {
+                Name = "Absturzstelle", Theme = MapTheme.Absturzstelle, UnlockStars = 26, Icon = "SchildAlien", BossIcon = "AlienKaiser",
+                Story = "Hinter dem Maisfeld liegt die Absturzstelle des Mutterschiffs. Zwischen leuchtenden Kristallen bereitet " +
+                        "Alien-Kaiser Zorbax den großen Milchraub vor. Seine Schild-Aliens sind zäh – zeig ihnen, wer hier der Bauer ist!",
             },
         };
 
@@ -159,6 +167,7 @@ namespace MuhDefense
         {
             Level1(), Level2(), Level3(), Level4(), Level5(),
             Mais1(), Mais2(), Mais3(), Mais4(), Mais5(),
+            Crash1(), Crash2(), Crash3(), Crash4(), Crash5(),
         };
 
         static LevelDefinition Level1() => new LevelDefinition
@@ -456,6 +465,166 @@ namespace MuhDefense
             HpMultiplier = 3.8f,
             RewardCorn = 2500,
             RewardMilk = 2500,
+            BossLevel = true,
+        };
+
+        // ---------------------------------------------------------------- Gebiet 3: Absturzstelle
+
+        static LevelDefinition Crash1() => new LevelDefinition
+        {
+            Id = "absturz-1",
+            Name = "Absturzstelle 1 – Der Krater",
+            Region = 2,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 4), new Vector2Int(3, 4), new Vector2Int(3, 1), new Vector2Int(7, 1),
+                new Vector2Int(7, 7), new Vector2Int(11, 7), new Vector2Int(11, 3), new Vector2Int(13, 3),
+            },
+            Corn = new[] { new RectInt(4, 3, 2, 3), new RectInt(8, 2, 2, 4), new RectInt(0, 6, 3, 2) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 750,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(Q, 3, 2f, 3f)),
+                (3, new SpawnGroup(T, 5, 1.4f, 2f)),
+                (4, new SpawnGroup(Q, 5, 1.5f, 2f)),
+                (6, new SpawnGroup(U, 6, 1.2f, 3f)),
+                (7, new SpawnGroup(Q, 8, 1.1f, 3f)),
+                (8, new SpawnGroup(M, 4, 2f, 4f)),
+                (10, new SpawnGroup(Q, 10, 0.9f, 3f)),
+                (11, new SpawnGroup(T, 10, 0.9f, 5f))),
+            HpMultiplier = 4.1f,
+            RewardCorn = 2800,
+            RewardMilk = 2800,
+        };
+
+        static LevelDefinition Crash2() => new LevelDefinition
+        {
+            Id = "absturz-2",
+            Name = "Absturzstelle 2 – Das Wrack",
+            Region = 2,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 1), new Vector2Int(5, 1), new Vector2Int(5, 4), new Vector2Int(1, 4),
+                new Vector2Int(1, 7), new Vector2Int(9, 7), new Vector2Int(9, 2), new Vector2Int(12, 2),
+                new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(2, 5, 2, 1), new RectInt(6, 3, 2, 3), new RectInt(10, 4, 2, 2), new RectInt(6, 0, 3, 1) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 780,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(Q, 4, 1.8f, 2f)),
+                (3, new SpawnGroup(S, 6, 1f, 3f)),
+                (5, new SpawnGroup(Q, 6, 1.2f, 2f)),
+                (6, new SpawnGroup(U, 8, 1f, 3f)),
+                (7, new SpawnGroup(T, 8, 1f, 4f)),
+                (9, new SpawnGroup(Q, 12, 0.8f, 2f)),
+                (10, new SpawnGroup(M, 5, 1.6f, 3f)),
+                (12, new SpawnGroup(Q, 12, 0.8f, 6f))),
+            HpMultiplier = 4.4f,
+            RewardCorn = 3100,
+            RewardMilk = 3100,
+        };
+
+        static LevelDefinition Crash3() => new LevelDefinition
+        {
+            Id = "absturz-3",
+            Name = "Absturzstelle 3 – Kristallhöhle",
+            Region = 2,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 7), new Vector2Int(2, 7), new Vector2Int(2, 1), new Vector2Int(5, 1),
+                new Vector2Int(5, 7), new Vector2Int(8, 7), new Vector2Int(8, 1), new Vector2Int(11, 1),
+                new Vector2Int(11, 6), new Vector2Int(12, 6), new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(3, 3, 1, 3), new RectInt(6, 2, 1, 4), new RectInt(9, 3, 1, 4), new RectInt(0, 0, 2, 4) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 820,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(S, 6, 1f, 2f)),
+                (3, new SpawnGroup(Q, 6, 1.4f, 3f)),
+                (5, new SpawnGroup(M, 4, 2f, 3f)),
+                (6, new SpawnGroup(Q, 8, 1f, 2f)),
+                (7, new SpawnGroup(S, 12, 0.6f, 3f)),
+                (8, new SpawnGroup(T, 10, 0.9f, 3f)),
+                (10, new SpawnGroup(Q, 14, 0.7f, 2f)),
+                (11, new SpawnGroup(U, 12, 0.7f, 4f))),
+            HpMultiplier = 4.7f,
+            RewardCorn = 3400,
+            RewardMilk = 3400,
+        };
+
+        static LevelDefinition Crash4() => new LevelDefinition
+        {
+            Id = "absturz-4",
+            Name = "Absturzstelle 4 – Der Leitstrahl",
+            Region = 2,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 4), new Vector2Int(2, 4), new Vector2Int(2, 0), new Vector2Int(6, 0),
+                new Vector2Int(6, 7), new Vector2Int(10, 7), new Vector2Int(10, 1), new Vector2Int(12, 1),
+                new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(3, 2, 2, 4), new RectInt(7, 2, 2, 3), new RectInt(0, 6, 2, 3), new RectInt(13, 7, 3, 2) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 860,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(Q, 6, 1.4f, 2f)),
+                (3, new SpawnGroup(U, 6, 1.2f, 3f)),
+                (4, new SpawnGroup(T, 8, 1f, 2f)),
+                (6, new SpawnGroup(Q, 10, 0.9f, 3f)),
+                (7, new SpawnGroup(M, 5, 1.6f, 4f)),
+                (8, new SpawnGroup(S, 14, 0.5f, 3f)),
+                (9, new SpawnGroup(EnemyKind.ErnteRoboter, 1, 0f, 10f)),
+                (11, new SpawnGroup(Q, 16, 0.6f, 4f)),
+                (12, new SpawnGroup(T, 14, 0.7f, 6f))),
+            HpMultiplier = 5.0f,
+            RewardCorn = 3700,
+            RewardMilk = 3700,
+        };
+
+        static LevelDefinition Crash5() => new LevelDefinition
+        {
+            Id = "absturz-5",
+            Name = "Absturzstelle 5 – Das Mutterschiff",
+            Region = 2,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 1), new Vector2Int(4, 1), new Vector2Int(4, 7), new Vector2Int(8, 7),
+                new Vector2Int(8, 1), new Vector2Int(12, 1), new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(1, 3, 2, 4), new RectInt(5, 2, 2, 3), new RectInt(9, 3, 2, 4) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 900,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(finalBosses: 1, boss: EnemyKind.Kaiser),
+                (2, new SpawnGroup(Q, 6, 1.2f, 2f)),
+                (3, new SpawnGroup(T, 8, 1f, 3f)),
+                (4, new SpawnGroup(U, 8, 1f, 3f)),
+                (5, new SpawnGroup(Q, 10, 0.9f, 2f)),
+                (6, new SpawnGroup(EnemyKind.Boss, 1, 0f, 8f)),
+                (7, new SpawnGroup(M, 6, 1.4f, 3f)),
+                (8, new SpawnGroup(Q, 14, 0.7f, 2f)),
+                (9, new SpawnGroup(EnemyKind.ErnteRoboter, 1, 0f, 6f)),
+                (10, new SpawnGroup(S, 16, 0.5f, 3f)),
+                (11, new SpawnGroup(Q, 18, 0.5f, 4f)),
+                (12, new SpawnGroup(Q, 12, 0.8f, 8f))),
+            HpMultiplier = 5.4f,
+            RewardCorn = 4000,
+            RewardMilk = 4000,
             BossLevel = true,
         };
 

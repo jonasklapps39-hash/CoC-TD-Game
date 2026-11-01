@@ -19,11 +19,11 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern
 
 **Levels (Tower Defense, wie in Bloons TD6)**
-- Weltkarte mit 2 Gebieten: 5 Levels im Heimattal (Level 1 als Tutorial) und 5 Levels im Maisfeld-Labyrinth (ab 12 Sternen, Maisstauden blockieren Bauplätze)
+- Weltkarte mit 3 Gebieten à 5 Levels: Heimattal (Level 1 als Tutorial), Maisfeld-Labyrinth (ab 12 Sternen, Maisstauden blockieren Bauplätze) und Absturzstelle (ab 26 Sternen, Kristalle)
 - 15 Türme: Mistgabel-Bauer, Eier-Huhn, Bienenstock, Heuballen-Katapult, Popcorn-Kanone, Kürbis-Mörser, Traktor-Tesla, Eismilch-Sprüher, Windmühle, Güllefass, Mähdrescher, Hofhund-Hütte, Vogelscheuche, Wetterhahn, Hofladen
 - Upgrade-System wie in Bloons TD6: je 3 Pfade mit 5 Stufen (225 Upgrades), Fähigkeiten auf Stufe 5, Zielmodus
 - 3 Helden (Stufe 1–10, je 2 Fähigkeiten): **Bauer Heinz** (Schrotflinte), **Oma Gertrud** (Kekse, macht Türme schneller), **Berta** (Laseraugen, schützt Kühe)
-- 9 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Teiler (zerfällt in zwei), Bosse Oberbrocken Gorg und Ernte-Roboter (wirft Flitzer ab)
+- 11 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Teiler (zerfällt in zwei), Schild-Alien (Energieschild), Bosse Oberbrocken Gorg, Ernte-Roboter (wirft Flitzer ab) und Alien-Kaiser Zorbax (verteilt Schilde)
 - Tempo 1x/2x, Pause-Menü, Sterne-Wertung nach geretteten Kühen
 - Schwierigkeitsgrade Leicht / Mittel / Schwer (Krone für „Schwer“)
 

@@ -14,6 +14,8 @@ namespace MuhDefense
         Sanitaeter,
         Teiler,
         ErnteRoboter,
+        SchildAlien,
+        Kaiser,
     }
 
     /// <summary>Werte einer Alien-Art (siehe Spielkonzept, Kapitel 10).</summary>
@@ -53,6 +55,12 @@ namespace MuhDefense
         /// <summary>Wirft jedes Mal Aliens ab, wenn es ein Viertel seines Lebens verliert.</summary>
         public EnemyKind DropKind;
         public int DropCount;
+        /// <summary>Schutzschild: schluckt so viel Schaden, bevor das Leben sinkt (wächst mit dem Level wie das Leben).</summary>
+        public float ShieldHp;
+        /// <summary>Gibt Aliens in der Nähe regelmäßig einen Schild (Anteil ihres Lebens).</summary>
+        public float ShieldGiveFraction;
+        public float ShieldGiveRadius;
+        public float ShieldGiveInterval;
 
         public static readonly Dictionary<EnemyKind, EnemyType> All = new Dictionary<EnemyKind, EnemyType>
         {
@@ -139,6 +147,27 @@ namespace MuhDefense
                     Hp = 1400f, Speed = 0.5f, Armor = 7f, Reward = 220, Scale = 2.2f, IsBoss = true, Big = true,
                     DropKind = EnemyKind.Flitzer, DropCount = 4,
                     Color = new Color(0.75f, 0.14f, 0.12f),
+                }
+            },
+            {
+                EnemyKind.SchildAlien, new EnemyType
+                {
+                    Kind = EnemyKind.SchildAlien, Name = "Schild-Alien", ModelName = "SchildAlien",
+                    Description = "Ein Energieschild (blauer Balken) schluckt die ersten Treffer komplett. Erst wenn er zerplatzt, sinkt das Leben. " +
+                                  "Schnelle Türme wie Eier-Huhn, Bienen oder Gülle knacken Schilde am besten.",
+                    Hp = 40f, Speed = 1.3f, Armor = 0f, Reward = 14, Scale = 1f, ShieldHp = 60f,
+                    Color = new Color(0.3f, 0.55f, 0.85f),
+                }
+            },
+            {
+                EnemyKind.Kaiser, new EnemyType
+                {
+                    Kind = EnemyKind.Kaiser, Name = "Alien-Kaiser Zorbax", ModelName = "AlienKaiser",
+                    Description = "Der Herrscher von Zorb höchstpersönlich! Er hat einen riesigen Schild und gibt alle paar Sekunden " +
+                                  "den Aliens in seiner Nähe ebenfalls einen Schild. Halte ihn mit allem auf, was du hast!",
+                    Hp = 2200f, Speed = 0.45f, Armor = 6f, Reward = 400, Scale = 2.4f, IsBoss = true, Big = true,
+                    ShieldHp = 600f, ShieldGiveFraction = 0.4f, ShieldGiveRadius = 2.2f, ShieldGiveInterval = 8f,
+                    Color = new Color(0.55f, 0.25f, 0.75f),
                 }
             },
         };
