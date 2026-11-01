@@ -465,6 +465,28 @@ def build_farm_shop():
     soft_box((0, -0.2, 0.92), (0.3, 0.03, 0.12), (0.95, 0.9, 0.7), round_=0.2)
 
 
+def build_coin():
+    """Münze (nur für Symbole)."""
+    tube((0, 0, 0.5), 0.45, 0.12, GOLD, rot=(math.radians(90), 0, 0), segs=24)
+    tube((0, -0.065, 0.5), 0.33, 0.02, (1.0, 0.88, 0.4), rot=(math.radians(90), 0, 0), segs=24)
+    soft_box((0, -0.08, 0.5), (0.08, 0.02, 0.36), (0.75, 0.55, 0.12), round_=0.3)
+
+
+def build_corn():
+    """Maiskolben (nur für Symbole)."""
+    ball((0, 0, 0.55), (0.32, 0.32, 0.8), (1.0, 0.82, 0.2), subsurf=2)
+    for s_ in (-1, 1):
+        ball((0.12 * s_, -0.02, 0.4), (0.12, 0.2, 0.7), LEAF, rot=(0, math.radians(18 * s_), 0))
+
+
+def build_milk():
+    """Milchflasche (nur für Symbole)."""
+    tube((0, 0, 0.42), 0.24, 0.62, WHITE, segs=20)
+    tube((0, 0, 0.84), 0.12, 0.24, WHITE, r2=0.1, segs=16)
+    tube((0, 0, 0.99), 0.12, 0.06, MILK_BLUE, segs=16)
+    tube((0, 0, 0.42), 0.245, 0.18, MILK_BLUE, segs=20)
+
+
 def build_ufo():
     ball((0, 0, 0), (1.7, 1.7, 0.34), METAL, subsurf=2, segs=24)
     ring((0, 0, 0), 0.82, 0.05, DARK_METAL)
@@ -500,6 +522,9 @@ MODELS = [
     ("Wetterhahn", build_weathercock, 4000),
     ("Hofladen", build_farm_shop, 5000),
     ("Ufo", build_ufo, 5000),
+    ("Muenze", build_coin, 2000),
+    ("Maiskolben", build_corn, 2000),
+    ("Milchflasche", build_milk, 2000),
     ("Baum", build_tree, 2500),
 ]
 

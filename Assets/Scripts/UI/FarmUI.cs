@@ -56,15 +56,22 @@ namespace MuhDefense
         void DrawTopBar()
         {
             float vw = UiKit.VirtualWidth;
-            var r = new Rect(0f, 0f, vw, UiKit.TopBarHeight);
+            var r = new Rect(-4f, -4f, vw + 8f, UiKit.TopBarHeight + 4f);
             blockers.Add(r);
             GUI.Box(r, GUIContent.none, UiKit.Panel);
 
-            string text =
-                $"Mais: {(int)State.Amount(Resource.Mais)} / {(int)State.Capacity(Resource.Mais)}      " +
-                $"Milch: {(int)State.Amount(Resource.Milch)} / {(int)State.Capacity(Resource.Milch)}      " +
-                $"Sterne: {State.TotalStars}      Knechte: {State.BuildersFree}/{State.BuildersTotal}";
-            GUI.Label(new Rect(16f, 0f, vw - 32f, UiKit.TopBarHeight), text, UiKit.Title);
+            UiKit.PillLabel(new Rect(18f, 10f, 230f, 36f), UiKit.Icon("Maiskolben"),
+                $"{(int)State.Amount(Resource.Mais)} / {(int)State.Capacity(Resource.Mais)}");
+            UiKit.PillLabel(new Rect(266f, 10f, 230f, 36f), UiKit.Icon("Milchflasche"),
+                $"{(int)State.Amount(Resource.Milch)} / {(int)State.Capacity(Resource.Milch)}");
+            var starRect = new Rect(514f, 10f, 110f, 36f);
+            GUI.Box(starRect, GUIContent.none, UiKit.Pill);
+            GUI.color = new Color(1f, 0.82f, 0.1f);
+            GUI.DrawTexture(new Rect(starRect.x + 4f, starRect.y + 2f, 32f, 32f), UiKit.Star);
+            GUI.color = Color.white;
+            UiKit.Title.alignment = TextAnchor.MiddleLeft;
+            UiKit.OutlinedText(new Rect(starRect.x + 42f, starRect.y, 66f, 36f), State.TotalStars.ToString(), UiKit.Title, Color.white);
+            UiKit.PillLabel(new Rect(642f, 10f, 140f, 36f), UiKit.Icon("MistgabelBauer"), $"{State.BuildersFree}/{State.BuildersTotal}");
         }
 
         void DrawSideBar()
@@ -85,21 +92,21 @@ namespace MuhDefense
             }
             else
             {
-                GUILayout.Label("Dein Hof", UiKit.Title);
+                UiKit.Heading("Dein Hof", UiKit.Title);
                 GUILayout.Label("Tippe auf ein Gebäude, um es zu verbessern oder Mais und Milch einzusammeln.", UiKit.Small);
                 GUILayout.Space(10f);
-                if (GUILayout.Button("Bauen", UiKit.Button, GUILayout.Height(56f))) farm.ShopOpen = true;
+                if (UiKit.Btn("Bauen", UiKit.YellowButton, GUILayout.Height(56f))) farm.ShopOpen = true;
                 GUILayout.Space(6f);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
-                if (GUILayout.Button(GameAudio.SoundOn ? "Ton: an" : "Ton: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.SoundOn = !GameAudio.SoundOn;
+                if (UiKit.Btn(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
+                if (UiKit.Btn(GameAudio.SoundOn ? "Ton: an" : "Ton: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.SoundOn = !GameAudio.SoundOn;
                 GUILayout.EndHorizontal();
             }
 
             GUILayout.FlexibleSpace();
             if (farm.Mode == FarmMode.Normal)
             {
-                if (GUILayout.Button("Zur Weltkarte", UiKit.BigButton, GUILayout.Height(64f))) farm.MapOpen = true;
+                if (UiKit.IconBtn("Weltkarte", UiKit.Icon("Ufo"), UiKit.BigButton, GUILayout.Height(66f))) farm.MapOpen = true;
             }
             GUILayout.EndArea();
         }
@@ -107,7 +114,7 @@ namespace MuhDefense
         void DrawPlacementPanel()
         {
             var type = farm.Mode == FarmMode.Placing ? farm.PlacingType : farm.Selected.TypeDef;
-            GUILayout.Label(farm.Mode == FarmMode.Placing ? $"{type.Name} bauen" : $"{type.Name} verschieben", UiKit.Title);
+            UiKit.Heading(farm.Mode == FarmMode.Placing ? $"{type.Name} bauen" : $"{type.Name} verschieben", UiKit.Title);
             GUILayout.Label("Tippe auf den Hof, um den Platz auszuwählen. Grün = frei, rot = belegt.", UiKit.Small);
             if (farm.Mode == FarmMode.Placing)
             {
@@ -116,15 +123,21 @@ namespace MuhDefense
             }
             GUILayout.Space(10f);
             GUI.enabled = farm.GhostValid;
-            if (GUILayout.Button("Bestätigen", UiKit.ActiveButton, GUILayout.Height(52f))) farm.ConfirmPlacement();
+            if (UiKit.Btn("Bestätigen", UiKit.ActiveButton, GUILayout.Height(52f))) farm.ConfirmPlacement();
             GUI.enabled = true;
-            if (GUILayout.Button("Abbrechen", UiKit.Button, GUILayout.Height(44f))) farm.CancelMode();
+            if (UiKit.Btn("Abbrechen", UiKit.RedButton, GUILayout.Height(44f))) farm.CancelMode();
         }
 
         void DrawBuildingPanel(BuildingData b)
         {
             var type = b.TypeDef;
-            GUILayout.Label(b.Level == 0 ? $"{type.Name} (im Bau)" : $"{type.Name} – Stufe {b.Level}", UiKit.Title);
+            var buildingIcon = UiKit.Icon(type.Id);
+            if (buildingIcon != null)
+            {
+                Rect ir = GUILayoutUtility.GetRect(10f, 90f, GUILayout.Height(90f));
+                GUI.DrawTexture(ir, buildingIcon, ScaleMode.ScaleToFit);
+            }
+            UiKit.Heading(b.Level == 0 ? $"{type.Name} (im Bau)" : $"{type.Name} – Stufe {b.Level}", UiKit.Title);
             GUILayout.Label(type.Description, UiKit.Small);
             GUILayout.Space(6f);
 
@@ -143,7 +156,7 @@ namespace MuhDefense
                 int cost = type.CostForLevel(b.Level + 1);
                 GUI.enabled = reason == null;
                 string label = $"Verbessern auf Stufe {b.Level + 1}\n{cost} {FarmBuildingType.ResourceName(type.CostResource)} · {UiKit.FormatTime(type.SecondsForLevel(b.Level + 1))}";
-                if (GUILayout.Button(label, UiKit.Button, GUILayout.Height(56f))) farm.UpgradeSelected();
+                if (UiKit.Btn(label, UiKit.ActiveButton, GUILayout.Height(60f))) farm.UpgradeSelected();
                 GUI.enabled = true;
                 if (reason != null) GUILayout.Label(reason, UiKit.Small);
             }
@@ -155,12 +168,13 @@ namespace MuhDefense
             if (type.IsProducer && b.Level > 0)
             {
                 GUI.enabled = b.Stored >= 1;
-                if (GUILayout.Button($"Einsammeln ({(int)b.Stored})", UiKit.Button, GUILayout.Height(44f))) farm.Collect(b);
+                var resIcon = UiKit.Icon(type.ProducedResource == Resource.Mais ? "Maiskolben" : "Milchflasche");
+                if (UiKit.IconBtn($"Einsammeln {(int)b.Stored}", resIcon, UiKit.YellowButton, GUILayout.Height(46f))) farm.Collect(b);
                 GUI.enabled = true;
             }
 
-            if (GUILayout.Button("Verschieben", UiKit.Button, GUILayout.Height(40f))) farm.BeginMoving();
-            if (GUILayout.Button("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.Select(null);
+            if (UiKit.Btn("Verschieben", UiKit.Button, GUILayout.Height(40f))) farm.BeginMoving();
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.Select(null);
         }
 
         string BuildingStats(BuildingData b)
@@ -200,9 +214,9 @@ namespace MuhDefense
             Rect box = UiKit.DrawOverlay(blockers, 760f, 600f);
             GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Bauen", UiKit.Title);
+            UiKit.Heading("Bauen", UiKit.Title, GUILayout.Height(40f));
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.ShopOpen = false;
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.ShopOpen = false;
             GUILayout.EndHorizontal();
             GUILayout.Space(6f);
 
@@ -212,15 +226,17 @@ namespace MuhDefense
                 if (type == FarmBuildingType.Bauernhaus) continue;
                 string reason = State.WhyCannotBuild(type);
 
-                GUILayout.BeginHorizontal(UiKit.Panel);
+                GUILayout.BeginHorizontal(UiKit.Card);
+                var icon = UiKit.Icon(type.Id);
+                if (icon != null) GUILayout.Label(icon, GUILayout.Width(84f), GUILayout.Height(84f));
                 GUILayout.BeginVertical();
-                GUILayout.Label($"{type.Name}   ({State.Count(type)}/{State.MaxCount(type)})", UiKit.Label);
+                UiKit.Heading($"{type.Name}   {State.Count(type)}/{State.MaxCount(type)}", UiKit.Title, GUILayout.Height(28f));
                 GUILayout.Label(type.Description, UiKit.Small);
                 GUILayout.Label($"{type.CostForLevel(1)} {FarmBuildingType.ResourceName(type.CostResource)} · Bauzeit {UiKit.FormatTime(type.SecondsForLevel(1))}" +
                                 (reason != null ? $"   –   {reason}" : ""), UiKit.Small);
                 GUILayout.EndVertical();
                 GUI.enabled = reason == null;
-                if (GUILayout.Button("Bauen", UiKit.ActiveButton, GUILayout.Width(120f), GUILayout.Height(60f))) farm.BeginPlacing(type);
+                if (UiKit.Btn("Bauen", UiKit.ActiveButton, GUILayout.Width(120f), GUILayout.Height(60f))) farm.BeginPlacing(type);
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4f);
@@ -234,9 +250,9 @@ namespace MuhDefense
             Rect box = UiKit.DrawOverlay(blockers, 720f, 560f);
             GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Weltkarte – Heimattal", UiKit.Title);
+            UiKit.Heading("Weltkarte – Heimattal", UiKit.Title, GUILayout.Height(40f));
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.MapOpen = false;
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.MapOpen = false;
             GUILayout.EndHorizontal();
             GUILayout.Space(10f);
 
@@ -245,9 +261,11 @@ namespace MuhDefense
             {
                 var def = Levels.All[i];
                 bool unlocked = GameFlow.IsUnlocked(i);
-                GUILayout.BeginHorizontal(UiKit.Panel, GUILayout.Height(96f));
+                GUILayout.BeginHorizontal(UiKit.Card, GUILayout.Height(96f));
+                var levelIcon = UiKit.Icon(unlocked ? (i == Levels.All.Length - 1 ? "Boss" : "KuhUfo") : "Schleicher");
+                if (levelIcon != null) GUILayout.Label(levelIcon, GUILayout.Width(72f), GUILayout.Height(72f));
                 GUILayout.BeginVertical();
-                GUILayout.Label(def.Name, UiKit.Label);
+                UiKit.Heading(def.Name, UiKit.Title, GUILayout.Height(30f));
                 GUILayout.Label(unlocked
                     ? $"Belohnung bei 3 Sternen: {def.RewardCorn} Mais, {def.RewardMilk} Milch"
                     : "Gesperrt – schaffe zuerst das vorherige Level.", UiKit.Small);
@@ -255,7 +273,7 @@ namespace MuhDefense
                 Rect stars = GUILayoutUtility.GetRect(130f, 60f, GUILayout.Width(130f));
                 UiKit.DrawStars(stars, State.BestStars(def.Id), 36f);
                 GUI.enabled = unlocked;
-                if (GUILayout.Button("Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(60f)))
+                if (UiKit.Btn("Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(60f)))
                 {
                     farm.MapOpen = false;
                     farm.PlayLevel(def);
