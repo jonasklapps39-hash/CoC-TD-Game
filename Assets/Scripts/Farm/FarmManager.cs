@@ -24,6 +24,16 @@ namespace MuhDefense
         public bool GhostValid { get; private set; }
         public bool ShopOpen;
         public bool MapOpen;
+        public bool TalentsOpen;
+        /// <summary>Irgendein Fenster (Bauen, Weltkarte, Talente, Shop …) ist offen.</summary>
+        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen;
+
+        public void CloseWindows()
+        {
+            ShopOpen = false;
+            MapOpen = false;
+            TalentsOpen = false;
+        }
 
         public readonly Dictionary<int, FarmBuildingView> Views = new Dictionary<int, FarmBuildingView>();
         public readonly List<FloatingText> FloatingTexts = new List<FloatingText>();
@@ -85,7 +95,7 @@ namespace MuhDefense
 
         public void HandleClick(Vector3 world)
         {
-            if (ShopOpen || MapOpen) return;
+            if (AnyWindowOpen) return;
             var cell = new Vector2Int(Mathf.FloorToInt(world.x), Mathf.FloorToInt(world.z));
 
             if (Mode != FarmMode.Normal)

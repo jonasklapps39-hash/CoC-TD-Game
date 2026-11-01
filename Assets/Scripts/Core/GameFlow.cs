@@ -43,7 +43,7 @@ namespace MuhDefense
             Farm.Tick();
             Farm.Save();
             var go = ReplaceRoot("MuhDefense Level");
-            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout());
+            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), Farm.LevelBonuses);
         }
 
         /// <summary>Welche Türme im Level verfügbar sind und bis zu welcher Stufe – bestimmt durch die Werkstätten auf dem Hof.</summary>

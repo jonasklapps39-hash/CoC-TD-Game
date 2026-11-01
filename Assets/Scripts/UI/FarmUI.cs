@@ -28,7 +28,7 @@ namespace MuhDefense
         void HandleDrag(Vector2 rawMouse)
         {
             var e = Event.current;
-            bool blocked = farm.ShopOpen || farm.MapOpen || UiKit.IsOverUi(rawMouse, blockers);
+            bool blocked = farm.AnyWindowOpen || UiKit.IsOverUi(rawMouse, blockers);
 
             if (e.type == EventType.MouseDown && e.button == 0 && !blocked && UiKit.ScreenToGround(rawMouse, cam, out var down))
             {
@@ -97,10 +97,11 @@ namespace MuhDefense
             DrawSideBar();
             if (farm.ShopOpen) DrawShop();
             if (farm.MapOpen) DrawWorldMap();
+            if (farm.TalentsOpen) DrawTalents();
 
             if (UiKit.EscapePressed())
             {
-                if (farm.ShopOpen || farm.MapOpen) { farm.ShopOpen = false; farm.MapOpen = false; }
+                if (farm.AnyWindowOpen) farm.CloseWindows();
                 else if (farm.Mode != FarmMode.Normal) farm.CancelMode();
                 else farm.Select(null);
             }
@@ -155,6 +156,8 @@ namespace MuhDefense
                 GUILayout.Label("Tippe auf ein Gebäude, um es zu verbessern oder Mais und Milch einzusammeln.", UiKit.Small);
                 GUILayout.Space(10f);
                 if (UiKit.Btn("Bauen", UiKit.YellowButton, GUILayout.Height(56f))) farm.ShopOpen = true;
+                GUILayout.Space(4f);
+                if (UiKit.Btn($"Bauernwissen ({State.AvailableStars} Sterne)", UiKit.BlueCard, GUILayout.Height(48f))) farm.TalentsOpen = true;
                 GUILayout.Space(6f);
                 GUILayout.BeginHorizontal();
                 if (UiKit.Btn(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
@@ -304,6 +307,66 @@ namespace MuhDefense
             GUILayout.EndArea();
         }
 
+        /// <summary>Talentbaum „Bauernwissen“: drei Spalten, Talente bauen aufeinander auf.</summary>
+        void DrawTalents()
+        {
+            Rect box = UiKit.DrawOverlay(blockers, 900f, 620f);
+            GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
+            GUILayout.BeginHorizontal();
+            UiKit.Heading("Bauernwissen", UiKit.Title, GUILayout.Height(40f));
+            GUILayout.FlexibleSpace();
+            Rect starRect = GUILayoutUtility.GetRect(150f, 40f, GUILayout.Width(150f));
+            GUI.color = new Color(1f, 0.82f, 0.1f);
+            GUI.DrawTexture(new Rect(starRect.x, starRect.y + 2f, 36f, 36f), UiKit.Star);
+            GUI.color = Color.white;
+            UiKit.Title.alignment = TextAnchor.MiddleLeft;
+            UiKit.OutlinedText(new Rect(starRect.x + 42f, starRect.y, 108f, 40f), $"{State.AvailableStars} frei", UiKit.Title, Color.white);
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.TalentsOpen = false;
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Sterne aus den Levels gegen dauerhafte Boni tauschen. Jedes Talent gilt in allen Levels.", UiKit.Small);
+            GUILayout.Space(6f);
+
+            GUILayout.BeginHorizontal();
+            for (int c = 0; c < Talents.ColumnNames.Length; c++)
+            {
+                GUILayout.BeginVertical(UiKit.Card, GUILayout.Width((box.width - 64f) / 3f));
+                UiKit.Heading(Talents.ColumnNames[c], UiKit.Title, GUILayout.Height(32f));
+                foreach (var t in Talents.All)
+                {
+                    if (t.Column != c) continue;
+                    DrawTalentCard(t);
+                }
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
+        void DrawTalentCard(Talent t)
+        {
+            bool owned = State.HasTalent(t.Id);
+            string reason = State.WhyCannotBuyTalent(t);
+            GUILayout.BeginVertical(owned ? UiKit.ActiveButton : UiKit.Panel);
+            UiKit.Heading($"{t.Name}  ({t.Cost} Stern{(t.Cost == 1 ? "" : "e")})", UiKit.Title, GUILayout.Height(28f));
+            GUILayout.Label(t.Description, UiKit.Small, GUILayout.Height(40f));
+            if (owned)
+            {
+                GUILayout.Label("Gelernt", UiKit.Small);
+            }
+            else
+            {
+                GUI.enabled = reason == null;
+                if (UiKit.Btn(reason ?? "Lernen", UiKit.YellowButton, GUILayout.Height(34f)) && State.BuyTalent(t))
+                {
+                    State.Save();
+                    GameAudio.Play(SoundId.LevelUp);
+                }
+                GUI.enabled = true;
+            }
+            GUILayout.EndVertical();
+            GUILayout.Space(4f);
+        }
+
         void DrawWorldMap()
         {
             Rect box = UiKit.DrawOverlay(blockers, 720f, 560f);
@@ -366,7 +429,7 @@ namespace MuhDefense
                     string res = FarmBuildingType.ResourceName(b.TypeDef.ProducedResource);
                     var bubble = new Rect(p.x - 45f, p.y - 14f, 90f, 26f);
                     string text = $"{(int)b.Stored} {res}";
-                    bool clickable = farm.Mode == FarmMode.Normal && !farm.ShopOpen && !farm.MapOpen;
+                    bool clickable = farm.Mode == FarmMode.Normal && !farm.AnyWindowOpen;
                     if (!clickable) GUI.Box(bubble, text, UiKit.Bubble);
                     else if (GUI.Button(bubble, text, UiKit.Bubble)) farm.Collect(b);
                 }

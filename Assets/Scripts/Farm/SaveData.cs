@@ -15,6 +15,8 @@ namespace MuhDefense
         public List<LevelProgress> Levels = new List<LevelProgress>();
         /// <summary>Alien-Arten, die schon vorgestellt wurden (Fenster „Neuer Gegner“).</summary>
         public List<string> SeenEnemies = new List<string>();
+        /// <summary>Gekaufte Talente aus dem Talentbaum „Bauernwissen“.</summary>
+        public List<string> Talents = new List<string>();
     }
 
     [Serializable]

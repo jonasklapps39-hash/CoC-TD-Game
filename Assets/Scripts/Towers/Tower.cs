@@ -41,12 +41,12 @@ namespace MuhDefense
         float modelTop = 1.15f;
         LineRenderer rangeCircle;
 
-        public void Init(LevelManager level, TowerType type, Vector2Int cell, int allowedMaxTier)
+        public void Init(LevelManager level, TowerType type, Vector2Int cell, int allowedMaxTier, int pricePaid = -1)
         {
             this.level = level;
             Type = type;
             Cell = cell;
-            Invested = type.Cost;
+            Invested = pricePaid >= 0 ? pricePaid : type.Cost;
             AllowedMaxTier = Mathf.Clamp(allowedMaxTier, 0, TowerType.MaxTier);
             name = type.Name;
             transform.position = LevelManager.CellCenter(cell);
@@ -105,6 +105,8 @@ namespace MuhDefense
             {
                 for (int t = 0; t < Tiers[p]; t++) Type.Paths[p].Tiers[t].Apply(s);
             }
+            s.Slow = Mathf.Clamp(s.Slow, 0.2f, 1f);
+            level.Bonuses.ApplyTo(Type, s);
             s.Slow = Mathf.Clamp(s.Slow, 0.2f, 1f);
             Stats = s;
         }

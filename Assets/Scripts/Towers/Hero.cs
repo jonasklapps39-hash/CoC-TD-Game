@@ -87,6 +87,17 @@ namespace MuhDefense
             };
         }
 
+        /// <summary>Startstufe (Talent „Veteran“, Heldenhütte).</summary>
+        public void SetStartLevel(int startLevel)
+        {
+            startLevel = Mathf.Clamp(startLevel, 1, MaxLevel);
+            if (startLevel <= Level) return;
+            Level = startLevel;
+            Xp = XpForLevel[Level - 1];
+            RecalculateStats();
+            if (rangeCircle != null) Visuals.SetCircleRadius(rangeCircle, Stats.Range);
+        }
+
         public void AddXp(int amount)
         {
             if (Level >= MaxLevel) return;
@@ -114,7 +125,7 @@ namespace MuhDefense
         public void UseBlast()
         {
             if (!BlastReady) return;
-            BlastCooldownLeft = BlastCooldown;
+            BlastCooldownLeft = BlastCooldown * level.Bonuses.AbilityCooldownFactor;
             var enemies = level.Enemies;
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
@@ -131,7 +142,7 @@ namespace MuhDefense
         public void UseTractor()
         {
             if (!TractorReady) return;
-            TractorCooldownLeft = TractorCooldown;
+            TractorCooldownLeft = TractorCooldown * level.Bonuses.AbilityCooldownFactor;
             var path = level.PathWorld;
             RollingBale.Spawn(level, path[path.Length - 1], path.Length - 2, 999f, TractorDamage, 0.6f, "Traktor");
             GameAudio.Play(SoundId.Tractor);

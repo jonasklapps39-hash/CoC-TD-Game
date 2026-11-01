@@ -392,6 +392,46 @@ namespace MuhDefense
             }
         }
 
+        // ---------------------------------------------------------------- Talentbaum
+
+        public int SpentStars
+        {
+            get
+            {
+                int n = 0;
+                if (Data.Talents == null) return 0;
+                foreach (var id in Data.Talents)
+                {
+                    var t = MuhDefense.Talents.Get(id);
+                    if (t != null) n += t.Cost;
+                }
+                return n;
+            }
+        }
+
+        public int AvailableStars => TotalStars - SpentStars;
+
+        public bool HasTalent(string id) => Data.Talents != null && Data.Talents.Contains(id);
+
+        /// <returns>null, wenn das Talent gekauft werden kann, sonst der Grund.</returns>
+        public string WhyCannotBuyTalent(Talent t)
+        {
+            if (HasTalent(t.Id)) return "Gelernt";
+            if (t.Requires != null && !HasTalent(t.Requires)) return "Erst das Talent davor lernen";
+            if (AvailableStars < t.Cost) return "Zu wenig Sterne";
+            return null;
+        }
+
+        public bool BuyTalent(Talent t)
+        {
+            if (WhyCannotBuyTalent(t) != null) return false;
+            if (Data.Talents == null) Data.Talents = new List<string>();
+            Data.Talents.Add(t.Id);
+            return true;
+        }
+
+        public LevelBonuses LevelBonuses => MuhDefense.Talents.BuildBonuses(Data.Talents ?? new List<string>());
+
         public void RecordStars(string levelId, int stars)
         {
             foreach (var p in Data.Levels)

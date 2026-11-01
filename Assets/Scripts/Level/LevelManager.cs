@@ -34,7 +34,10 @@ namespace MuhDefense
         /// <summary>Anzahl der bisher gestarteten Wellen (= Nummer der aktuellen Welle).</summary>
         public int WavesStarted { get; private set; }
         public int CowsLost { get; private set; }
-        public int CowsRemaining => Def.CowCount - CowsLost;
+        public int TotalCows => Def.CowCount + Bonuses.ExtraCows;
+        public int CowsRemaining => TotalCows - CowsLost;
+        /// <summary>Dauerhafte Boni aus dem Talentbaum „Bauernwissen“.</summary>
+        public LevelBonuses Bonuses { get; private set; } = new LevelBonuses();
         public int Stars { get; private set; }
         public int BestStars => GameFlow.Farm.BestStars(Def.Id);
         /// <summary>Belohnung für den Hof, sobald das Level gewonnen ist.</summary>
@@ -74,10 +77,11 @@ namespace MuhDefense
 
         public static Vector3 CellCenter(Vector2Int c) => new Vector3(c.x + 0.5f, 0f, c.y + 0.5f);
 
-        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout)
+        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout, LevelBonuses bonuses = null)
         {
             Def = def;
-            Money = def.StartMoney;
+            Bonuses = bonuses ?? new LevelBonuses();
+            Money = def.StartMoney + Bonuses.StartMoney;
             towerMaxLevels = towerLoadout;
             foreach (var type in TowerType.All)
             {
@@ -91,7 +95,7 @@ namespace MuhDefense
             pathWorld = new Vector3[def.Waypoints.Length];
             for (int i = 0; i < pathWorld.Length; i++) pathWorld[i] = CellCenter(def.Waypoints[i]);
 
-            for (int i = 0; i < def.CowCount; i++)
+            for (int i = 0; i < TotalCows; i++)
             {
                 var cow = new GameObject("Kuh").AddComponent<Cow>();
                 cow.transform.SetParent(transform, false);
@@ -287,15 +291,16 @@ namespace MuhDefense
         void WaveCleared()
         {
             var wave = Def.Waves[WavesStarted - 1];
-            if (Hero != null) Hero.AddXp(40 + 10 * WavesStarted);
+            if (Hero != null) Hero.AddXp(Mathf.RoundToInt((40 + 10 * WavesStarted) * Bonuses.HeroXpFactor));
             foreach (var t in Towers)
             {
                 if (t.Stats.IncomePerWave > 0) AddMoney(t.Stats.IncomePerWave, t.transform.position + Vector3.up * 1.2f);
             }
-            if (wave.Bonus > 0)
+            int waveBonus = Mathf.RoundToInt(wave.Bonus * Bonuses.WaveBonusFactor);
+            if (waveBonus > 0)
             {
-                Money += wave.Bonus;
-                AddFloatingText(CellCenter(new Vector2Int(Def.Width / 2, Def.Height / 2)), $"Welle geschafft! +{wave.Bonus}", new Color(1f, 0.9f, 0.3f));
+                Money += waveBonus;
+                AddFloatingText(CellCenter(new Vector2Int(Def.Width / 2, Def.Height / 2)), $"Welle geschafft! +{waveBonus}", new Color(1f, 0.9f, 0.3f));
             }
 
             if (HasMoreWaves)
@@ -371,10 +376,10 @@ namespace MuhDefense
         public void OnEnemyKilled(Enemy enemy)
         {
             Enemies.Remove(enemy);
-            int reward = Mathf.RoundToInt(enemy.Type.Reward * (1f + enemy.BonusReward));
+            int reward = Mathf.RoundToInt(enemy.Type.Reward * (1f + enemy.BonusReward) * Bonuses.RewardFactor);
             Money += reward;
             AddFloatingText(enemy.transform.position + Vector3.up * 0.5f, "+" + reward, new Color(1f, 0.9f, 0.3f));
-            if (Hero != null) Hero.AddXp(enemy.IsBoss ? 60 : 3);
+            if (Hero != null) Hero.AddXp(Mathf.RoundToInt((enemy.IsBoss ? 60 : 3) * Bonuses.HeroXpFactor));
             Effects.Burst(transform, enemy.AimPoint, enemy.Type.Color, enemy.IsBoss ? 20 : 8, 3f);
             GameAudio.Play(SoundId.Pop);
             GameAudio.Play(SoundId.Coin);
@@ -442,6 +447,7 @@ namespace MuhDefense
             Hero = new GameObject("Held").AddComponent<Hero>();
             Hero.transform.SetParent(transform, false);
             Hero.Init(this, cell);
+            Hero.SetStartLevel(1 + Bonuses.HeroStartLevels);
             Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.3f, new Color(1f, 0.85f, 0.3f), 10, 2.5f);
             GameAudio.Play(SoundId.Build);
             return true;
@@ -464,6 +470,9 @@ namespace MuhDefense
             if (State == LevelState.WaveRunning && Hero != null) Hero.UseTractor();
         }
 
+        /// <summary>Preis eines Turms in diesem Level (mit Talent-Rabatt).</summary>
+        public int TowerCost(TowerType type) => Mathf.RoundToInt(type.Cost * Bonuses.TowerCostFactor);
+
         public bool IsBuildable(Vector2Int cell)
         {
             return map.InBounds(cell)
@@ -475,7 +484,7 @@ namespace MuhDefense
 
         public void BeginPlacing(TowerType type)
         {
-            if (Money < type.Cost || MaxTowerLevel(type) <= 0) return;
+            if (Money < TowerCost(type) || MaxTowerLevel(type) <= 0) return;
             Select(null);
             PlacingHero = false;
             PlacingType = type;
@@ -551,12 +560,13 @@ namespace MuhDefense
                 AddFloatingText(CellCenter(cell), "Hier nicht!", new Color(1f, 0.4f, 0.3f));
                 return false;
             }
-            if (Money < type.Cost) return false;
+            int cost = TowerCost(type);
+            if (Money < cost) return false;
 
-            Money -= type.Cost;
+            Money -= cost;
             var tower = new GameObject("Turm").AddComponent<Tower>();
             tower.transform.SetParent(transform, false);
-            tower.Init(this, type, cell, MaxTowerLevel(type));
+            tower.Init(this, type, cell, MaxTowerLevel(type), cost);
             Towers.Add(tower);
             GameAudio.Play(SoundId.Build);
             Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.2f, new Color(0.75f, 0.6f, 0.4f), 8, 2f);

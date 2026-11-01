@@ -140,7 +140,7 @@ namespace MuhDefense
             blockers.Add(r);
             GUI.Box(r, GUIContent.none, UiKit.Panel);
 
-            UiKit.PillLabel(new Rect(18f, 10f, 140f, 36f), UiKit.Icon("Kuh"), $"{level.CowsRemaining}/{level.Def.CowCount}");
+            UiKit.PillLabel(new Rect(18f, 10f, 140f, 36f), UiKit.Icon("Kuh"), $"{level.CowsRemaining}/{level.TotalCows}");
             UiKit.PillLabel(new Rect(176f, 10f, 170f, 36f), UiKit.Icon("Muenze"), level.Money.ToString());
             UiKit.PillLabel(new Rect(364f, 10f, 190f, 36f), UiKit.Icon("Ufo"), $"Welle {level.WavesStarted}/{level.Def.Waves.Length}");
 
@@ -231,7 +231,8 @@ namespace MuhDefense
         void TowerCard(TowerType type)
         {
             bool active = level.PlacingType == type;
-            bool affordable = level.Money >= type.Cost;
+            int price = level.TowerCost(type);
+            bool affordable = level.Money >= price;
             Rect r = GUILayoutUtility.GetRect(112f, 78f, GUILayout.Width(112f), GUILayout.Height(78f));
             GUI.enabled = Playing && (active || affordable);
             RememberPress(r, type, false);
@@ -246,7 +247,7 @@ namespace MuhDefense
             UiKit.ButtonText.fontSize = 13;
             UiKit.OutlinedText(new Rect(r.x + 2f, r.y + 44f, r.width - 4f, 18f), type.ShortName, UiKit.ButtonText, Color.white, 1.4f);
             UiKit.ButtonText.fontSize = 16;
-            UiKit.OutlinedText(new Rect(r.x + 2f, r.y + 59f, r.width - 4f, 18f), type.Cost.ToString(), UiKit.ButtonText,
+            UiKit.OutlinedText(new Rect(r.x + 2f, r.y + 59f, r.width - 4f, 18f), price.ToString(), UiKit.ButtonText,
                 affordable ? new Color(1f, 0.88f, 0.3f) : new Color(1f, 0.45f, 0.4f), 1.4f);
             GUI.enabled = true;
         }
@@ -522,7 +523,7 @@ namespace MuhDefense
             {
                 Rect starsRect = GUILayoutUtility.GetRect(box.width - 56f, 96f);
                 UiKit.DrawStars(starsRect, level.Stars, 86f);
-                GUILayout.Label($"Kühe gerettet: {level.CowsRemaining}/{level.Def.CowCount}   •   Bestes Ergebnis: {level.BestStars} Sterne", UiKit.Center);
+                GUILayout.Label($"Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}   •   Bestes Ergebnis: {level.BestStars} Sterne", UiKit.Center);
 
                 var reward = level.Reward;
                 if (reward != null)
