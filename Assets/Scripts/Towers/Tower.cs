@@ -63,7 +63,12 @@ namespace MuhDefense
 
         float DisplayRange => Stats.GlobalRange ? 1.2f : Stats.Range;
 
-        public void SetSelected(bool selected) => rangeCircle.enabled = selected;
+        public void SetSelected(bool selected)
+        {
+            rangeCircle.enabled = selected;
+            // Reichweite inklusive Wetterhahn-Bonus anzeigen
+            if (selected) Visuals.SetCircleRadius(rangeCircle, Stats.GlobalRange ? 1.2f : Range);
+        }
 
         // ---------------------------------------------------------------- Upgrades
 
@@ -88,12 +93,13 @@ namespace MuhDefense
             return null;
         }
 
-        public void Upgrade(int path)
+        /// <param name="paid">Tatsächlich bezahlter Preis (mit Hofladen-Rabatt); bestimmt den Verkaufswert.</param>
+        public void Upgrade(int path, int paid = -1)
         {
             var tier = NextTier(path);
             if (tier == null) return;
             Tiers[path]++;
-            Invested += tier.Cost;
+            Invested += paid >= 0 ? paid : tier.Cost;
             GameAudio.Play(SoundId.Upgrade);
             Effects.Burst(level.transform, transform.position + Vector3.up * 0.6f, Type.Paths[path].Color, 10, 2.5f);
             RecalculateStats();
@@ -401,6 +407,9 @@ namespace MuhDefense
         readonly List<TowerUnit> units = new List<TowerUnit>();
 
         /// <summary>Sorgt dafür, dass so viele Einheiten unterwegs sind, wie die Upgrades erlauben.</summary>
+        /// <summary>Einheiten neu ausrichten (z. B. wenn ein Wetterhahn in der Nähe gebaut oder verkauft wurde).</summary>
+        public void RefreshUnits() => SyncUnits();
+
         void SyncUnits()
         {
             if (Type.Kind != TowerKind.Harvester && Type.Kind != TowerKind.Dogs) return;

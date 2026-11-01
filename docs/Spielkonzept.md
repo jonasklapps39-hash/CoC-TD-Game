@@ -391,6 +391,9 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
   - Schwache Türme gestärkt (Traktor-Tesla, Bienenstock, Hofhund, Windmühle, Güllefass, Kürbis-Mörser, Hofladen-Upgrades rechnen sich jetzt innerhalb eines Levels)
   - Schwierigkeitskurve gleichmäßiger (Heimattal 3–5, Maisfeld 1–2, Absturzstelle 4–5 leichter; Spitzen in der letzten Welle von Maisfeld 2 und Absturzstelle 2 entfernt; Kaiser-Schild 400 statt 600 und lädt langsamer nach)
   - Hof: Bauernhaus-Lager doppelt so groß (keine verlorenen Belohnungen am Anfang), Felder und Ställe speichern dreimal so viel (lohnt sich, nach einer Pause zurückzukommen), Tüftlerschuppen günstiger, Rohstoffpaket 1500 statt 600
+- [x] **Fehlerbehebungen nach kompletter Code-Prüfung:**
+  - Level: Welle konnte mit Berta und getarnten Aliens hängen bleiben (Aliens ziehen jetzt nach 8 s ohne Kuh ab); Pause/Gegner-Fenster sperren jetzt Fähigkeiten und Wellenstart; alle Stufe-5-Fähigkeiten auslösbar (auch im Upgrade-Fenster); Einfrier-Bonus hing dauerhaft am Alien; Verkaufswert mit Rabatt korrekt; Wetterhahn/Gertrud-Tempo wirkt auf Mähdrescher und Hunde; Reichweitenkreis mit Bonus; Seitenleiste und Pfadnamen passen; Bauernaufstand endet mit der Welle; Eisblock bei Ufos in der Luft
+  - Hof: sicheres Speichern mit Sicherungskopie (kein Verlust, wenn das Handy die App beim Speichern beendet); Seitenleiste scrollt; Gebäude werden nur verschoben, wenn sie schon ausgewählt sind (sonst Kamera); kein Kamerasprung nach dem Zoomen; Turbo nicht während Umbau; Aufgaben-Belohnung nur bei Platz im Lager; Rohstoffpaket nur bei genug Platz; Tutorial-Schritt mit Bauernhaus; Uhr zurückstellen bringt nichts mehr; Schwierigkeitsgrad wird gemerkt
 
 ### Upgrade-System
 

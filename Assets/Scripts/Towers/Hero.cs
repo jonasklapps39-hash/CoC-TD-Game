@@ -200,7 +200,7 @@ namespace MuhDefense
             {
                 switch (Type.Kind)
                 {
-                    case HeroKind.Gertrud: return $"{Type.Ability2Name}: alle Aliens bleiben 4 Sekunden verzückt stehen";
+                    case HeroKind.Gertrud: return $"{Type.Ability2Name}: alle Aliens bleiben 4 Sekunden verzückt stehen (Bosse 2 Sekunden)";
                     case HeroKind.Berta: return $"{Type.Ability2Name}: knackt alle Panzer, holt Ufos vom Himmel ({Ability2Damage:0} Schaden)";
                     default: return $"{Type.Ability2Name}: überrollt alle Aliens am Boden ({Ability2Damage:0} Schaden)";
                 }

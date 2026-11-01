@@ -123,7 +123,7 @@ namespace MuhDefense
             model.localPosition = new Vector3(0f, Mathf.Abs(Mathf.Sin(Time.time * 14f)) * 0.03f, 0f);
 
             // Mähen
-            float interval = 1f / Mathf.Max(0.1f, s.FireRate);
+            float interval = 1f / Mathf.Max(0.1f, s.FireRate * (1f + level.RateBonusAt(tower)));
             var enemies = level.Enemies;
             for (int k = enemies.Count - 1; k >= 0; k--)
             {
@@ -157,6 +157,7 @@ namespace MuhDefense
         bool alive = true;
         Enemy target;
         float biteTimer;
+        float lastMaxHp;
 
         protected override void BuildModel()
         {
@@ -174,7 +175,9 @@ namespace MuhDefense
             int n = tower.UnitTotal;
             post = route[Mathf.Clamp(Mathf.RoundToInt((route.Count - 1) * (index + 1f) / (n + 1f)), 0, route.Count - 1)];
             if (target == null) transform.position = post;
-            if (alive) hp = Mathf.Max(hp, tower.Stats.UnitHp);
+            // Mehr Ausdauer durch ein Upgrade kommt dazu, heilt aber nicht komplett
+            if (alive) hp = Mathf.Max(hp, 0f) + Mathf.Max(0f, tower.Stats.UnitHp - lastMaxHp);
+            lastMaxHp = tower.Stats.UnitHp;
         }
 
         void Update()
@@ -224,7 +227,7 @@ namespace MuhDefense
             biteTimer -= dt;
             if (biteTimer <= 0f)
             {
-                biteTimer = 0.5f;
+                biteTimer = 0.5f / (1f + level.RateBonusAt(tower));
                 float bite = s.Damage * 0.5f * (s.RescuesCows && target.Carried != null ? 3f : 1f);
                 ApplyEffects(target);
                 target.TakeDamage(bite, s.ArmorPiercing, s.ArmoredBonus);

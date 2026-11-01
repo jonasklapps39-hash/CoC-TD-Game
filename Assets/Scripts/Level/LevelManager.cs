@@ -271,7 +271,7 @@ namespace MuhDefense
 
         public void StartNextWave()
         {
-            if (State != LevelState.Building || !HasMoreWaves) return;
+            if (State != LevelState.Building || !HasMoreWaves || Paused || NewEnemyIntro != null) return;
 
             var wave = Def.Waves[WavesStarted];
             float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted) * DifficultyRules.HpFactor(Difficulty);
@@ -334,6 +334,7 @@ namespace MuhDefense
 
         void WaveCleared()
         {
+            FarmerFrenzyTimer = 0f;
             var wave = Def.Waves[WavesStarted - 1];
             if (Hero != null) Hero.AddXp(Mathf.RoundToInt((40 + 10 * WavesStarted) * Bonuses.HeroXpFactor));
             foreach (var t in Towers)
@@ -402,7 +403,7 @@ namespace MuhDefense
         public Cow TryGrabCow(Enemy enemy)
         {
             // Berta: in ihrem Schutzkreis kann kein Alien eine Kuh schnappen
-            if (Hero != null && Hero.Type.Kind == HeroKind.Berta && Hero.InRange(enemy)) return null;
+            if (Hero != null && Hero.Type.Kind == HeroKind.Berta && Hero.InRange(enemy) && (!enemy.IsCamo || Hero.Stats.SeesCamo)) return null;
             Cow best = null;
             float bestDist = float.MaxValue;
             foreach (var cow in Cows)
@@ -425,6 +426,11 @@ namespace MuhDefense
 
         public void OnEnemyKilled(Enemy enemy)
         {
+            if (State == LevelState.Lost)
+            {
+                Enemies.Remove(enemy);
+                return;
+            }
             Enemies.Remove(enemy);
             int reward = Mathf.RoundToInt(enemy.Type.Reward * (1f + enemy.BonusReward) * Bonuses.RewardFactor);
             Money += reward;
@@ -522,12 +528,12 @@ namespace MuhDefense
 
         public void UseHeroAbility1()
         {
-            if (State == LevelState.WaveRunning && Hero != null) Hero.UseAbility1();
+            if (State == LevelState.WaveRunning && !Paused && NewEnemyIntro == null && Hero != null) Hero.UseAbility1();
         }
 
         public void UseHeroAbility2()
         {
-            if (State == LevelState.WaveRunning && Hero != null) Hero.UseAbility2();
+            if (State == LevelState.WaveRunning && !Paused && NewEnemyIntro == null && Hero != null) Hero.UseAbility2();
         }
 
         /// <summary>Preis eines Turms in diesem Level (mit Talent-Rabatt).</summary>
@@ -630,6 +636,7 @@ namespace MuhDefense
             tower.Init(this, type, cell, MaxTowerLevel(type), cost);
             Towers.Add(tower);
             GameFlow.Farm.Count(Counter.TowersBuilt);
+            foreach (var t in Towers) t.RefreshUnits();
             GameAudio.Play(SoundId.Build);
             Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.2f, new Color(0.75f, 0.6f, 0.4f), 8, 2f);
             return true;
@@ -672,7 +679,7 @@ namespace MuhDefense
             int cost = UpgradeCost(tower, path);
             if (Money < cost) return;
             Money -= cost;
-            tower.Upgrade(path);
+            tower.Upgrade(path, cost);
             GameFlow.Farm.Count(Counter.Upgrades);
         }
 
@@ -680,7 +687,7 @@ namespace MuhDefense
 
         public void UseAbility(Tower tower)
         {
-            if (State != LevelState.WaveRunning || tower == null || !tower.AbilityReady) return;
+            if (State != LevelState.WaveRunning || Paused || NewEnemyIntro != null || tower == null || !tower.AbilityReady) return;
             var ability = tower.Stats.Ability;
             tower.TriggerAbility();
             AddFloatingText(tower.transform.position + Vector3.up * 1.2f, TowerType.AbilityName(ability) + "!", new Color(1f, 0.9f, 0.3f));
@@ -706,7 +713,7 @@ namespace MuhDefense
                     GameAudio.Play(SoundId.Boom);
                     break;
                 case TowerAbility.Eiszeit:
-                    foreach (var e in Enemies) e.Freeze(4f, 1.5f, true);
+                    foreach (var e in Enemies) e.Freeze(4f, tower.Stats.FrozenVulnerability, true);
                     GameAudio.Play(SoundId.Freeze);
                     break;
             }
@@ -779,6 +786,10 @@ namespace MuhDefense
             Money += tower.SellValue;
             AddFloatingText(tower.transform.position + Vector3.up * 0.5f, "+" + tower.SellValue, new Color(1f, 0.9f, 0.3f));
             Towers.Remove(tower);
+            foreach (var t in Towers)
+            {
+                if (t != tower) t.RefreshUnits();
+            }
             Destroy(tower.gameObject);
         }
 

@@ -50,8 +50,12 @@ namespace MuhDefense
             blockers.Clear();
 
             DrawWorldOverlays();
+            // Während Pause oder Gegner-Vorstellung sind Seitenleiste und Kopfzeile gesperrt (außer dem Menü-Knopf im Pause-Fenster)
+            bool frozen = level.Paused || level.NewEnemyIntro != null;
+            if (frozen) GUI.enabled = false;
             DrawTopBar();
             DrawSideBar();
+            GUI.enabled = true;
             if (level.SelectedTower != null && !level.Paused) DrawUpgradePanel(level.SelectedTower);
             else if (level.HeroSelected && level.Hero != null && !level.Paused) DrawHeroPanel(level.Hero);
 
@@ -210,7 +214,8 @@ namespace MuhDefense
             }
             else if (level.PlacingType != null)
             {
-                GUILayout.Label(level.PlacingType.Description, UiKit.Small);
+                // Bei vielen Türmen ist kein Platz für die Beschreibung (sie steht auch im Upgrade-Fenster)
+                if (level.AvailableTowers.Count <= 9) GUILayout.Label(level.PlacingType.Description, UiKit.Small);
                 if (UiKit.Btn("Abbrechen", UiKit.RedButton, GUILayout.Height(40f))) level.CancelPlacing();
             }
 
@@ -275,7 +280,7 @@ namespace MuhDefense
             }
             foreach (var tower in level.Towers)
             {
-                if (!tower.HasAbility || shown >= 2) continue;
+                if (!tower.HasAbility || shown >= 3) continue;
                 shown++;
                 var t = tower;
                 AbilityButton(TowerType.AbilityName(tower.Stats.Ability), UiKit.TowerIcon(tower.Type), tower.AbilityReady, tower.AbilityCooldownLeft,
@@ -292,6 +297,8 @@ namespace MuhDefense
         }
 
         // ---------------------------------------------------------------- Upgrade-Fenster und Held
+
+        GUIStyle pathNameStyle;
 
         Rect BottomPanel(float height)
         {
@@ -316,8 +323,16 @@ namespace MuhDefense
             UiKit.Heading(tower.Type.ShortName, UiKit.Title, GUILayout.Height(56f));
             GUILayout.EndHorizontal();
             if (UiKit.Btn($"Ziel: {TowerType.TargetModeName(tower.TargetMode)}", UiKit.Button, GUILayout.Height(38f))) level.CycleTargetMode();
-            if (UiKit.Btn($"Verkaufen +{tower.SellValue}", UiKit.RedButton, GUILayout.Height(38f))) level.SellSelected();
-            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(34f))) level.Select(null);
+            if (tower.HasAbility)
+            {
+                // Fähigkeit auch hier auslösbar (die Seitenleiste zeigt nur die ersten drei)
+                GUI.enabled = tower.AbilityReady && level.State == LevelState.WaveRunning;
+                string ab = tower.AbilityReady ? TowerType.AbilityName(tower.Stats.Ability) : $"{TowerType.AbilityName(tower.Stats.Ability)} {Mathf.CeilToInt(tower.AbilityCooldownLeft)}s";
+                if (UiKit.Btn(ab, UiKit.YellowButton, GUILayout.Height(30f))) level.UseAbility(tower);
+                GUI.enabled = true;
+            }
+            if (UiKit.Btn($"Verkaufen +{tower.SellValue}", UiKit.RedButton, GUILayout.Height(tower.HasAbility ? 32f : 38f))) level.SellSelected();
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(tower.HasAbility ? 28f : 34f))) level.Select(null);
             GUILayout.EndArea();
 
             float colWidth = (r.width - leftWidth - 36f) / TowerType.PathCount;
@@ -328,8 +343,8 @@ namespace MuhDefense
                 GUI.Box(col, GUIContent.none, UiKit.Card);
 
                 // Pfadname und Stufen-Kästchen
-                UiKit.Title.alignment = TextAnchor.MiddleLeft;
-                UiKit.OutlinedText(new Rect(col.x + 10f, col.y + 4f, col.width - 100f, 28f), path.Name, UiKit.Title, path.Color);
+                if (pathNameStyle == null) pathNameStyle = new GUIStyle(UiKit.Title) { fontSize = 16, wordWrap = false, alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
+                UiKit.OutlinedText(new Rect(col.x + 10f, col.y + 4f, col.width - 100f, 28f), path.Name, pathNameStyle, path.Color);
                 for (int t = 0; t < TowerType.MaxTier; t++)
                 {
                     var pip = new Rect(col.xMax - 90f + t * 17f, col.y + 11f, 13f, 13f);
@@ -490,7 +505,7 @@ namespace MuhDefense
         void DrawGift()
         {
             var tower = level.GiftedTower;
-            string text = tower.Description + $"\n\nKosten: {tower.Cost} Münzen. Du findest ihn rechts bei den Türmen.";
+            string text = tower.Description + $"\n\nKosten: {level.TowerCost(tower)} Münzen. Du findest ihn rechts bei den Türmen.";
             if (PictureDialog("Neuer Turm!", tower.Name, text, UiKit.TowerIcon(tower), "Super!")) level.DismissGift();
         }
 

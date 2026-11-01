@@ -44,6 +44,10 @@ namespace MuhDefense
         float slowFactor = 1f;
         float slowTimer;
         float freezeTimer;
+        /// <summary>Festgehalten ohne Eis (Hunde, Schreck, Betäubung) – zählt nicht als eingefroren.</summary>
+        float holdTimer;
+        /// <summary>Wie lange das Alien schon auf der Weide auf eine Kuh wartet.</summary>
+        float waitTime;
         float frozenVulnerability = 1f;
         float dotDps;
         float dotTimer;
@@ -121,7 +125,8 @@ namespace MuhDefense
             if (hitPunch > 0f) hitPunch = Mathf.Max(0f, hitPunch - dt * 6f);
             spawnAge += dt;
 
-            if (freezeTimer > 0f)
+            if (holdTimer > 0f) holdTimer -= dt;
+            if (freezeTimer > 0f || holdTimer > 0f)
             {
                 ApplyModelPose(0f);
                 return;
@@ -130,7 +135,19 @@ namespace MuhDefense
             if (waitingForCow)
             {
                 var cow = level.TryGrabCow(this);
-                if (cow == null) return;
+                if (cow == null)
+                {
+                    // Keine Kuh zu holen (alle weg oder Berta passt auf): nach einer Weile ohne Beute abziehen
+                    waitTime += dt;
+                    if (waitTime > 8f)
+                    {
+                        waitingForCow = false;
+                        returning = true;
+                        travelled = 0f;
+                        targetIndex = path.Length - 2;
+                    }
+                    return;
+                }
                 Carried = cow;
                 waitingForCow = false;
                 returning = true;
@@ -223,7 +240,11 @@ namespace MuhDefense
             if (freezeTimer > 0f)
             {
                 freezeTimer -= dt;
-                if (freezeTimer <= 0f) SetIce(false);
+                if (freezeTimer <= 0f)
+                {
+                    SetIce(false);
+                    frozenVulnerability = 1f;
+                }
             }
             if (armorShredTimer > 0f)
             {
@@ -362,7 +383,7 @@ namespace MuhDefense
         public bool Hold(float duration, bool allowBoss)
         {
             if (!Alive || (IsBoss && !allowBoss)) return false;
-            freezeTimer = Mathf.Max(freezeTimer, duration);
+            holdTimer = Mathf.Max(holdTimer, duration);
             return true;
         }
 
@@ -451,7 +472,7 @@ namespace MuhDefense
         {
             if (on && iceBlock == null)
             {
-                iceBlock = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, 0.45f * Type.Scale, 0f),
+                iceBlock = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, HoverHeight + 0.45f * Type.Scale, 0f),
                     new Vector3(0.6f, 0.95f, 0.6f) * Type.Scale, new Color(0.7f, 0.9f, 1f), "Eisblock");
             }
             if (iceBlock != null) iceBlock.SetActive(on);
