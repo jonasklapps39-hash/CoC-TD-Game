@@ -180,7 +180,9 @@ namespace MuhDefense
                 if (type != null && type.IsProducer && b.Level > 0)
                 {
                     double elapsed = Math.Max(0, now - b.LastTick);
-                    b.Stored = Math.Min(ProducerCapacity(b), b.Stored + ProductionPerMinute(b) / 60.0 * elapsed);
+                    // Ernte-Turbo: der Teil der Zeit, in dem der Turbo lief, zählt doppelt
+                    double boosted = Math.Max(0, Math.Min(now, b.BoostEnd) - b.LastTick);
+                    b.Stored = Math.Min(ProducerCapacity(b), b.Stored + ProductionPerMinute(b) / 60.0 * (elapsed + boosted));
                 }
                 b.LastTick = now;
             }
@@ -504,6 +506,19 @@ namespace MuhDefense
         {
             if (!b.IsUpgrading || !SpendGems(InstantFinishCost(b))) return false;
             b.UpgradeEnd = Now;
+            return true;
+        }
+
+        public const int BoostGems = 10;
+        public const double BoostSeconds = 3600;
+
+        public bool IsBoosted(BuildingData b) => b.BoostEnd > Now;
+
+        public bool BoostProducer(BuildingData b)
+        {
+            if (b.TypeDef == null || !b.TypeDef.IsProducer || b.Level <= 0 || IsBoosted(b) || !SpendGems(BoostGems)) return false;
+            Tick();
+            b.BoostEnd = Now + BoostSeconds;
             return true;
         }
 

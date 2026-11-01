@@ -461,6 +461,20 @@ namespace MuhDefense
                 var resIcon = UiKit.Icon(type.ProducedResource == Resource.Mais ? "Maiskolben" : "Milchflasche");
                 if (UiKit.IconBtn($"Einsammeln {(int)b.Stored}", resIcon, UiKit.YellowButton, GUILayout.Height(46f))) farm.Collect(b);
                 GUI.enabled = true;
+                if (State.IsBoosted(b))
+                {
+                    GUILayout.Label($"Ernte-Turbo aktiv: doppelte Produktion, noch {UiKit.FormatTime(b.BoostEnd - FarmState.Now)}", UiKit.Small);
+                }
+                else
+                {
+                    GUI.enabled = State.Gems >= FarmState.BoostGems;
+                    if (UiKit.IconBtn($"Ernte-Turbo 1 h: {FarmState.BoostGems}", UiKit.Icon("Diamant"), UiKit.BlueCard, GUILayout.Height(40f)) && State.BoostProducer(b))
+                    {
+                        State.Save();
+                        GameAudio.Play(SoundId.LevelUp);
+                    }
+                    GUI.enabled = true;
+                }
             }
 
             if (type == FarmBuildingType.Bauernschule && b.Level > 0)
@@ -537,7 +551,7 @@ namespace MuhDefense
             if (type.IsProducer)
             {
                 string res = FarmBuildingType.ResourceName(type.ProducedResource);
-                lines.Add($"Produktion: {State.ProductionPerMinute(b):0} {res} pro Minute");
+                lines.Add($"Produktion: {State.ProductionPerMinute(b) * (State.IsBoosted(b) ? 2 : 1):0} {res} pro Minute" + (State.IsBoosted(b) ? " (Turbo)" : ""));
                 lines.Add($"Gesammelt: {(int)b.Stored} / {(int)State.ProducerCapacity(b)}");
             }
             if (type == FarmBuildingType.Heldenhuette)

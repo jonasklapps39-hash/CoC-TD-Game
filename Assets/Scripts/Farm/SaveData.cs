@@ -84,6 +84,8 @@ namespace MuhDefense
         public double Stored;
         /// <summary>Letzter Zeitpunkt, bis zu dem die Produktion berechnet wurde.</summary>
         public double LastTick;
+        /// <summary>Ernte-Turbo (doppelte Produktion) läuft bis zu diesem Zeitpunkt.</summary>
+        public double BoostEnd;
 
         public bool IsUpgrading => UpgradeEnd > 0;
         public FarmBuildingType TypeDef => FarmBuildingType.Get(Type);
