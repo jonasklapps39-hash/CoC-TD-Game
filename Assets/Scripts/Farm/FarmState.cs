@@ -10,7 +10,7 @@ namespace MuhDefense
     /// Alles ist zeitbasiert (echte Uhrzeit), Produktion und Bauarbeiten laufen also auch weiter,
     /// während man ein Level spielt oder das Spiel geschlossen ist.
     /// </summary>
-    public class FarmState
+    public partial class FarmState
     {
         public const int Width = 30;
         public const int Height = 18;
@@ -53,6 +53,7 @@ namespace MuhDefense
             if (state.Data == null || state.Data.Buildings == null || state.Data.Buildings.Count == 0)
             {
                 state.Data = CreateNewFarm();
+                state.SpawnObstacles(14, Environment.TickCount);
             }
             state.Migrate();
             state.Tick();
@@ -93,6 +94,15 @@ namespace MuhDefense
                 }
                 Data.Version = 5;
             }
+            if (Data.Obstacles == null) Data.Obstacles = new List<ObstacleData>();
+            if (Data.Version < 6)
+            {
+                // Neu: Hindernisse auf dem Hof und Bauernstufe
+                if (Data.FarmLevel < 1) Data.FarmLevel = 1;
+                SpawnObstacles(10, Data.NextBuildingId * 31 + 7);
+                Data.LastObstacleSpawn = Now;
+                Data.Version = 6;
+            }
             if (Data.OwnedSkins == null || Data.OwnedSkins.Count == 0) Data.OwnedSkins = new List<string> { "standard" };
             if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
             if (Data.Talents == null) Data.Talents = new List<string>();
@@ -125,7 +135,7 @@ namespace MuhDefense
 
         static SaveData CreateNewFarm()
         {
-            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 5 };
+            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 6 };
             AddStartBuilding(data, FarmBuildingType.Bauernhaus, 13, 8);
             AddStartBuilding(data, FarmBuildingType.Maisfeld, 8, 11);
             AddStartBuilding(data, FarmBuildingType.Kuhstall, 19, 11);
@@ -163,6 +173,7 @@ namespace MuhDefense
                     b.LastTick = b.UpgradeEnd;
                     b.UpgradeEnd = 0;
                     finished.Add(b);
+                    if (b.TypeDef != null) AddXp(XpForBuilding(b.TypeDef, b.Level), new Vector3(b.X + 1f, 2f, b.Y + 1f));
                 }
 
                 var type = b.TypeDef;
@@ -173,6 +184,7 @@ namespace MuhDefense
                 }
                 b.LastTick = now;
             }
+            TickObstacles(now);
             return finished;
         }
 
@@ -276,7 +288,7 @@ namespace MuhDefense
                 {
                     if (b.IsUpgrading) n++;
                 }
-                return n;
+                return n + ObstaclesClearing;
             }
         }
 
@@ -379,6 +391,10 @@ namespace MuhDefense
         public bool IsAreaFree(int x, int y, int size, int ignoreId)
         {
             if (x < 0 || y < 0 || x + size > Width || y + size > Height) return false;
+            foreach (var o in Data.Obstacles)
+            {
+                if (o.X >= x && o.X < x + size && o.Y >= y && o.Y < y + size) return false;
+            }
             foreach (var b in Data.Buildings)
             {
                 if (b.Id == ignoreId) continue;

@@ -381,6 +381,11 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Neuer Boden:** gezeichnete Rasen-Textur mit Halmen und Flecken (nur noch leichtes Mäh-Schachbrett), Weg aus Erde mit Kieseln, Blumen und Grasbüschel rund um Hof und Spielfeld
 - [x] **Bauernschule:** Bauernwissen ist jetzt ein eigenes Gebäude (Mais, 5 Stufen). Jede Stufe schaltet eine Talent-Reihe frei, neu ist eine 5. Reihe (Goldene Ernte, Präzision, Heldenruhm). Neues Talent-Fenster im Stil von Spezial-Upgrades (Symbole, Sterne-Abzeichen, Verbindungslinien)
 - [x] **Vorschau vor dem Verbessern:** Jedes Gebäude zeigt, was die nächste Stufe bringt (Produktion, Lager, Turm-Stufen, Talent-Reihe …); neues Helden-Fenster mit Trainings-Kästchen und „Nächste Stufe“
+- [x] **Mehr Leben auf dem Hof:**
+  - **Hindernisse** (Busch, Pilzkreis, Felsbrocken, Baumstumpf): ein Knecht räumt sie gegen Mais/Milch weg, dafür gibt es Diamanten und Erfahrung; alle 2 Stunden wächst etwas nach (höchstens 16)
+  - **Bauernstufe** (1–30): Erfahrung für fertige Gebäude, Hindernisse und gewonnene Levels (Schwer = doppelt); jeder Aufstieg bringt Diamanten
+  - **Kühe laufen** rund um die Kuhställe über den Hof (mehr Kühe mit höherer Stall-Stufe)
+  - Knopf **„Alles einsammeln“**, neue Aufgabe und zwei neue Erfolge (Hindernisse, Bauernstufe)
 
 ### Upgrade-System
 

@@ -106,6 +106,9 @@ namespace MuhDefense
             bool nextWasLocked = next.HasValue && !Farm.IsDifficultyUnlocked(def.Id, next.Value);
             Farm.AddGems(gems);
             Farm.RecordStars(def.Id, stars, difficulty);
+            // Erfahrung für die Bauernstufe (schwerer = mehr)
+            float xpFactor = difficulty == Difficulty.Schwer ? 2f : difficulty == Difficulty.Mittel ? 1.5f : 1f;
+            Farm.AddXp(Mathf.RoundToInt((15 + 10 * stars) * xpFactor), new Vector3(FarmState.Width / 2f, 2.5f, FarmState.Height / 2f));
             Farm.Save();
             return new LevelReward
             {

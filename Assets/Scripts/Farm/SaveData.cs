@@ -37,6 +37,12 @@ namespace MuhDefense
         public List<string> OwnedHeroSkins = new List<string>();
         /// <summary>Schritt im Hof-Tutorial (-1 = fertig oder übersprungen).</summary>
         public int TutorialStep;
+        public List<ObstacleData> Obstacles = new List<ObstacleData>();
+        /// <summary>Zeitpunkt, an dem zuletzt ein Hindernis nachgewachsen ist.</summary>
+        public double LastObstacleSpawn;
+        /// <summary>Bauernstufe (Hof-Erfahrung).</summary>
+        public int FarmLevel = 1;
+        public int FarmXp;
     }
 
     [Serializable]

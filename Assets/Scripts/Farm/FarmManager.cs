@@ -21,6 +21,10 @@ namespace MuhDefense
         public FarmMode Mode { get; private set; } = FarmMode.Normal;
         public FarmBuildingType PlacingType { get; private set; }
         public BuildingData Selected { get; private set; }
+        /// <summary>Ausgewähltes Hindernis (Stein, Busch …), oder null.</summary>
+        public ObstacleData SelectedObstacle { get; private set; }
+        readonly Dictionary<int, GameObject> obstacleViews = new Dictionary<int, GameObject>();
+        float obstacleSyncTimer;
         public bool GhostValid { get; private set; }
         public bool ShopOpen;
         public bool MapOpen;
@@ -62,6 +66,8 @@ namespace MuhDefense
             Farm.Tick();
             BuildGround();
             foreach (var b in Farm.Buildings) CreateView(b);
+            SyncObstacles();
+            gameObject.AddComponent<FarmAnimals>().Init(Farm);
             gameObject.AddComponent<FarmUI>().Init(this);
             GameAudio.PlayMusic(MusicId.Farm);
         }
@@ -79,6 +85,32 @@ namespace MuhDefense
                 }
                 Farm.Save();
             }
+
+            // Ereignisse aus dem Spielstand anzeigen (Hindernis weg, Erfahrung, Bauernstufe)
+            if (Farm.Events.Count > 0)
+            {
+                foreach (var e in Farm.Events)
+                {
+                    AddFloatingText(e.Position, e.Text, e.Color);
+                    Effects.Burst(transform, e.Position, e.Color, 6, 2.5f);
+                }
+                Farm.Events.Clear();
+                Farm.Save();
+            }
+            if (Farm.LevelUpPending)
+            {
+                Farm.LevelUpPending = false;
+                GameAudio.Play(SoundId.Win);
+                Effects.Burst(transform, new Vector3(FarmState.Width / 2f, 2f, FarmState.Height / 2f), UiKit.Gold, 40, 5f, 0.12f);
+            }
+
+            obstacleSyncTimer -= Time.deltaTime;
+            if (obstacleSyncTimer <= 0f)
+            {
+                obstacleSyncTimer = 0.5f;
+                SyncObstacles();
+            }
+            AnimateClearing();
 
             for (int i = FloatingTexts.Count - 1; i >= 0; i--)
             {
@@ -120,6 +152,68 @@ namespace MuhDefense
             var b = Farm.BuildingAt(cell);
             Select(b);
             if (b != null && b.TypeDef.IsProducer && b.Stored >= 1) Collect(b);
+            if (b == null)
+            {
+                SelectedObstacle = Farm.ObstacleAt(cell);
+                if (SelectedObstacle != null) GameAudio.Play(SoundId.Click);
+            }
+        }
+
+        // ---------------------------------------------------------------- Hindernisse
+
+        public void ClearSelectedObstacle()
+        {
+            if (SelectedObstacle == null || !Farm.StartClearing(SelectedObstacle)) return;
+            GameAudio.Play(SoundId.Build);
+            Farm.Save();
+        }
+
+        public void DeselectObstacle() => SelectedObstacle = null;
+
+        void SyncObstacles()
+        {
+            var alive = new HashSet<int>();
+            foreach (var o in Farm.Data.Obstacles)
+            {
+                alive.Add(o.Id);
+                if (!obstacleViews.ContainsKey(o.Id)) obstacleViews[o.Id] = ObstacleModels.Build(o, transform);
+            }
+            var gone = new List<int>();
+            foreach (var kv in obstacleViews)
+            {
+                if (alive.Contains(kv.Key)) continue;
+                Effects.Burst(transform, kv.Value.transform.position + Vector3.up * 0.3f, new Color(0.6f, 0.45f, 0.3f), 10, 2.5f);
+                Destroy(kv.Value);
+                gone.Add(kv.Key);
+            }
+            foreach (var id in gone)
+            {
+                obstacleViews.Remove(id);
+                if (SelectedObstacle != null && SelectedObstacle.Id == id) SelectedObstacle = null;
+            }
+        }
+
+        /// <summary>Hindernisse, die gerade weggeräumt werden, wackeln.</summary>
+        void AnimateClearing()
+        {
+            foreach (var o in Farm.Data.Obstacles)
+            {
+                if (!obstacleViews.TryGetValue(o.Id, out var view)) continue;
+                float wobble = o.IsClearing ? Mathf.Sin(Time.time * 18f + o.Id) * 4f : 0f;
+                var e = view.transform.localEulerAngles;
+                view.transform.localRotation = Quaternion.Euler(wobble, e.y, 0f);
+            }
+        }
+
+        public Vector3 ObstacleTop(ObstacleData o) => new Vector3(o.X + 0.5f, 0.8f, o.Y + 0.5f);
+
+        /// <summary>Sammelt alle Felder und Ställe auf einmal ein.</summary>
+        public void CollectAll()
+        {
+            foreach (var b in Farm.Data.Buildings)
+            {
+                if (b.TypeDef != null && b.TypeDef.IsProducer && b.Level > 0 && b.Stored >= 1) Collect(b);
+            }
         }
 
         /// <summary>Vorschau beim Platzieren oder Verschieben unter den Finger setzen (auch beim Ziehen).</summary>
@@ -137,6 +231,7 @@ namespace MuhDefense
 
         public void Select(BuildingData b)
         {
+            SelectedObstacle = null;
             if (Selected != null && Views.TryGetValue(Selected.Id, out var oldView)) oldView.SetSelected(false);
             Selected = b;
             if (Selected != null && Views.TryGetValue(Selected.Id, out var newView)) newView.SetSelected(true);

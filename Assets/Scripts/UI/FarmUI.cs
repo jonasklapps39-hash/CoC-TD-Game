@@ -230,6 +230,16 @@ namespace MuhDefense
                 UiKit.PillLabel(gemRect, UiKit.Icon("Diamant"), State.Gems.ToString());
                 if (GUI.Button(gemRect, GUIContent.none, GUIStyle.none)) farm.GemShopOpen = true;
             }
+            // Bauernstufe mit Erfahrungsbalken
+            var lvlRect = new Rect(968f, 10f, 190f, 36f);
+            if (lvlRect.xMax < vw - 10f)
+            {
+                GUI.Box(lvlRect, GUIContent.none, UiKit.Pill);
+                UiKit.OutlinedText(new Rect(lvlRect.x + 10f, lvlRect.y, 90f, 22f), $"Stufe {State.FarmLevel}", nameStyle, UiKit.Gold, 1.2f);
+                UiKit.DrawBar(new Rect(lvlRect.x + 10f, lvlRect.y + 23f, lvlRect.width - 20f, 8f), State.FarmXpProgress, new Color(0.6f, 0.95f, 0.4f));
+                string xp = State.FarmLevel >= FarmState.MaxFarmLevel ? "max" : $"{State.Data.FarmXp}/{FarmState.XpToNext(State.FarmLevel)} EP";
+                GUI.Label(new Rect(lvlRect.x + 96f, lvlRect.y + 1f, 90f, 22f), xp, tinyStyle);
+            }
         }
 
         /// <summary>Hof-Tutorial: Hinweis-Fenster unten links, bis alle Schritte erledigt sind.</summary>
@@ -282,11 +292,20 @@ namespace MuhDefense
             {
                 DrawBuildingPanel(farm.Selected);
             }
+            else if (farm.SelectedObstacle != null)
+            {
+                DrawObstaclePanel(farm.SelectedObstacle);
+            }
             else
             {
                 UiKit.Heading("Dein Hof", UiKit.Title);
-                GUILayout.Label("Tippe auf ein Gebäude, um es zu verbessern oder Mais und Milch einzusammeln.", UiKit.Small);
-                GUILayout.Space(10f);
+                GUILayout.Label("Tippe auf Gebäude zum Verbessern, auf Steine und Büsche zum Wegräumen.", UiKit.Small);
+                GUILayout.Space(6f);
+                if (AnythingToCollect() && UiKit.IconBtn("Alles einsammeln", UiKit.Icon("Maiskolben"), UiKit.ActiveButton, GUILayout.Height(44f)))
+                {
+                    farm.CollectAll();
+                }
+                GUILayout.Space(4f);
                 if (UiKit.Btn("Bauen", UiKit.YellowButton, GUILayout.Height(56f))) farm.ShopOpen = true;
                 GUILayout.Space(4f);
                 if (State.SchoolLevel > 0)
@@ -327,6 +346,47 @@ namespace MuhDefense
                 }
             }
             GUILayout.EndArea();
+        }
+
+        bool AnythingToCollect()
+        {
+            int n = 0;
+            foreach (var b in State.Data.Buildings)
+            {
+                if (b.TypeDef != null && b.TypeDef.IsProducer && b.Level > 0 && b.Stored >= 1) n++;
+            }
+            return n >= 2;
+        }
+
+        void DrawObstaclePanel(ObstacleData o)
+        {
+            var t = o.TypeDef;
+            UiKit.Heading(t.Name, UiKit.Title);
+            GUILayout.Label("Räum den Hof auf! Ein Knecht entfernt das Hindernis und findet dabei oft Diamanten. " +
+                            "Mit der Zeit wächst neues Zeug nach.", UiKit.Small);
+            GUILayout.Space(6f);
+            GUILayout.BeginVertical(UiKit.BlueCard);
+            GUILayout.Label("Belohnung:", headStyle);
+            GUILayout.Label(t.MaxGems > 0 ? $"{t.MinGems}–{t.MaxGems} Diamanten und {t.Xp} Erfahrung" : $"{t.Xp} Erfahrung", smallStyle);
+            GUILayout.EndVertical();
+            GUILayout.Space(6f);
+            if (o.IsClearing)
+            {
+                GUILayout.Label($"Wird weggeräumt: noch {UiKit.FormatTime(State.ClearRemaining(o))}", UiKit.Small);
+                Rect bar = GUILayoutUtility.GetRect(10f, 14f);
+                UiKit.DrawBar(bar, State.ClearProgress(o), new Color(0.4f, 0.8f, 0.3f));
+            }
+            else
+            {
+                string reason = State.WhyCannotClear(o);
+                GUI.enabled = reason == null;
+                string label = $"Wegräumen\n{t.Cost} {FarmBuildingType.ResourceName(t.CostResource)} · {UiKit.FormatTime(t.Seconds)}";
+                if (UiKit.Btn(label, upgradeStyle, GUILayout.Height(60f))) farm.ClearSelectedObstacle();
+                GUI.enabled = true;
+                if (reason != null) GUILayout.Label(reason, UiKit.Small);
+            }
+            GUILayout.FlexibleSpace();
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.DeselectObstacle();
         }
 
         void DrawPlacementPanel()
@@ -1129,6 +1189,13 @@ namespace MuhDefense
                     if (!clickable) GUI.Box(bubble, text, UiKit.Bubble);
                     else if (GUI.Button(bubble, text, UiKit.Bubble)) farm.Collect(b);
                 }
+            }
+
+            foreach (var o in State.Data.Obstacles)
+            {
+                if (!o.IsClearing || !UiKit.WorldToGui(cam, farm.ObstacleTop(o), out var op)) continue;
+                UiKit.DrawBar(new Rect(op.x - 30f, op.y, 60f, 8f), State.ClearProgress(o), new Color(0.4f, 0.8f, 0.3f));
+                UiKit.ShadowLabel(new Vector2(op.x, op.y - 11f), UiKit.FormatTime(State.ClearRemaining(o)), Color.white, UiKit.Small);
             }
 
             foreach (var ft in farm.FloatingTexts)

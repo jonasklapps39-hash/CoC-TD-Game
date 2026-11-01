@@ -15,6 +15,7 @@ namespace MuhDefense
         public const string Upgrades = "upgrades";
         public const string Collected = "collected";
         public const string FarmBuilds = "farm_builds";
+        public const string ObstaclesCleared = "obstacles";
     }
 
     public enum RewardKind
@@ -63,6 +64,7 @@ namespace MuhDefense
             new DailyQuestDef { Id = "d_upgrades", Text = "Kaufe 10 Turm-Upgrades", Counter = Counter.Upgrades, Target = 10, Reward = RewardKind.Corn, Amount = 500 },
             new DailyQuestDef { Id = "d_collect", Text = "Sammle 800 Mais oder Milch auf dem Hof", Counter = Counter.Collected, Target = 800, Reward = RewardKind.Gems, Amount = 8 },
             new DailyQuestDef { Id = "d_build", Text = "Starte 2 Bauarbeiten auf dem Hof", Counter = Counter.FarmBuilds, Target = 2, Reward = RewardKind.Milk, Amount = 400 },
+            new DailyQuestDef { Id = "d_obstacles", Text = "Räume 3 Hindernisse auf dem Hof weg", Counter = Counter.ObstaclesCleared, Target = 3, Reward = RewardKind.Gems, Amount = 8 },
             new DailyQuestDef { Id = "d_hard", Text = "Gewinne ein Level auf „Schwer“", Counter = Counter.HardWins, Target = 1, Reward = RewardKind.Gems, Amount = 15 },
         };
 
@@ -82,6 +84,8 @@ namespace MuhDefense
             new AchievementDef { Id = "a_emperor", Name = "Kaiser-Bezwinger", Description = "Besiege Alien-Kaiser Zorbax.", Value = f => f.BestStars("absturz-5") > 0 ? 1 : 0, Target = 1, Gems = 50, Icon = "AlienKaiser" },
             new AchievementDef { Id = "a_crowns", Name = "Kronenträger", Description = "Schaffe 5 Levels auf „Schwer“.", Value = f => f.CrownCount, Target = 5, Gems = 30, Icon = "Diamant" },
             new AchievementDef { Id = "a_stars", Name = "Sternensammler", Description = "Sammle 60 Sterne (alle Schwierigkeitsgrade zählen).", Value = f => f.TotalStars, Target = 60, Gems = 30, Icon = "Maiskolben" },
+            new AchievementDef { Id = "a_obstacles", Name = "Landschaftsgärtner", Description = "Räume 30 Hindernisse weg.", Counter = Counter.ObstaclesCleared, Target = 30, Gems = 25, Icon = "Baum" },
+            new AchievementDef { Id = "a_farmlevel", Name = "Meisterbauer", Description = "Erreiche Bauernstufe 10.", Value = f => f.FarmLevel, Target = 10, Gems = 40, Icon = "Bauernhaus" },
             new AchievementDef { Id = "a_farmhouse", Name = "Großbauer", Description = "Verbessere das Bauernhaus auf Stufe 5.", Value = f => f.FarmhouseLevel, Target = 5, Gems = 30, Icon = "Bauernhaus" },
         };
 

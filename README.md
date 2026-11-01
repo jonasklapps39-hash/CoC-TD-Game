@@ -17,6 +17,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - Tägliche Aufgaben und 15 Erfolge mit Belohnungen
 - Helden in der Heldenhütte trainieren (Milch) und Skins kaufen (Diamanten)
 - Kurzes Hof-Tutorial für neue Spieler
+- Hindernisse wegräumen (Diamanten), Bauernstufe mit Belohnungen, Kühe auf dem Hof, „Alles einsammeln“
 - Hof mit 30 × 18 Feldern: zoomen (zwei Finger, Mausrad, +/−) und verschieben (Wiese ziehen)
 - Mais und Milch werden in Echtzeit produziert, auch während eines Levels oder wenn das Spiel geschlossen ist
 - Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern
