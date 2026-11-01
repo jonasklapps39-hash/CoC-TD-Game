@@ -366,6 +366,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
   - Neues Alien **Teiler**: zerfällt beim Besiegen in zwei Grünlinge
   - Neuer Boss **Ernte-Roboter**: Alien im Mähdrescher-Kampfroboter, wirft bei jedem verlorenen Viertel Leben vier Flitzer ab
 - [x] **Kamera auf dem Hof:** zoomen (zwei Finger, Mausrad oder +/− Knöpfe) und verschieben (freie Wiese ziehen); Hof größer (30 × 18 Felder), alte Spielstände werden in die Mitte gerückt
+- [x] **Balance-Durchgang:** Schwierigkeit ab Heimattal 4 flacher (Alien-Leben pro verdienter Münze steigt jetzt gleichmäßiger von 4 auf 20 statt auf 24), mehr Start-Münzen im Maisfeld, „Sofort fertig“ günstiger (1 Diamant pro 30 statt 20 Sekunden)
 
 ### Upgrade-System
 

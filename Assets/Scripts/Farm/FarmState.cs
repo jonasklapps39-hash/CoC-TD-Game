@@ -438,8 +438,8 @@ namespace MuhDefense
             return true;
         }
 
-        /// <summary>Diamanten, um einen Bau sofort fertigzustellen (1 Diamant pro angefangene 20 Sekunden).</summary>
-        public int InstantFinishCost(BuildingData b) => b.IsUpgrading ? Mathf.Max(1, Mathf.CeilToInt((float)(RemainingSeconds(b) / 20.0))) : 0;
+        /// <summary>Diamanten, um einen Bau sofort fertigzustellen (1 Diamant pro angefangene 30 Sekunden).</summary>
+        public int InstantFinishCost(BuildingData b) => b.IsUpgrading ? Mathf.Max(1, Mathf.CeilToInt((float)(RemainingSeconds(b) / 30.0))) : 0;
 
         public bool InstantFinish(BuildingData b)
         {
