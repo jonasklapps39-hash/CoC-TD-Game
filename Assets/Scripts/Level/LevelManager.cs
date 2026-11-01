@@ -693,6 +693,28 @@ namespace MuhDefense
         }
 
         /// <summary>Nächster Punkt auf dem Weg und der Index des Weg-Punkts davor (Richtung Eingang).</summary>
+        /// <summary>Punkte auf dem Weg (alle 0,25 Felder) im Umkreis, in Laufrichtung sortiert (Güllefass, Mähdrescher, Hunde).</summary>
+        public List<Vector3> PathPointsWithin(Vector3 center, float radius)
+        {
+            var points = new List<Vector3>();
+            center.y = 0f;
+            for (int i = 0; i < pathWorld.Length - 1; i++)
+            {
+                Vector3 a = pathWorld[i], b = pathWorld[i + 1];
+                float len = Vector3.Distance(a, b);
+                int steps = Mathf.Max(1, Mathf.CeilToInt(len / 0.25f));
+                for (int k = 0; k < steps; k++)
+                {
+                    Vector3 p = Vector3.Lerp(a, b, k / (float)steps);
+                    var flat = new Vector3(p.x, 0f, p.z);
+                    // nur auf dem Spielfeld (nicht im Eingang außerhalb der Karte)
+                    if (flat.x < 0f || flat.z < 0f || flat.x > Def.Width || flat.z > Def.Height) continue;
+                    if ((flat - center).magnitude <= radius) points.Add(p);
+                }
+            }
+            return points;
+        }
+
         public Vector3 ClosestPointOnPath(Vector3 position, out int towardsEntrance)
         {
             towardsEntrance = 0;

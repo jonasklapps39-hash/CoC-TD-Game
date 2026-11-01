@@ -334,17 +334,7 @@ namespace MuhDefense
             return tex;
         }
 
-        public static Texture2D TowerIcon(TowerType t)
-        {
-            if (t == TowerType.Mistgabel) return Icon("MistgabelBauer");
-            if (t == TowerType.Heuballen) return Icon("HeuballenKatapult");
-            if (t == TowerType.Eismilch) return Icon("EismilchSprueher");
-            if (t == TowerType.Bienenstock) return Icon("Bienenstock");
-            if (t == TowerType.Windmuehle) return Icon("Windmuehle");
-            if (t == TowerType.Wetterhahn) return Icon("Wetterhahn");
-            if (t == TowerType.Hofladen) return Icon("Hofladen");
-            return null;
-        }
+        public static Texture2D TowerIcon(TowerType t) => Icon(t.IconName.Length > 0 ? t.IconName : t.ModelName);
 
         /// <summary>Erzeugt eine weiße Stern-Textur (eingefärbt wird beim Zeichnen).</summary>
         static Texture2D MakeStarTexture(int size)

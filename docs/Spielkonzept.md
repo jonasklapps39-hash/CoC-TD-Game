@@ -367,6 +367,8 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
   - Neuer Boss **Ernte-Roboter**: Alien im Mähdrescher-Kampfroboter, wirft bei jedem verlorenen Viertel Leben vier Flitzer ab
 - [x] **Kamera auf dem Hof:** zoomen (zwei Finger, Mausrad oder +/− Knöpfe) und verschieben (freie Wiese ziehen); Hof größer (30 × 18 Felder), alte Spielstände werden in die Mitte gerückt
 - [x] **Balance-Durchgang:** Schwierigkeit ab Heimattal 4 flacher (Alien-Leben pro verdienter Münze steigt jetzt gleichmäßiger von 4 auf 20 statt auf 24), mehr Start-Münzen im Maisfeld, „Sofort fertig“ günstiger (1 Diamant pro 30 statt 20 Sekunden)
+- [x] **Alle 15 Türme:** neu sind Eier-Huhn, Popcorn-Kanone, Kürbis-Mörser, Traktor-Tesla (Kettenblitz), Güllefass (Pfützen), Mähdrescher (fährt auf dem Weg), Hofhund-Hütte (Hunde halten Aliens fest) und Vogelscheuche (erschreckt Aliens), jeweils mit 3 Pfaden à 5 Stufen
+  - Freischaltung: Schmiede (Eier-Huhn, ab Stufe 2 Hofhund-Hütte), Zimmerei (Popcorn-Kanone, ab Stufe 2 Kürbis-Mörser und Mähdrescher), Tüftlerschuppen (ab Stufe 2 Traktor-Tesla und Güllefass), Hofladen-Kontor (Vogelscheuche)
 
 ### Upgrade-System
 

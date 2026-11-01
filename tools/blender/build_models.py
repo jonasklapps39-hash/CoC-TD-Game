@@ -841,6 +841,205 @@ def build_corn_stalk():
         tube((dx, dy, h + 0.08), 0.03, 0.16, STRAW, r2=0.004, segs=6)
 
 
+def base_plate():
+    tube((0, 0, 0.1), 0.48, 0.2, STONE, segs=16)
+
+
+def build_chicken_tower():
+    """Eier-Huhn: grimmiges Huhn mit Patronengurt auf einer Kiste mit Eiern."""
+    base_plate()
+    soft_box((0, 0.05, 0.36), (0.6, 0.5, 0.3), WOOD, round_=0.2)
+    for x in (-0.18, 0.0, 0.18):
+        ball((x, -0.22, 0.42), (0.1, 0.08, 0.13), WHITE)
+    red = (0.9, 0.12, 0.1)
+    ball((0, 0.05, 0.75), (0.5, 0.5, 0.46), WHITE, subsurf=2)
+    ball((0, 0.24, 0.88), (0.3, 0.2, 0.34), WHITE, rot=(math.radians(-30), 0, 0))
+    ball((0, -0.1, 1.05), (0.32, 0.3, 0.32), WHITE, subsurf=2)
+    for i, x in enumerate((-0.06, 0.0, 0.06)):
+        ball((x, -0.08, 1.24 + (0.03 if i == 1 else 0)), (0.07, 0.1, 0.12), red)
+    tube((0, -0.3, 1.02), 0.06, 0.12, GOLD, rot=(math.radians(90), 0, 0), r2=0.004)
+    ball((0, -0.26, 0.94), (0.06, 0.04, 0.1), red)
+    eye((-0.08, -0.22, 1.1), 0.1, (0.95, 0.6, 0.1), lid=WHITE, lid_tilt=math.radians(22), lid_cover=0.4, brow=BLACK, brow_tilt=math.radians(22))
+    eye((0.08, -0.22, 1.1), 0.1, (0.95, 0.6, 0.1), lid=WHITE, lid_tilt=math.radians(-22), lid_cover=0.4, brow=BLACK, brow_tilt=math.radians(-22))
+    for s_ in (-1, 1):
+        ball((0.25 * s_, 0.05, 0.75), (0.12, 0.34, 0.24), (0.9, 0.88, 0.82), rot=(0, math.radians(15 * s_), 0))
+    # Patronengurt mit Eiern
+    soft_box((0, -0.12, 0.78), (0.52, 0.06, 0.08), DARK_WOOD, round_=0.3, rot=(0, math.radians(30), 0))
+    for k in range(4):
+        ball((-0.15 + 0.1 * k, -0.17, 0.7 + 0.06 * k), (0.06, 0.04, 0.08), (1.0, 0.95, 0.85))
+
+
+def build_popcorn_cannon():
+    """Popcorn-Kanone: rote Kanone auf Rädern, Popcorn quillt aus dem Rohr."""
+    base_plate()
+    red = (0.85, 0.15, 0.12)
+    for s_ in (-1, 1):
+        tube((0.3 * s_, 0.05, 0.38), 0.2, 0.08, WOOD, rot=(0, math.radians(90), 0), segs=16)
+        tube((0.31 * s_, 0.05, 0.38), 0.07, 0.09, DARK_METAL, rot=(0, math.radians(90), 0), segs=10)
+    soft_box((0, 0.1, 0.42), (0.4, 0.5, 0.2), DARK_WOOD, round_=0.3)
+    tube((0, -0.1, 0.62), 0.16, 0.7, red, rot=(math.radians(70), 0, 0), r2=0.2)
+    for i in range(5):
+        ring((0, -0.1 - 0.1 * i * 0.94, 0.62 + 0.1 * i * 0.34), 0.165 + 0.008 * i, 0.02, WHITE, rot=(math.radians(70), 0, 0))
+    for (x, y, z) in [(0, -0.44, 0.8), (0.08, -0.46, 0.86), (-0.08, -0.45, 0.84), (0.02, -0.5, 0.92), (-0.05, -0.38, 0.9)]:
+        ball((x, y, z), (0.11, 0.1, 0.1), (1.0, 0.97, 0.85))
+        ball((x + 0.02, y - 0.02, z + 0.03), (0.05, 0.05, 0.05), (1.0, 0.85, 0.35))
+    tube((0, 0.3, 0.6), 0.12, 0.24, (0.95, 0.9, 0.85), r2=0.15)
+    for i in range(4):
+        a = i * math.pi / 2
+        soft_box((math.cos(a) * 0.13, 0.3 + math.sin(a) * 0.13, 0.6), (0.04, 0.04, 0.24), red, round_=0.3)
+
+
+def build_pumpkin_mortar():
+    """Kürbis-Mörser: dicker Mörser, ein fieser Kürbis wartet als Munition."""
+    base_plate()
+    orange = (0.95, 0.5, 0.1)
+    tube((0, 0.05, 0.4), 0.3, 0.3, DARK_METAL, r2=0.26, segs=16)
+    tube((0, 0.0, 0.72), 0.22, 0.45, METAL, rot=(math.radians(20), 0, 0), segs=16)
+    ring((0, -0.08, 0.92), 0.22, 0.04, DARK_METAL, rot=(math.radians(20), 0, 0))
+    ball((0, -0.08, 0.98), (0.3, 0.3, 0.24), orange)
+    tube((0, -0.08, 1.1), 0.03, 0.08, LEAF)
+    # Kürbis daneben mit Grinsen
+    ball((0.3, -0.25, 0.3), (0.26, 0.24, 0.22), orange)
+    for s_ in (-1, 1):
+        ball((0.3 + 0.06 * s_, -0.36, 0.34), (0.05, 0.03, 0.05), (0.2, 0.1, 0.0), subsurf=0, segs=8)
+    ball((0.3, -0.36, 0.25), (0.12, 0.03, 0.04), (0.2, 0.1, 0.0))
+    tube((0.3, -0.25, 0.43), 0.025, 0.06, LEAF)
+
+
+def build_tesla_tractor():
+    """Traktor-Tesla: kleiner Traktor mit Teslaspule auf dem Rücken."""
+    base_plate()
+    red = (0.82, 0.16, 0.12)
+    soft_box((0, 0.0, 0.36), (0.4, 0.62, 0.24), red, round_=0.3)
+    soft_box((0, -0.26, 0.42), (0.34, 0.2, 0.2), red, round_=0.35)
+    for s_ in (-1, 1):
+        tube((0.24 * s_, 0.14, 0.32), 0.2, 0.12, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=16)
+        tube((0.25 * s_, 0.14, 0.32), 0.09, 0.13, GOLD, rot=(0, math.radians(90), 0), segs=10)
+        tube((0.2 * s_, -0.28, 0.22), 0.11, 0.1, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=12)
+        ball((0.1 * s_, -0.37, 0.46), (0.07, 0.03, 0.07), (1.0, 0.95, 0.6))
+    tube((0, 0.1, 0.62), 0.06, 0.36, DARK_METAL)
+    for i in range(4):
+        ring((0, 0.1, 0.5 + 0.08 * i), 0.1 - 0.012 * i, 0.025, (0.85, 0.5, 0.2))
+    ball((0, 0.1, 0.92), (0.24, 0.24, 0.24), (0.45, 0.8, 1.0))
+    ring((0, 0.1, 0.92), 0.17, 0.02, (0.7, 0.95, 1.0), rot=(math.radians(60), 0, 0))
+
+
+def build_slurry_tank():
+    """Güllefass: Fass auf Rädern mit Spritzdüse, brauner Inhalt quillt raus."""
+    base_plate()
+    brown = (0.42, 0.28, 0.12)
+    green_tank = (0.25, 0.5, 0.22)
+    for s_ in (-1, 1):
+        tube((0.3 * s_, 0.0, 0.32), 0.18, 0.1, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=16)
+        tube((0.31 * s_, 0.0, 0.32), 0.07, 0.11, GOLD, rot=(0, math.radians(90), 0), segs=10)
+    tube((0, 0.0, 0.62), 0.27, 0.62, green_tank, rot=(math.radians(90), 0, 0), segs=18)
+    for y in (-0.22, 0.0, 0.22):
+        ring((0, y, 0.62), 0.275, 0.025, DARK_METAL, rot=(math.radians(90), 0, 0))
+    tube((0, -0.36, 0.5), 0.06, 0.2, DARK_METAL, rot=(math.radians(90), 0, 0))
+    soft_box((0, -0.48, 0.48), (0.3, 0.06, 0.06), DARK_METAL, round_=0.3)
+    ball((0, -0.5, 0.44), (0.14, 0.1, 0.08), brown)
+    ball((0, 0.0, 0.9), (0.2, 0.2, 0.08), brown)
+    for (x, y) in [(0.1, -0.05), (-0.08, 0.06)]:
+        ball((x, y, 0.95), (0.05, 0.05, 0.05), (0.55, 0.38, 0.15))
+
+
+def build_machine_shed():
+    """Maschinenschuppen: Garage des Mähdreschers mit offenem Tor."""
+    base_plate()
+    soft_box((0, 0.08, 0.5), (0.72, 0.6, 0.6), (0.72, 0.2, 0.15), round_=0.12)
+    roof((0, 0.08, 0.8), 0.8, 0.68, DARK_WOOD)
+    soft_box((0, -0.23, 0.42), (0.42, 0.04, 0.44), (0.12, 0.1, 0.08), round_=0.15)
+    for x in (-0.22, 0.22):
+        soft_box((x, -0.24, 0.42), (0.04, 0.05, 0.46), WHITE, round_=0.3)
+    soft_box((0, -0.24, 0.66), (0.48, 0.05, 0.04), WHITE, round_=0.3)
+    ball((0, -0.22, 0.3), (0.3, 0.1, 0.12), GOLD)
+
+
+def build_harvester():
+    """Mähdrescher: grüne Erntemaschine mit Haspel vorne (fährt auf dem Weg)."""
+    green = (0.25, 0.6, 0.2)
+    for s_ in (-1, 1):
+        tube((0.3 * s_, 0.1, 0.26), 0.26, 0.14, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=16)
+        tube((0.31 * s_, 0.1, 0.26), 0.11, 0.15, GOLD, rot=(0, math.radians(90), 0), segs=10)
+        tube((0.26 * s_, 0.5, 0.18), 0.16, 0.1, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=12)
+    soft_box((0, 0.3, 0.55), (0.5, 0.7, 0.5), green, round_=0.2)
+    soft_box((0, 0.0, 0.92), (0.36, 0.3, 0.3), (0.6, 0.85, 0.95), round_=0.2)
+    soft_box((0, 0.0, 1.08), (0.4, 0.34, 0.04), green, round_=0.3)
+    soft_box((0, -0.35, 0.28), (0.9, 0.3, 0.12), GOLD, round_=0.3)
+    tube((0, -0.4, 0.42), 0.14, 0.86, (0.85, 0.75, 0.3), rot=(0, math.radians(90), 0), segs=12)
+    for i in range(6):
+        a = i * math.pi / 3
+        soft_box((0, -0.4 + math.cos(a) * 0.15, 0.42 + math.sin(a) * 0.15), (0.84, 0.03, 0.03), DARK_METAL, round_=0.3)
+    tube((0.2, 0.5, 0.95), 0.05, 0.35, DARK_METAL, rot=(math.radians(-30), 0, 0))
+    ball((0.12, -0.17, 0.62), (0.08, 0.03, 0.08), (1.0, 0.95, 0.6))
+    ball((-0.12, -0.17, 0.62), (0.08, 0.03, 0.08), (1.0, 0.95, 0.6))
+
+
+def build_dog_house():
+    """Hofhund-Hütte: Hundehütte mit Napf und Knochen."""
+    base_plate()
+    soft_box((0, 0.06, 0.45), (0.6, 0.6, 0.5), (0.7, 0.45, 0.22), round_=0.12)
+    roof((0, 0.06, 0.72), 0.72, 0.7, (0.75, 0.18, 0.14))
+    ball((0, -0.24, 0.4), (0.28, 0.06, 0.34), (0.12, 0.08, 0.06))
+    soft_box((0, -0.25, 0.68), (0.28, 0.04, 0.1), WHITE, round_=0.3)
+    tube((0.3, -0.3, 0.22), 0.09, 0.06, (0.75, 0.15, 0.15), segs=12)
+    soft_box((-0.28, -0.32, 0.22), (0.2, 0.05, 0.05), WHITE, round_=0.4)
+    for s_ in (-1, 1):
+        ball((-0.28 + 0.1 * s_, -0.32, 0.22), (0.07, 0.07, 0.07), WHITE)
+    # Hund schaut aus der Hütte
+    dogc = (0.78, 0.55, 0.3)
+    ball((0, -0.3, 0.38), (0.24, 0.22, 0.2), dogc)
+    ball((0, -0.42, 0.34), (0.12, 0.1, 0.08), (0.95, 0.85, 0.7))
+    ball((0, -0.47, 0.37), (0.06, 0.04, 0.04), BLACK)
+    for s_ in (-1, 1):
+        ball((0.06 * s_, -0.38, 0.43), (0.05, 0.03, 0.05), BLACK, subsurf=0, segs=8)
+        ball((0.12 * s_, -0.28, 0.42), (0.08, 0.06, 0.16), (0.45, 0.28, 0.14), rot=(0, math.radians(25 * s_), 0))
+
+
+def build_dog():
+    """Hofhund: kräftiger Hund mit Halsband (läuft auf dem Weg)."""
+    dogc = (0.78, 0.55, 0.3)
+    dark = (0.45, 0.28, 0.14)
+    ball((0, 0.05, 0.36), (0.32, 0.6, 0.32), dogc)
+    for s_ in (-1, 1):
+        for t in (-1, 1):
+            tube((0.1 * s_, 0.05 + 0.2 * t, 0.14), 0.05, 0.28, dogc)
+            ball((0.1 * s_, 0.03 + 0.2 * t, 0.02), (0.08, 0.1, 0.05), dark)
+    ball((0, -0.28, 0.56), (0.3, 0.28, 0.28), dogc)
+    ball((0, -0.42, 0.5), (0.16, 0.16, 0.12), (0.95, 0.85, 0.7))
+    ball((0, -0.5, 0.54), (0.07, 0.05, 0.05), BLACK)
+    eye((-0.07, -0.39, 0.62), 0.08, (0.35, 0.22, 0.1), brow=dark, brow_tilt=math.radians(20))
+    eye((0.07, -0.39, 0.62), 0.08, (0.35, 0.22, 0.1), brow=dark, brow_tilt=math.radians(-20))
+    for s_ in (-1, 1):
+        ball((0.13 * s_, -0.24, 0.66), (0.08, 0.06, 0.18), dark, rot=(0, math.radians(30 * s_), 0))
+    ring((0, -0.2, 0.48), 0.12, 0.025, (0.85, 0.12, 0.12), rot=(math.radians(70), 0, 0))
+    ball((0, -0.3, 0.42), (0.05, 0.03, 0.05), GOLD)
+    tube((0, 0.38, 0.5), 0.03, 0.22, dogc, rot=(math.radians(-40), 0, 0))
+
+
+def build_scarecrow():
+    """Vogelscheuche: gruselige Scheuche mit Kürbiskopf, Hut und Krähe."""
+    base_plate()
+    tube((0, 0, 0.6), 0.04, 1.0, DARK_WOOD)
+    tube((0, 0, 0.9), 0.035, 0.8, DARK_WOOD, rot=(0, math.radians(90), 0))
+    soft_box((0, 0, 0.75), (0.36, 0.22, 0.4), (0.55, 0.25, 0.15), round_=0.25)
+    for s_ in (-1, 1):
+        soft_box((0.24 * s_, 0, 0.9), (0.2, 0.16, 0.12), (0.55, 0.25, 0.15), round_=0.3)
+        tube((0.38 * s_, -0.02, 0.88), 0.04, 0.1, STRAW, rot=(0, math.radians(90), 0), r2=0.01)
+    soft_box((0.1, -0.12, 0.7), (0.1, 0.02, 0.1), DENIM, round_=0.3)
+    orange = (0.95, 0.5, 0.1)
+    ball((0, 0, 1.16), (0.32, 0.3, 0.28), orange)
+    for s_ in (-1, 1):
+        tube((0.07 * s_, -0.14, 1.2), 0.035, 0.03, (0.15, 0.08, 0.0), rot=(math.radians(90), 0, 0), segs=3)
+    ball((0, -0.14, 1.08), (0.14, 0.03, 0.04), (0.15, 0.08, 0.0))
+    tube((0, 0, 1.32), 0.24, 0.03, (0.3, 0.22, 0.12), segs=16)
+    tube((0, 0, 1.42), 0.12, 0.2, (0.3, 0.22, 0.12), r2=0.06, segs=12)
+    # Krähe auf dem Arm
+    ball((0.32, 0.02, 1.02), (0.12, 0.2, 0.12), (0.1, 0.1, 0.12))
+    ball((0.32, -0.08, 1.1), (0.09, 0.09, 0.09), (0.1, 0.1, 0.12))
+    tube((0.32, -0.14, 1.1), 0.02, 0.06, GOLD, rot=(math.radians(90), 0, 0), r2=0.002)
+
+
 # Name, Bau-Funktion, höchstens Dreiecke
 MODELS = [
     ("Kuh", build_cow, 6000),
@@ -882,6 +1081,16 @@ MODELS = [
     ("Teiler", build_splitter, 5000),
     ("ErnteRoboter", build_harvester_boss, 8000),
     ("Maisstaude", build_corn_stalk, 2500),
+    ("EierHuhn", build_chicken_tower, 5000),
+    ("PopcornKanone", build_popcorn_cannon, 5000),
+    ("KuerbisMoerser", build_pumpkin_mortar, 5000),
+    ("TraktorTesla", build_tesla_tractor, 5000),
+    ("Guellefass", build_slurry_tank, 5000),
+    ("Maschinenschuppen", build_machine_shed, 4000),
+    ("Maehdrescher", build_harvester, 5000),
+    ("Hundehuette", build_dog_house, 5000),
+    ("Hofhund", build_dog, 4000),
+    ("Vogelscheuche", build_scarecrow, 5000),
 ]
 
 # Optional nur einzelne Modelle bauen: ONLY=Name1,Name2

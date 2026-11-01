@@ -186,10 +186,10 @@ namespace MuhDefense
             }
 
             UiKit.Heading("Türme", UiKit.Title, GUILayout.Height(30f));
-            for (int i = 0; i < level.AvailableTowers.Count; i += 2)
+            for (int i = 0; i < level.AvailableTowers.Count; i += 3)
             {
                 GUILayout.BeginHorizontal();
-                for (int k = i; k < Mathf.Min(i + 2, level.AvailableTowers.Count); k++) TowerCard(level.AvailableTowers[k]);
+                for (int k = i; k < Mathf.Min(i + 3, level.AvailableTowers.Count); k++) TowerCard(level.AvailableTowers[k]);
                 GUILayout.EndHorizontal();
             }
             if (level.AvailableTowers.Count < TowerType.All.Length)
@@ -233,7 +233,7 @@ namespace MuhDefense
             bool active = level.PlacingType == type;
             int price = level.TowerCost(type);
             bool affordable = level.Money >= price;
-            Rect r = GUILayoutUtility.GetRect(112f, 78f, GUILayout.Width(112f), GUILayout.Height(78f));
+            Rect r = GUILayoutUtility.GetRect(74f, 66f, GUILayout.Width(74f), GUILayout.Height(66f));
             GUI.enabled = Playing && (active || affordable);
             RememberPress(r, type, false);
             if (GUI.Button(r, GUIContent.none, active ? UiKit.ActiveButton : UiKit.BlueCard))
@@ -243,11 +243,11 @@ namespace MuhDefense
                 else level.BeginPlacing(type);
             }
             var icon = UiKit.TowerIcon(type);
-            if (icon != null) GUI.DrawTexture(new Rect(r.x + 28f, r.y + 3f, 56f, 48f), icon, ScaleMode.ScaleToFit);
-            UiKit.ButtonText.fontSize = 13;
-            UiKit.OutlinedText(new Rect(r.x + 2f, r.y + 44f, r.width - 4f, 18f), type.ShortName, UiKit.ButtonText, Color.white, 1.4f);
-            UiKit.ButtonText.fontSize = 16;
-            UiKit.OutlinedText(new Rect(r.x + 2f, r.y + 59f, r.width - 4f, 18f), price.ToString(), UiKit.ButtonText,
+            if (icon != null) GUI.DrawTexture(new Rect(r.x + 17f, r.y + 2f, 40f, 34f), icon, ScaleMode.ScaleToFit);
+            UiKit.ButtonText.fontSize = 11;
+            UiKit.OutlinedText(new Rect(r.x + 1f, r.y + 34f, r.width - 2f, 15f), type.ShortName, UiKit.ButtonText, Color.white, 1.2f);
+            UiKit.ButtonText.fontSize = 14;
+            UiKit.OutlinedText(new Rect(r.x + 1f, r.y + 48f, r.width - 2f, 16f), price.ToString(), UiKit.ButtonText,
                 affordable ? new Color(1f, 0.88f, 0.3f) : new Color(1f, 0.45f, 0.4f), 1.4f);
             GUI.enabled = true;
         }

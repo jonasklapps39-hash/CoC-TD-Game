@@ -55,6 +55,7 @@ namespace MuhDefense
             rangeCircle = Visuals.Circle(transform, DisplayRange, new Color(1f, 1f, 1f, 0.8f));
             rangeCircle.enabled = false;
             UpdateDecorations();
+            SyncUnits();
         }
 
         float DisplayRange => Stats.GlobalRange ? 1.2f : Stats.Range;
@@ -95,6 +96,7 @@ namespace MuhDefense
             RecalculateStats();
             Visuals.SetCircleRadius(rangeCircle, DisplayRange);
             UpdateDecorations();
+            SyncUnits();
             RingEffect.Spawn(level.transform, transform.position, 0.8f, Type.Paths[path].Color, 0.5f);
         }
 
@@ -151,6 +153,16 @@ namespace MuhDefense
                 if (cooldown <= 0f && Pulse()) cooldown = 1f / rate;
                 return;
             }
+            if (Type.Kind == TowerKind.Harvester || Type.Kind == TowerKind.Dogs)
+            {
+                // Die Einheiten (Mähdrescher, Hunde) arbeiten selbst
+                return;
+            }
+            if (Type.Kind == TowerKind.Puddle)
+            {
+                if (cooldown <= 0f && LayPuddles()) cooldown = 1f / rate;
+                return;
+            }
 
             var targets = FindTargets(Mathf.Max(1, Stats.Projectiles));
             if (targets.Count == 0) return;
@@ -169,7 +181,7 @@ namespace MuhDefense
             }
         }
 
-        bool InRange(Enemy e)
+        public bool InRange(Enemy e)
         {
             Vector3 d = e.transform.position - transform.position;
             d.y = 0f;
@@ -212,6 +224,18 @@ namespace MuhDefense
 
             switch (Type.Kind)
             {
+                case TowerKind.Chain:
+                    FireChain(target, damage);
+                    break;
+                case TowerKind.Projectile when Type == TowerType.EierHuhn:
+                    GameAudio.Play(SoundId.Pop, 0.4f);
+                    Projectile.Spawn(level, this, from, target, damage, Stats, false, Type.ShotShape, Type.ShotScale,
+                        Stats.DotDps > 0f ? new Color(0.75f, 0.85f, 0.45f) : Type.ShotColor);
+                    break;
+                case TowerKind.Arc when Type != TowerType.Heuballen:
+                    GameAudio.Play(SoundId.Pop, Type == TowerType.Moerser ? 0.4f : 0.7f);
+                    Projectile.Spawn(level, this, from, target, damage, Stats, true, Type.ShotShape, Type.ShotScale, Type.ShotColor);
+                    break;
                 case TowerKind.Projectile when Type == TowerType.Bienenstock:
                     GameAudio.Play(SoundId.Buzz);
                     Projectile.Spawn(level, this, from, target, damage, Stats, false,
@@ -232,9 +256,69 @@ namespace MuhDefense
             }
         }
 
+        /// <summary>Blitz auf das Ziel, der danach auf weitere Aliens in der Nähe überspringt.</summary>
+        void FireChain(Enemy first, float damage)
+        {
+            GameAudio.Play(SoundId.Zap);
+            var hit = new HashSet<Enemy>();
+            Vector3 from = transform.position + Vector3.up * (modelTop * 0.9f);
+            Enemy current = first;
+            var color = new Color(0.55f, 0.85f, 1f);
+            for (int jump = 0; jump <= Stats.ChainCount && current != null; jump++)
+            {
+                hit.Add(current);
+                Vector3 to = current.AimPoint;
+                Effects.Beam(level.transform, from, to, color);
+                if (Stats.StunDuration > 0f) current.Hold(Stats.StunDuration, Stats.StunBoss);
+                if (Stats.ArmorShred > 0f) current.ShredArmor(Stats.ArmorShred, 2f);
+                current.TakeDamage(damage, Stats.ArmorPiercing, Stats.ArmoredBonus);
+                damage *= Stats.ChainFalloff;
+                from = to;
+
+                Enemy next = null;
+                float best = Stats.ChainRange;
+                foreach (var e in level.Enemies)
+                {
+                    if (hit.Contains(e) || !CanTarget(e)) continue;
+                    float d = Vector3.Distance(e.transform.position, to);
+                    if (d < best)
+                    {
+                        best = d;
+                        next = e;
+                    }
+                }
+                current = next;
+            }
+        }
+
+        /// <summary>Güllefass: Pfützen auf den Weg in Reichweite – bevorzugt dort, wo gerade Aliens laufen.</summary>
+        bool LayPuddles()
+        {
+            var spots = level.PathPointsWithin(transform.position, Range);
+            if (spots.Count == 0) return false;
+            var targets = FindTargets(Mathf.Max(1, Stats.Projectiles));
+            GameAudio.Play(SoundId.Splat, 0.6f);
+            for (int i = 0; i < Mathf.Max(1, Stats.Projectiles); i++)
+            {
+                Vector3 spot;
+                if (i < targets.Count)
+                {
+                    // etwas vor das Alien, damit es hineinläuft
+                    spot = level.ClosestPointOnPath(targets[i].transform.position + targets[i].transform.forward * 0.6f, out _);
+                }
+                else
+                {
+                    spot = spots[Random.Range(0, spots.Count)];
+                }
+                SlurryPuddle.Spawn(level, this, spot);
+            }
+            return true;
+        }
+
         /// <returns>true, wenn mindestens ein Alien getroffen wurde.</returns>
         bool Pulse()
         {
+            if (Stats.ScareCount > 0) return Scare();
             bool hit = false;
             var enemies = level.Enemies;
             if (!enemies.Exists(e => InRange(e) && CanTarget(e))) return false;
@@ -267,6 +351,66 @@ namespace MuhDefense
             return hit;
         }
 
+        /// <summary>Vogelscheuche: die vordersten Aliens erschrecken (bleiben stehen, weichen zurück), Krähen picken alle in Reichweite.</summary>
+        bool Scare()
+        {
+            var inRange = level.Enemies.FindAll(e => InRange(e) && CanTarget(e));
+            if (inRange.Count == 0) return false;
+            inRange.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+            int scared = 0;
+            foreach (var e in inRange)
+            {
+                if (scared >= Stats.ScareCount) break;
+                if (!e.Hold(Stats.StunDuration, false)) continue;
+                scared++;
+                if (Stats.Knockback > 0f) e.PushBack(Stats.Knockback);
+                if (Stats.PermanentVulnerability > 0f) e.AddPermanentVulnerability(Stats.PermanentVulnerability);
+                level.AddFloatingText(e.AimPoint + Vector3.up * 0.3f, "!", new Color(1f, 0.95f, 0.4f));
+            }
+            if (Stats.Damage > 0f)
+            {
+                for (int i = inRange.Count - 1; i >= 0; i--)
+                {
+                    var e = inRange[i];
+                    if (Stats.ArmorShred > 0f) e.ShredArmor(Stats.ArmorShred, 2f);
+                    e.TakeDamage(Stats.Damage);
+                }
+            }
+            RingEffect.Spawn(level.transform, transform.position, Mathf.Min(Range, 6f), new Color(0.6f, 0.35f, 0.2f, 0.9f), 0.45f);
+            GameAudio.Play(SoundId.Hit, 0.8f);
+            return true;
+        }
+
+        // ---------------------------------------------------------------- Einheiten (Mähdrescher, Hunde)
+
+        readonly List<TowerUnit> units = new List<TowerUnit>();
+
+        /// <summary>Sorgt dafür, dass so viele Einheiten unterwegs sind, wie die Upgrades erlauben.</summary>
+        void SyncUnits()
+        {
+            if (Type.Kind != TowerKind.Harvester && Type.Kind != TowerKind.Dogs) return;
+            units.RemoveAll(u => u == null);
+            while (units.Count < Stats.UnitCount)
+            {
+                var go = new GameObject(Type.Kind == TowerKind.Dogs ? "Hofhund" : "Mähdrescher");
+                go.transform.SetParent(level.transform, false);
+                TowerUnit unit = Type.Kind == TowerKind.Dogs ? go.AddComponent<DogUnit>() : (TowerUnit)go.AddComponent<HarvesterUnit>();
+                unit.Init(level, this, units.Count);
+                units.Add(unit);
+            }
+            foreach (var u in units) u.OnStatsChanged();
+        }
+
+        public int UnitTotal => Mathf.Max(1, Stats.UnitCount);
+
+        void OnDestroy()
+        {
+            foreach (var u in units)
+            {
+                if (u != null) Destroy(u.gameObject);
+            }
+        }
+
         // ---------------------------------------------------------------- Aussehen
 
         /// <summary>Zeigt die Upgrades am Turm: farbige Kugeln je Pfad, ab Stufe 3 ein Abzeichen, ab Stufe 5 ein Leuchten.</summary>
@@ -295,29 +439,7 @@ namespace MuhDefense
             turret.localScale = Vector3.one * (1f + 0.035f * total);
         }
 
-        static string ModelName(TowerKind kind)
-        {
-            switch (kind)
-            {
-                case TowerKind.Arc: return "HeuballenKatapult";
-                case TowerKind.Aura: return "EismilchSprueher";
-                default: return "MistgabelBauer";
-            }
-        }
-
-        public static string ModelNameFor(TowerType type)
-        {
-            if (type == TowerType.Bienenstock) return "Bienenstock";
-            if (type == TowerType.Windmuehle) return "Windmuehle";
-            if (type == TowerType.Wetterhahn) return "Wetterhahn";
-            if (type == TowerType.Hofladen) return "Hofladen";
-            switch (type.Kind)
-            {
-                case TowerKind.Arc: return "HeuballenKatapult";
-                case TowerKind.Aura: return "EismilchSprueher";
-                default: return "MistgabelBauer";
-            }
-        }
+        public static string ModelNameFor(TowerType type) => type.ModelName;
 
         void BuildModel()
         {
@@ -339,7 +461,7 @@ namespace MuhDefense
 
             switch (Type.Kind)
             {
-                case TowerKind.Projectile:
+                default:
                     Visuals.Prim(PrimitiveType.Capsule, turret, new Vector3(0f, 0.4f, 0f), new Vector3(0.3f, 0.28f, 0.3f), Type.Color, "Latzhose");
                     Visuals.Prim(PrimitiveType.Sphere, turret, new Vector3(0f, 0.78f, 0f), Vector3.one * 0.24f, new Color(1f, 0.8f, 0.65f), "Kopf");
                     Visuals.Prim(PrimitiveType.Cylinder, turret, new Vector3(0f, 0.9f, 0f), new Vector3(0.4f, 0.02f, 0.4f), new Color(0.95f, 0.85f, 0.4f), "Strohhut");

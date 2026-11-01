@@ -114,6 +114,31 @@ namespace MuhDefense
             if (stats.BonusReward > 0f) e.MarkBonusReward(stats.BonusReward);
         }
 
+        /// <summary>Popcorn: Körner fliegen in alle Richtungen und treffen Aliens in der Nähe.</summary>
+        void PopcornShards(Vector3 center)
+        {
+            var near = new List<Enemy>();
+            float radius = Mathf.Max(1.4f, stats.Splash * 2.4f);
+            foreach (var e in level.Enemies)
+            {
+                if (!e.Alive || (e.IsFlying && !stats.HitsAir)) continue;
+                Vector3 d = e.transform.position - center;
+                d.y = 0f;
+                if (d.magnitude <= radius) near.Add(e);
+            }
+            Effects.Burst(level.transform, center + Vector3.up * 0.3f, new Color(1f, 0.97f, 0.85f), Mathf.Min(24, stats.Shards + 4), 3.5f, 0.11f);
+            if (near.Count == 0) return;
+            near.Sort((a, b) => (a.transform.position - center).sqrMagnitude.CompareTo((b.transform.position - center).sqrMagnitude));
+            for (int k = 0; k < stats.Shards; k++)
+            {
+                var e = near[k % near.Count];
+                if (!e.Alive) continue;
+                if (stats.Slow < 1f) e.ApplySlow(stats.Slow, stats.SlowDuration);
+                if (stats.StunDuration > 0f) e.Hold(stats.StunDuration, false);
+                e.TakeDamage(stats.ShardDamage, stats.ArmorPiercing, stats.ArmoredBonus);
+            }
+        }
+
         void ArcImpact()
         {
             Vector3 center = new Vector3(targetPos.x, 0f, targetPos.z);
@@ -131,8 +156,12 @@ namespace MuhDefense
                     float dps = stats.BurnDps * (e.IsArmored ? stats.BurnArmoredMultiplier : 1f);
                     e.ApplyBurn(dps, stats.BurnDuration, stats.FireMeltsArmor);
                 }
+                ApplyHitEffects(e);
+                if (stats.StunDuration > 0f) e.Hold(stats.StunDuration, stats.StunBoss);
+                if (stats.Knockback > 0f) e.PushBack(stats.Knockback);
                 e.TakeDamage(damage, stats.ArmorPiercing, stats.ArmoredBonus);
             }
+            if (stats.Shards > 0) PopcornShards(center);
             RingEffect.Spawn(level.transform, center, stats.Splash, new Color(1f, 0.85f, 0.3f, 0.9f), 0.3f);
             Effects.Burst(level.transform, center + Vector3.up * 0.2f, stats.BurnDps > 0f ? new Color(1f, 0.5f, 0.15f) : new Color(0.95f, 0.8f, 0.35f), 8, 2.5f);
             GameAudio.Play(SoundId.Hit, 1.5f);

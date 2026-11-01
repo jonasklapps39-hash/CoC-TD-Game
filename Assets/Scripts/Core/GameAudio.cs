@@ -25,6 +25,9 @@ namespace MuhDefense
         Freeze,
         Buzz,
         Wind,
+        Zap,
+        Splat,
+        Bark,
     }
 
     public enum MusicId
@@ -241,6 +244,22 @@ namespace MuhDefense
                     b = Buffer(0.3f);
                     AddNoise(b, 0f, 0.28f, 1f, 0.9f, 0.05f, 4f);
                     AddTone(b, 0f, 0.12f, 140f, 60f, 0.7f, Sine);
+                    break;
+                case SoundId.Zap:
+                    b = Buffer(0.22f);
+                    AddNoise(b, 0f, 0.2f, 0.7f, 0.95f, 0.02f, 3f);
+                    AddTone(b, 0f, 0.2f, 1400f, 300f, 0.35f, Square, 2f);
+                    break;
+                case SoundId.Splat:
+                    b = Buffer(0.25f);
+                    AddNoise(b, 0f, 0.22f, 0.9f, 0.15f, 0.2f, 2f);
+                    AddTone(b, 0f, 0.15f, 160f, 70f, 0.5f, Sine);
+                    break;
+                case SoundId.Bark:
+                    b = Buffer(0.2f);
+                    AddTone(b, 0f, 0.08f, 520f, 380f, 0.7f, Saw, 2f);
+                    AddTone(b, 0.1f, 0.08f, 560f, 400f, 0.6f, Saw, 2f);
+                    AddNoise(b, 0f, 0.18f, 0.3f, 0.5f, 0.1f);
                     break;
                 case SoundId.Fork:
                     b = Buffer(0.14f);

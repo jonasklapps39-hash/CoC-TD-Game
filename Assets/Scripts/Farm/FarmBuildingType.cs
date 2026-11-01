@@ -163,52 +163,67 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Schmiede,
             Name = "Schmiede",
-            Description = "Werkstatt für Basis-Türme: Mistgabel-Bauer, ab Stufe 2 der Bienenstock. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Basis-Türme: Mistgabel-Bauer und Eier-Huhn, ab Stufe 2 Bienenstock und Hofhund-Hütte. Jede Stufe erlaubt im Level höhere Upgrades.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
             Costs = new[] { 200, 500, 1200, 2500, 4500 },
             BuildSeconds = new[] { 10, 60, 180, 300, 420 },
             MaxCount = new[] { 1, 1, 1, 1, 1 },
-            Unlocks = new[] { new TowerUnlock(TowerType.Mistgabel, 1), new TowerUnlock(TowerType.Bienenstock, 2) },
+            Unlocks = new[]
+            {
+                new TowerUnlock(TowerType.Mistgabel, 1), new TowerUnlock(TowerType.EierHuhn, 1),
+                new TowerUnlock(TowerType.Bienenstock, 2), new TowerUnlock(TowerType.Hofhund, 2),
+            },
         };
 
         public static readonly FarmBuildingType Zimmerei = new FarmBuildingType
         {
             Kind = FarmBuildingKind.Zimmerei,
             Name = "Zimmerei",
-            Description = "Werkstatt für Explosiv-Türme: Heuballen-Katapult. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Explosiv-Türme: Heuballen-Katapult und Popcorn-Kanone, ab Stufe 2 Kürbis-Mörser und Mähdrescher. Jede Stufe erlaubt im Level höhere Upgrades.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
             Costs = new[] { 400, 1000, 2000, 3500, 5000 },
             BuildSeconds = new[] { 30, 120, 240, 360, 480 },
             MaxCount = new[] { 0, 1, 1, 1, 1 },
-            Unlocks = new[] { new TowerUnlock(TowerType.Heuballen, 1) },
+            Unlocks = new[]
+            {
+                new TowerUnlock(TowerType.Heuballen, 1), new TowerUnlock(TowerType.Popcorn, 1),
+                new TowerUnlock(TowerType.Moerser, 2), new TowerUnlock(TowerType.Maehdrescher, 2),
+            },
         };
 
         public static readonly FarmBuildingType Tueftlerschuppen = new FarmBuildingType
         {
             Kind = FarmBuildingKind.Tueftlerschuppen,
             Name = "Tüftlerschuppen",
-            Description = "Werkstatt für Technik-Türme: Eismilch-Sprüher, ab Stufe 2 die Windmühle. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Technik-Türme: Eismilch-Sprüher, ab Stufe 2 Windmühle, Traktor-Tesla und Güllefass. Jede Stufe erlaubt im Level höhere Upgrades.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
             Costs = new[] { 900, 1800, 3000, 4500, 6000 },
             BuildSeconds = new[] { 60, 180, 300, 420, 540 },
             MaxCount = new[] { 0, 0, 1, 1, 1 },
-            Unlocks = new[] { new TowerUnlock(TowerType.Eismilch, 1), new TowerUnlock(TowerType.Windmuehle, 2) },
+            Unlocks = new[]
+            {
+                new TowerUnlock(TowerType.Eismilch, 1), new TowerUnlock(TowerType.Windmuehle, 2),
+                new TowerUnlock(TowerType.Tesla, 2), new TowerUnlock(TowerType.Guelle, 2),
+            },
         };
 
         public static readonly FarmBuildingType HofladenKontor = new FarmBuildingType
         {
             Kind = FarmBuildingKind.HofladenKontor,
             Name = "Hofladen-Kontor",
-            Description = "Werkstatt für Unterstützungs-Türme: Wetterhahn, ab Stufe 2 der Hofladen. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Unterstützungs-Türme: Wetterhahn und Vogelscheuche, ab Stufe 2 der Hofladen. Jede Stufe erlaubt im Level höhere Upgrades.",
             MaxLevel = 5,
             CostResource = Resource.Mais,
             Costs = new[] { 600, 1200, 2400, 4000, 6000 },
             BuildSeconds = new[] { 30, 120, 240, 360, 480 },
             MaxCount = new[] { 0, 1, 1, 1, 1 },
-            Unlocks = new[] { new TowerUnlock(TowerType.Wetterhahn, 1), new TowerUnlock(TowerType.Hofladen, 2) },
+            Unlocks = new[]
+            {
+                new TowerUnlock(TowerType.Wetterhahn, 1), new TowerUnlock(TowerType.Vogelscheuche, 1), new TowerUnlock(TowerType.Hofladen, 2),
+            },
         };
 
         public static readonly FarmBuildingType Heldenhuette = new FarmBuildingType

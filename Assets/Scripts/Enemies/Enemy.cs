@@ -292,6 +292,15 @@ namespace MuhDefense
             if (showIce) SetIce(true);
         }
 
+        /// <summary>Hält das Alien fest, ohne Eisblock (Hunde, Schreck, Betäubung).</summary>
+        /// <returns>false, wenn es sich nicht festhalten lässt (Boss).</returns>
+        public bool Hold(float duration, bool allowBoss)
+        {
+            if (!Alive || (IsBoss && !allowBoss)) return false;
+            freezeTimer = Mathf.Max(freezeTimer, duration);
+            return true;
+        }
+
         public void ApplyDot(float dps, float duration)
         {
             dotDps = Mathf.Max(dotDps, dps);

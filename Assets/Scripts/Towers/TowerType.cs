@@ -10,6 +10,14 @@ namespace MuhDefense
         Arc,
         /// <summary>Wirkt regelmäßig auf alle Aliens in Reichweite.</summary>
         Aura,
+        /// <summary>Blitz, der von Alien zu Alien springt (Traktor-Tesla).</summary>
+        Chain,
+        /// <summary>Legt Pfützen auf den Weg (Güllefass).</summary>
+        Puddle,
+        /// <summary>Fährt selbst auf dem Weg hin und her (Mähdrescher).</summary>
+        Harvester,
+        /// <summary>Schickt Hunde auf den Weg, die Aliens festhalten (Hofhund-Hütte).</summary>
+        Dogs,
     }
 
     public enum TowerAbility
@@ -104,6 +112,39 @@ namespace MuhDefense
         /// <summary>Zusätzliche Münzen für Aliens, die von diesem Turm getroffen wurden (Anteil).</summary>
         public float BonusReward;
 
+        // Popcorn-Kanone: Splitter nach dem Aufprall
+        public int Shards;
+        public float ShardDamage;
+
+        /// <summary>Getroffene Aliens bleiben so lange stehen (Blitz, Kürbis, Vogelscheuche).</summary>
+        public float StunDuration;
+        /// <summary>Betäubung wirkt auch auf Bosse.</summary>
+        public bool StunBoss;
+
+        // Traktor-Tesla
+        public int ChainCount;
+        public float ChainRange = 1.6f;
+        /// <summary>Schadens-Faktor pro Sprung.</summary>
+        public float ChainFalloff = 0.85f;
+
+        // Güllefass
+        public float PuddleRadius;
+        public float PuddleDuration;
+
+        // Mähdrescher und Hofhunde
+        public int UnitCount;
+        public float UnitSpeed = 1.5f;
+        public float UnitRadius = 0.45f;
+        public float UnitHp;
+        public float RespawnTime = 6f;
+        /// <summary>Hunde halten auch Bosse fest.</summary>
+        public bool BlocksBoss;
+        /// <summary>Hunde beißen Kuh-Träger dreifach.</summary>
+        public bool RescuesCows;
+
+        /// <summary>Vogelscheuche: so viele Aliens werden pro Schreck erschreckt (0 = keine Schreck-Wirkung).</summary>
+        public int ScareCount;
+
         public TowerAbility Ability = TowerAbility.None;
         public float AbilityCooldown;
 
@@ -153,6 +194,14 @@ namespace MuhDefense
         /// <summary>Kurzer Name für die Turm-Karten in der Seitenleiste.</summary>
         public string ShortName;
         public string Description;
+        /// <summary>Modell in Assets/Resources/Models.</summary>
+        public string ModelName;
+        /// <summary>Symbol in Assets/Resources/Icons (leer = wie das Modell).</summary>
+        public string IconName = "";
+        /// <summary>Form und Farbe der Geschosse.</summary>
+        public PrimitiveType ShotShape = PrimitiveType.Cube;
+        public Vector3 ShotScale = new Vector3(0.05f, 0.05f, 0.35f);
+        public Color ShotColor = new Color(0.75f, 0.75f, 0.8f);
         public TowerKind Kind;
         public int Cost;
         public Color Color;
@@ -169,6 +218,7 @@ namespace MuhDefense
         public static readonly TowerType Mistgabel = new TowerType
         {
             Name = "Mistgabel-Bauer",
+            ModelName = "MistgabelBauer",
             ShortName = "Mistgabel",
             Description = "Wirft Mistgabeln auf einzelne Aliens. Günstig und zuverlässig.",
             Kind = TowerKind.Projectile,
@@ -206,6 +256,7 @@ namespace MuhDefense
         public static readonly TowerType Heuballen = new TowerType
         {
             Name = "Heuballen-Katapult",
+            ModelName = "HeuballenKatapult",
             ShortName = "Katapult",
             Description = "Schleudert Heuballen im Bogen. Flächenschaden, gut gegen Gruppen und Panzer.",
             Kind = TowerKind.Arc,
@@ -241,6 +292,7 @@ namespace MuhDefense
         public static readonly TowerType Eismilch = new TowerType
         {
             Name = "Eismilch-Sprüher",
+            ModelName = "EismilchSprueher",
             ShortName = "Eismilch",
             Description = "Versprüht eiskalte Milch und verlangsamt alle Aliens in der Nähe.",
             Kind = TowerKind.Aura,
@@ -276,6 +328,7 @@ namespace MuhDefense
         public static readonly TowerType Bienenstock = new TowerType
         {
             Name = "Bienenstock",
+            ModelName = "Bienenstock",
             ShortName = "Bienen",
             Description = "Bienen verfolgen die Aliens, treffen auch Ufos und stechen mit Gift (Schaden über Zeit).",
             Kind = TowerKind.Projectile,
@@ -309,6 +362,7 @@ namespace MuhDefense
         public static readonly TowerType Windmuehle = new TowerType
         {
             Name = "Windmühle",
+            ModelName = "Windmuehle",
             ShortName = "Windmühle",
             Description = "Pustet Aliens den Weg zurück. Richtet vierfachen Schaden an fliegenden Ufos an.",
             Kind = TowerKind.Aura,
@@ -342,6 +396,7 @@ namespace MuhDefense
         public static readonly TowerType Wetterhahn = new TowerType
         {
             Name = "Wetterhahn",
+            ModelName = "Wetterhahn",
             ShortName = "Wetterhahn",
             Description = "Greift nicht an, aber Türme in seiner Nähe sehen getarnte Aliens und haben 10 % mehr Reichweite.",
             Kind = TowerKind.Aura,
@@ -375,6 +430,7 @@ namespace MuhDefense
         public static readonly TowerType Hofladen = new TowerType
         {
             Name = "Hofladen",
+            ModelName = "Hofladen",
             ShortName = "Hofladen",
             Description = "Greift nicht an, bringt aber nach jeder Welle 40 Münzen extra.",
             Kind = TowerKind.Aura,
@@ -405,7 +461,294 @@ namespace MuhDefense
             },
         };
 
-        public static readonly TowerType[] All = { Mistgabel, Heuballen, Eismilch, Bienenstock, Windmuehle, Wetterhahn, Hofladen };
+        public static readonly TowerType EierHuhn = new TowerType
+        {
+            Name = "Eier-Huhn",
+            ModelName = "EierHuhn",
+            ShortName = "Huhn",
+            Description = "Ein grimmiges Huhn feuert Eier in schneller Folge. Billig, schnell, wenig Schaden pro Ei.",
+            Kind = TowerKind.Projectile,
+            Cost = 90,
+            Color = new Color(0.97f, 0.95f, 0.9f),
+            ShotShape = PrimitiveType.Sphere,
+            ShotScale = new Vector3(0.11f, 0.11f, 0.15f),
+            ShotColor = new Color(1f, 0.97f, 0.88f),
+            Base = new TowerStats { Range = 2.3f, Damage = 3f, FireRate = 3f, ProjectileSpeed = 11f },
+            Paths = new[]
+            {
+                new UpgradePath("Maschinenhuhn", Red,
+                    T("Hektisch", "+25 % Tempo.", 90, s => s.FireRate *= 1.25f),
+                    T("Doppelei", "2 Eier pro Schuss.", 170, s => s.Projectiles += 1),
+                    T("Legebatterie", "+60 % Tempo.", 380, s => s.FireRate *= 1.6f),
+                    T("Eier-MG", "Doppeltes Tempo.", 850, s => s.FireRate *= 2f),
+                    T("Maschinenhuhn", "Doppeltes Tempo, 3 Eier pro Schuss, +2 Schaden.", 1700,
+                        s => { s.FireRate *= 2f; s.Projectiles += 1; s.Damage += 2f; })),
+                new UpgradePath("Faule Eier", Blue,
+                    T("Faule Eier", "Treffer verlangsamen leicht.", 100, s => { s.Slow = 0.8f; s.SlowDuration = 1f; }),
+                    T("Stinkbombe", "Gestank: Schaden über Zeit.", 200, s => { s.DotDps = 2f; s.DotDuration = 3f; }),
+                    T("Schwefelei", "Schwächt Panzer um 2.", 420, s => s.ArmorShred = 2f),
+                    T("Ekel-Ei", "Stärkere Verlangsamung, doppelter Gestank.", 900, s => { s.Slow = 0.6f; s.DotDps *= 2f; }),
+                    T("Faulgas-Wolke", "Getroffene Aliens nehmen dauerhaft 20 % mehr Schaden.", 1600,
+                        s => { s.PermanentVulnerability = 0.2f; s.DotDps *= 2f; })),
+                new UpgradePath("Goldene Eier", Green,
+                    T("Hartgekocht", "+2 Schaden.", 110, s => s.Damage += 2f),
+                    T("Weitwurf", "+30 % Reichweite, sieht getarnte Aliens.", 200, s => { s.Range *= 1.3f; s.SeesCamo = true; }),
+                    T("Durchschlag", "Jedes Ei trifft 3 Aliens.", 450, s => s.Pierce += 2),
+                    T("Goldenes Ei", "+4 Schaden, getroffene Aliens bringen 30 % mehr Münzen.", 900, s => { s.Damage += 4f; s.BonusReward = 0.3f; }),
+                    T("Henne der Legende", "Jedes vierte Ei ist kritisch (vierfacher Schaden), trifft 5 Aliens.", 1700,
+                        s => { s.CritChance = 0.25f; s.CritMultiplier = 4f; s.Pierce += 2; })),
+            },
+        };
+
+        public static readonly TowerType Popcorn = new TowerType
+        {
+            Name = "Popcorn-Kanone",
+            ModelName = "PopcornKanone",
+            ShortName = "Popcorn",
+            Description = "Schießt Maiskolben, die beim Aufprall zu Popcorn platzen. Die Körner fliegen in alle Richtungen.",
+            Kind = TowerKind.Arc,
+            Cost = 200,
+            Color = new Color(1f, 0.9f, 0.4f),
+            ShotShape = PrimitiveType.Capsule,
+            ShotScale = new Vector3(0.14f, 0.2f, 0.14f),
+            ShotColor = new Color(1f, 0.82f, 0.2f),
+            Base = new TowerStats { Range = 3f, Damage = 8f, FireRate = 0.6f, Splash = 0.7f, Shards = 4, ShardDamage = 4f, ProjectileSpeed = 7f, HitsAir = false },
+            Paths = new[]
+            {
+                new UpgradePath("Karamell", Red,
+                    T("Karamell", "Körner kleben und verlangsamen.", 120, s => { s.Slow = 0.75f; s.SlowDuration = 1.5f; }),
+                    T("Klebrig", "Verlangsamung hält länger.", 230, s => s.SlowDuration = 2.5f),
+                    T("Zuckerguss", "Stärkere Verlangsamung.", 480, s => s.Slow = 0.55f),
+                    T("Karamellfalle", "Körner kleben Aliens kurz fest.", 950, s => s.StunDuration = 0.5f),
+                    T("Karamell-Lawine", "6 Körner mehr, sehr starke Verlangsamung.", 1700, s => { s.Shards += 6; s.Slow = 0.45f; })),
+                new UpgradePath("Mega-Plopp", Blue,
+                    T("Mehr Körner", "3 Körner mehr.", 130, s => s.Shards += 3),
+                    T("Großer Topf", "+40 % Flächenradius.", 240, s => s.Splash *= 1.4f),
+                    T("Mega-Plopp", "5 Körner mehr, +3 Kornschaden.", 520, s => { s.Shards += 5; s.ShardDamage += 3f; }),
+                    T("Kinosaal", "+10 Schaden, +30 % Flächenradius.", 1000, s => { s.Damage += 10f; s.Splash *= 1.3f; }),
+                    T("Popcorn-Explosion", "10 Körner mehr, doppelter Kornschaden.", 1800, s => { s.Shards += 10; s.ShardDamage *= 2f; })),
+                new UpgradePath("Butter", Green,
+                    T("Gebuttert", "+25 % Tempo.", 110, s => s.FireRate *= 1.25f),
+                    T("Salzig", "+2 Kornschaden.", 210, s => s.ShardDamage += 2f),
+                    T("Doppellauf", "2 Kolben pro Schuss.", 480, s => s.Projectiles += 1),
+                    T("Butterschmelze", "Durchdringt Panzer, +50 % gegen gepanzerte Aliens.", 950, s => { s.ArmorPiercing = true; s.ArmoredBonus *= 1.5f; }),
+                    T("Popcorn-Fabrik", "Doppeltes Tempo, 3 Kolben pro Schuss.", 1800, s => { s.FireRate *= 2f; s.Projectiles += 1; })),
+            },
+        };
+
+        public static readonly TowerType Moerser = new TowerType
+        {
+            Name = "Kürbis-Mörser",
+            ModelName = "KuerbisMoerser",
+            ShortName = "Mörser",
+            Description = "Artillerie mit riesiger Reichweite und großem Explosionsradius, aber langsam. Trifft nur Bodengegner.",
+            Kind = TowerKind.Arc,
+            Cost = 300,
+            Color = new Color(0.95f, 0.5f, 0.1f),
+            ShotShape = PrimitiveType.Sphere,
+            ShotScale = new Vector3(0.32f, 0.28f, 0.32f),
+            ShotColor = new Color(0.95f, 0.5f, 0.1f),
+            Base = new TowerStats { Range = 5f, Damage = 30f, FireRate = 0.3f, Splash = 1.3f, ProjectileSpeed = 5f, HitsAir = false },
+            Paths = new[]
+            {
+                new UpgradePath("Panzerknacker", Red,
+                    T("Harte Schale", "Schwächt Panzer um 2.", 150, s => s.ArmorShred = 2f),
+                    T("Panzerknacker", "Ignoriert Panzer.", 300, s => s.ArmorPiercing = true),
+                    T("Schalensprenger", "Doppelter Schaden gegen gepanzerte Aliens.", 600, s => s.ArmoredBonus *= 2f),
+                    T("Stahlkürbis", "+30 Schaden.", 1100, s => s.Damage += 30f),
+                    T("Kürbis-Kanone", "Doppelter Schaden, dreifach gegen Panzer.", 2000, s => { s.Damage *= 2f; s.ArmoredBonus *= 1.5f; })),
+                new UpgradePath("Kürbis-Regen", Blue,
+                    T("Schnelllader", "+30 % Tempo.", 140, s => s.FireRate *= 1.3f),
+                    T("Zwei Kürbisse", "2 Kürbisse pro Schuss.", 320, s => s.Projectiles += 1),
+                    T("Kürbis-Hagel", "3 Kürbisse, +20 % Tempo.", 650, s => { s.Projectiles += 1; s.FireRate *= 1.2f; }),
+                    T("Kürbisfeld", "5 Kürbisse pro Schuss.", 1200, s => s.Projectiles += 2),
+                    T("Kürbis-Regen", "8 Kürbisse pro Schuss, +50 % Tempo.", 2100, s => { s.Projectiles += 3; s.FireRate *= 1.5f; })),
+                new UpgradePath("Riesenkürbis", Green,
+                    T("Großer Kürbis", "+30 % Explosionsradius.", 130, s => s.Splash *= 1.3f),
+                    T("Betäubung", "Getroffene Aliens sind kurz betäubt.", 280, s => s.StunDuration = 0.4f),
+                    T("Riesenkürbis", "+40 % Radius, +15 Schaden.", 600, s => { s.Splash *= 1.4f; s.Damage += 15f; }),
+                    T("Schockwelle", "Längere Betäubung, stößt Aliens zurück.", 1100, s => { s.StunDuration = 1f; s.Knockback = 0.4f; }),
+                    T("Halloween", "Unbegrenzte Reichweite, +40 Schaden.", 2000, s => { s.GlobalRange = true; s.Damage += 40f; })),
+            },
+        };
+
+        public static readonly TowerType Tesla = new TowerType
+        {
+            Name = "Traktor-Tesla",
+            ModelName = "TraktorTesla",
+            ShortName = "Tesla",
+            Description = "Ein umgebauter Traktor mit Teslaspule. Blitze springen von Alien zu Alien, auch auf Ufos.",
+            Kind = TowerKind.Chain,
+            Cost = 260,
+            Color = new Color(0.45f, 0.8f, 1f),
+            Base = new TowerStats { Range = 2.6f, Damage = 9f, FireRate = 0.8f, ChainCount = 2, ChainRange = 1.6f, ChainFalloff = 0.85f },
+            Paths = new[]
+            {
+                new UpgradePath("Gewitter", Red,
+                    T("Mehr Spannung", "Springt auf ein Alien mehr.", 140, s => s.ChainCount += 1),
+                    T("Kettenblitz", "Springt auf 2 Aliens mehr.", 300, s => s.ChainCount += 2),
+                    T("Gewitterfront", "Weitere Sprünge, +4 Schaden.", 620, s => { s.ChainRange *= 1.4f; s.Damage += 4f; }),
+                    T("Blitzgewitter", "Springt auf 4 Aliens mehr.", 1200, s => s.ChainCount += 4),
+                    T("Kugelblitz", "Zwei Blitze gleichzeitig, 6 Sprünge mehr.", 2100, s => { s.ChainCount += 6; s.Projectiles += 1; })),
+                new UpgradePath("Überladung", Blue,
+                    T("Funkenflug", "+4 Schaden.", 130, s => s.Damage += 4f),
+                    T("Betäuber", "Blitze betäuben kurz.", 280, s => s.StunDuration = 0.3f),
+                    T("Hochspannung", "+10 Schaden.", 600, s => s.Damage += 10f),
+                    T("Überladung", "Längere Betäubung, wirkt auch auf Bosse.", 1100, s => { s.StunDuration = 0.8f; s.StunBoss = true; }),
+                    T("Tesla-Turm", "Doppelter Schaden, ignoriert Panzer.", 2000, s => { s.Damage *= 2f; s.ArmorPiercing = true; })),
+                new UpgradePath("Generator", Green,
+                    T("Dynamo", "+25 % Tempo.", 120, s => s.FireRate *= 1.25f),
+                    T("Antenne", "+30 % Reichweite, sieht getarnte Aliens.", 240, s => { s.Range *= 1.3f; s.SeesCamo = true; }),
+                    T("Turbo", "+50 % Tempo.", 520, s => s.FireRate *= 1.5f),
+                    T("Starkstrom", "Blitze verlieren beim Springen keinen Schaden.", 1000, s => s.ChainFalloff = 1f),
+                    T("Kraftwerk", "Doppeltes Tempo, +30 % Reichweite.", 1900, s => { s.FireRate *= 2f; s.Range *= 1.3f; })),
+            },
+        };
+
+        public static readonly TowerType Guelle = new TowerType
+        {
+            Name = "Güllefass",
+            ModelName = "Guellefass",
+            ShortName = "Gülle",
+            Description = "Verteilt Gülle auf dem Weg. Aliens, die durchlaufen, nehmen Giftschaden und rutschen langsamer.",
+            Kind = TowerKind.Puddle,
+            Cost = 200,
+            Color = new Color(0.45f, 0.3f, 0.12f),
+            Base = new TowerStats
+            {
+                Range = 2.4f, FireRate = 0.35f, DotDps = 4f, DotDuration = 1f, Slow = 0.75f, SlowDuration = 0.5f,
+                PuddleRadius = 0.6f, PuddleDuration = 5f, HitsAir = false,
+            },
+            Paths = new[]
+            {
+                new UpgradePath("Extra-Würzig", Red,
+                    T("Würzig", "+50 % Giftschaden.", 110, s => s.DotDps *= 1.5f),
+                    T("Ätzend", "Schwächt Panzer um 2.", 230, s => s.ArmorShred = 2f),
+                    T("Lange Haltbarkeit", "Pfützen bleiben fast doppelt so lange.", 450, s => s.PuddleDuration *= 1.8f),
+                    T("Extra-Würzig", "Zweieinhalbfacher Giftschaden.", 950, s => s.DotDps *= 2.5f),
+                    T("Biogas", "Aliens nehmen dauerhaft 25 % mehr Schaden, mehr Gift.", 1800,
+                        s => { s.PermanentVulnerability = 0.25f; s.DotDps *= 1.5f; })),
+                new UpgradePath("Gülle-Fontäne", Blue,
+                    T("Großer Schlauch", "Größere Pfützen.", 120, s => s.PuddleRadius *= 1.3f),
+                    T("Fontäne", "Spritzt auch auf fliegende Ufos.", 260, s => s.HitsAir = true),
+                    T("Zweite Düse", "2 Pfützen auf einmal.", 520, s => s.Projectiles += 1),
+                    T("Sprühregen", "+50 % Reichweite, 3 Pfützen.", 1000, s => { s.Range *= 1.5f; s.Projectiles += 1; }),
+                    T("Gülle-Tsunami", "Riesige Pfützen, 5 auf einmal.", 1800, s => { s.PuddleRadius *= 1.6f; s.Projectiles += 2; })),
+                new UpgradePath("Matsch", Green,
+                    T("Rutschig", "Stärkere Verlangsamung.", 100, s => s.Slow = 0.6f),
+                    T("Schlammbad", "Noch stärkere Verlangsamung.", 240, s => s.Slow = 0.45f),
+                    T("Rasenmatsch", "+40 % Tempo.", 480, s => s.FireRate *= 1.4f),
+                    T("Sumpf", "Aliens kommen kaum voran.", 950, s => s.Slow = 0.3f),
+                    T("Moor", "Doppelter Giftschaden, Aliens versinken fast.", 1700, s => { s.DotDps *= 2f; s.Slow = 0.25f; })),
+            },
+        };
+
+        public static readonly TowerType Maehdrescher = new TowerType
+        {
+            Name = "Mähdrescher",
+            ModelName = "Maschinenschuppen",
+            IconName = "Maehdrescher",
+            ShortName = "Mäher",
+            Description = "Fährt selbst auf dem Weg in seiner Nähe hin und her und mäht Aliens nieder. Hoher Nahkampfschaden.",
+            Kind = TowerKind.Harvester,
+            Cost = 350,
+            Color = new Color(0.3f, 0.65f, 0.25f),
+            Base = new TowerStats { Range = 2.5f, Damage = 12f, FireRate = 2f, UnitCount = 1, UnitSpeed = 1.5f, UnitRadius = 0.45f, HitsAir = false },
+            Paths = new[]
+            {
+                new UpgradePath("Turbo-Mäher", Red,
+                    T("Schärfere Messer", "+6 Schaden.", 150, s => s.Damage += 6f),
+                    T("Turbo", "+50 % Geschwindigkeit.", 300, s => s.UnitSpeed *= 1.5f),
+                    T("Doppelmesser", "+12 Schaden.", 650, s => s.Damage += 12f),
+                    T("Diesel-Monster", "+50 % Geschwindigkeit, +15 Schaden.", 1200, s => { s.UnitSpeed *= 1.5f; s.Damage += 15f; }),
+                    T("Turbo-Mäher", "Doppelter Schaden, noch schneller.", 2100, s => { s.Damage *= 2f; s.UnitSpeed *= 1.3f; })),
+                new UpgradePath("Strohballen-Presse", Blue,
+                    T("Rückwärtsgang", "Schiebt Aliens zurück.", 140, s => s.Knockback = 0.25f),
+                    T("Presse", "Verlangsamt getroffene Aliens.", 280, s => { s.Slow = 0.6f; s.SlowDuration = 1.5f; }),
+                    T("Strohballen", "Getroffene Aliens bringen 25 % mehr Münzen.", 550, s => s.BonusReward = 0.25f),
+                    T("Ballenwerfer", "Schiebt weiter zurück.", 1000, s => s.Knockback = 0.5f),
+                    T("Großpresse", "+20 Schaden, breiteres Schneidwerk.", 2000, s => { s.Damage += 20f; s.UnitRadius *= 1.4f; })),
+                new UpgradePath("Fuhrpark", Green,
+                    T("Breites Schneidwerk", "Trifft in breiterem Streifen.", 130, s => s.UnitRadius *= 1.3f),
+                    T("Größeres Feld", "Fährt eine längere Strecke ab.", 260, s => s.Range *= 1.4f),
+                    T("Zweiter Mähdrescher", "2 Mähdrescher.", 600, s => s.UnitCount = 2),
+                    T("Flutlicht", "Sieht getarnte Aliens, längere Strecke.", 900, s => { s.SeesCamo = true; s.Range *= 1.2f; }),
+                    T("Erntekolonne", "3 Mähdrescher, +10 Schaden.", 1900, s => { s.UnitCount = 3; s.Damage += 10f; })),
+            },
+        };
+
+        public static readonly TowerType Hofhund = new TowerType
+        {
+            Name = "Hofhund-Hütte",
+            ModelName = "Hundehuette",
+            ShortName = "Hofhund",
+            Description = "Schickt Hofhunde auf den Weg. Sie halten Aliens fest und beißen zu. Bosse sind zu stark für sie.",
+            Kind = TowerKind.Dogs,
+            Cost = 240,
+            Color = new Color(0.78f, 0.55f, 0.3f),
+            Base = new TowerStats { Range = 2.2f, Damage = 6f, FireRate = 1f, UnitCount = 2, UnitHp = 60f, RespawnTime = 6f, HitsAir = false },
+            Paths = new[]
+            {
+                new UpgradePath("Rudel", Red,
+                    T("Welpe", "Ein Hund mehr.", 120, s => s.UnitCount += 1),
+                    T("Rudel", "Noch ein Hund mehr.", 260, s => s.UnitCount += 1),
+                    T("Leitwolf", "+6 Bissschaden.", 550, s => s.Damage += 6f),
+                    T("Großes Rudel", "2 Hunde mehr.", 1000, s => s.UnitCount += 2),
+                    T("Wolfsrudel", "2 Hunde mehr, +50 % Bissschaden.", 1900, s => { s.UnitCount += 2; s.Damage *= 1.5f; })),
+                new UpgradePath("Bernhardiner", Blue,
+                    T("Kräftig", "Hunde halten länger durch.", 130, s => s.UnitHp *= 1.6f),
+                    T("Dickes Fell", "Hunde halten noch länger durch.", 280, s => s.UnitHp *= 1.6f),
+                    T("Bernhardiner", "Große Hunde: doppelte Ausdauer, +8 Bissschaden.", 600, s => { s.UnitHp *= 2f; s.Damage += 8f; }),
+                    T("Bollwerk", "Halten sogar Bosse fest.", 1100, s => s.BlocksBoss = true),
+                    T("Retter", "Beißen Kuh-Träger dreifach.", 2000, s => { s.RescuesCows = true; s.UnitHp *= 1.5f; })),
+                new UpgradePath("Schnauze", Green,
+                    T("Spürnase", "Erschnüffeln getarnte Aliens.", 100, s => s.SeesCamo = true),
+                    T("Schnelle Pfoten", "Neue Hunde kommen schneller.", 220, s => s.RespawnTime *= 0.6f),
+                    T("Kräftiger Biss", "+6 Bissschaden, schwächt Panzer um 2.", 500, s => { s.Damage += 6f; s.ArmorShred = 2f; }),
+                    T("Tollwut", "Bisse vergiften.", 950, s => { s.DotDps = 6f; s.DotDuration = 2f; }),
+                    T("Höllenhund", "Doppelter Bissschaden, Bisse setzen Aliens in Brand.", 1800, s => { s.Damage *= 2f; s.BurnDps = 10f; s.BurnDuration = 2f; })),
+            },
+        };
+
+        public static readonly TowerType Vogelscheuche = new TowerType
+        {
+            Name = "Vogelscheuche",
+            ModelName = "Vogelscheuche",
+            ShortName = "Scheuche",
+            Description = "Erschreckt Aliens: Sie bleiben kurz wie angewurzelt stehen. Macht selbst keinen Schaden. Bosse lachen nur.",
+            Kind = TowerKind.Aura,
+            Cost = 180,
+            Color = new Color(0.55f, 0.25f, 0.15f),
+            Base = new TowerStats { Range = 2f, Damage = 0f, FireRate = 0.5f, StunDuration = 0.8f, ScareCount = 1, HitsAir = false },
+            Paths = new[]
+            {
+                new UpgradePath("Gruselscheuche", Red,
+                    T("Gruselig", "Erschreckt 2 Aliens auf einmal.", 100, s => s.ScareCount += 1),
+                    T("Kürbisfratze", "Erschreckt 4 Aliens auf einmal.", 220, s => s.ScareCount += 2),
+                    T("Schreckgespenst", "Aliens bleiben länger stehen.", 480, s => s.StunDuration *= 1.5f),
+                    T("Albtraum", "Erschreckt 8 Aliens auf einmal.", 1000, s => s.ScareCount += 4),
+                    T("Gruselscheuche", "Erschreckt alle Aliens in Reichweite, noch länger.", 1800, s => { s.ScareCount = 99; s.StunDuration += 0.5f; })),
+                new UpgradePath("Krähenschwarm", Blue,
+                    T("Krähe", "Eine Krähe pickt Aliens (auch getarnte und Ufos).", 120,
+                        s => { s.Damage = 3f; s.HitsAir = true; s.SeesCamo = true; }),
+                    T("Zwei Krähen", "+3 Schaden.", 240, s => s.Damage += 3f),
+                    T("Krähenschwarm", "+6 Schaden, +30 % Tempo.", 500, s => { s.Damage += 6f; s.FireRate *= 1.3f; }),
+                    T("Rabenschwarm", "Schwächt Panzer um 3, +6 Schaden.", 950, s => { s.ArmorShred = 3f; s.Damage += 6f; }),
+                    T("Hitchcock", "+15 Schaden, +50 % Tempo.", 1800, s => { s.Damage += 15f; s.FireRate *= 1.5f; })),
+                new UpgradePath("Feldwächter", Green,
+                    T("Weiter Blick", "+30 % Reichweite.", 90, s => s.Range *= 1.3f),
+                    T("Rückzug", "Erschreckte Aliens weichen zurück.", 220, s => s.Knockback = 0.3f),
+                    T("Panik", "Weichen weiter zurück, +20 % Tempo.", 480, s => { s.Knockback = 0.5f; s.FireRate *= 1.2f; }),
+                    T("Schreckensherrschaft", "Erschreckte Aliens nehmen dauerhaft 20 % mehr Schaden.", 950, s => s.PermanentVulnerability = 0.2f),
+                    T("Feldherr", "+50 % Reichweite, weichen weit zurück.", 1700, s => { s.Range *= 1.5f; s.Knockback = 0.7f; })),
+            },
+        };
+
+        public static readonly TowerType[] All =
+        {
+            Mistgabel, EierHuhn, Bienenstock, Heuballen, Popcorn, Moerser, Tesla, Eismilch, Windmuehle,
+            Guelle, Maehdrescher, Hofhund, Vogelscheuche, Wetterhahn, Hofladen,
+        };
 
         public static string AbilityName(TowerAbility ability)
         {
