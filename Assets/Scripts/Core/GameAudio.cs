@@ -74,6 +74,27 @@ namespace MuhDefense
             }
         }
 
+        /// <summary>Lautstärke der Geräusche (0..1), in den Einstellungen.</summary>
+        public static float SoundVolume
+        {
+            get => PlayerPrefs.GetFloat("tonLaut", 1f);
+            set { PlayerPrefs.SetFloat("tonLaut", Mathf.Clamp01(value)); }
+        }
+
+        /// <summary>Lautstärke der Musik (0..1), in den Einstellungen.</summary>
+        public static float MusicVolume
+        {
+            get => PlayerPrefs.GetFloat("musikLaut", 1f);
+            set
+            {
+                PlayerPrefs.SetFloat("musikLaut", Mathf.Clamp01(value));
+                Ensure();
+                music.volume = 0.22f * MusicVolume;
+            }
+        }
+
+        public static void SaveSettings() => PlayerPrefs.Save();
+
         static void Ensure()
         {
             if (root != null) return;
@@ -87,7 +108,7 @@ namespace MuhDefense
             }
             music = root.AddComponent<AudioSource>();
             music.loop = true;
-            music.volume = 0.22f;
+            music.volume = 0.22f * MusicVolume;
             music.playOnAwake = false;
         }
 
@@ -106,7 +127,7 @@ namespace MuhDefense
             var src = pool[next];
             next = (next + 1) % PoolSize;
             src.pitch = Random.Range(0.94f, 1.06f);
-            src.volume = Mathf.Clamp01(volume * BaseVolume(id));
+            src.volume = Mathf.Clamp01(volume * BaseVolume(id) * SoundVolume);
             src.clip = clip;
             src.Play();
         }

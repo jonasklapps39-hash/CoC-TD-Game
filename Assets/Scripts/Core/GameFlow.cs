@@ -42,6 +42,22 @@ namespace MuhDefense
             }
         }
 
+        /// <summary>Startbildschirm mit Logo, „Spielen“ und „Einstellungen“.</summary>
+        public static void ShowTitle()
+        {
+            var go = ReplaceRoot("MuhDefense Start");
+            go.AddComponent<TitleScreen>().Init();
+        }
+
+        /// <summary>Spielstand löschen und neu beginnen (aus den Einstellungen).</summary>
+        public static void ResetGame()
+        {
+            FarmState.DeleteSave();
+            farm = null;
+            CurrentDifficulty = Difficulty.Leicht;
+            ShowTitle();
+        }
+
         public static void ShowFarm()
         {
             var go = ReplaceRoot("MuhDefense Hof");

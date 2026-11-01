@@ -11,6 +11,7 @@ namespace MuhDefense
         readonly List<Rect> blockers = new List<Rect>();
         Vector2 shopScroll;
         Vector2 sideScroll;
+        SettingsWindow settingsWindow;
         BuildingData lastSelected;
         int mapRegion;
         Vector2 mapScroll;
@@ -217,6 +218,11 @@ namespace MuhDefense
             if (farm.GemShopOpen) DrawGemShop();
             if (farm.HeroesOpen) DrawHeroes();
             if (farm.QuestsOpen) DrawQuests();
+            if (farm.SettingsOpen)
+            {
+                if (settingsWindow == null) settingsWindow = new SettingsWindow();
+                if (!settingsWindow.Draw(blockers)) farm.SettingsOpen = false;
+            }
 
             if (UiKit.EscapePressed())
             {
@@ -361,8 +367,12 @@ namespace MuhDefense
                 GUILayout.EndHorizontal();
                 GUILayout.Space(6f);
                 GUILayout.BeginHorizontal();
-                if (UiKit.Btn(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
-                if (UiKit.Btn(GameAudio.SoundOn ? "Ton: an" : "Ton: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.SoundOn = !GameAudio.SoundOn;
+                if (UiKit.Btn("Einstellungen", UiKit.Button, GUILayout.Height(36f))) farm.SettingsOpen = true;
+                if (UiKit.Btn("Hauptmenü", UiKit.Button, GUILayout.Height(36f)))
+                {
+                    State.Save();
+                    GameFlow.ShowTitle();
+                }
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();

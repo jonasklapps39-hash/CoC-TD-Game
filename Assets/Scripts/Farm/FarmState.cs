@@ -168,7 +168,10 @@ namespace MuhDefense
 
         public static void DeleteSave()
         {
-            if (File.Exists(SavePath)) File.Delete(SavePath);
+            foreach (var suffix in new[] { "", ".bak", ".tmp" })
+            {
+                if (File.Exists(SavePath + suffix)) File.Delete(SavePath + suffix);
+            }
         }
 
         static SaveData CreateNewFarm()

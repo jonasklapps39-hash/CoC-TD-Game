@@ -32,8 +32,9 @@ namespace MuhDefense
         public bool GemShopOpen;
         public bool HeroesOpen;
         public bool QuestsOpen;
+        public bool SettingsOpen;
         /// <summary>Irgendein Fenster (Bauen, Weltkarte, Talente, Shop …) ist offen.</summary>
-        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen || GemShopOpen || HeroesOpen || QuestsOpen;
+        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen || GemShopOpen || HeroesOpen || QuestsOpen || SettingsOpen;
 
         public void CloseWindows()
         {
@@ -43,6 +44,7 @@ namespace MuhDefense
             GemShopOpen = false;
             HeroesOpen = false;
             QuestsOpen = false;
+            SettingsOpen = false;
         }
 
         public void InstantFinishSelected()

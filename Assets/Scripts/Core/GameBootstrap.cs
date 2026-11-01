@@ -21,7 +21,8 @@ namespace MuhDefense
             ConfigureDevice();
             SetupCameras();
             SetupLight();
-            GameFlow.ShowFarm();
+            GameSettings.ApplyGraphics();
+            GameFlow.ShowTitle();
         }
 
         static void ConfigureDevice()

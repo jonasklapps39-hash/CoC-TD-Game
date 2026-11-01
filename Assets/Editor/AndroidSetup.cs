@@ -65,7 +65,11 @@ namespace MuhDefense.EditorTools
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
-            PlayerSettings.bundleVersion = "0.1";
+            PlayerSettings.bundleVersion = "0.2";
+
+            // App-Icon (gerendert mit tools/blender/render_app_icon.py)
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/AppIcon/AppIcon.png");
+            if (icon != null) PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
         }
 
         static void ShowResult(bool switched)
