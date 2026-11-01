@@ -84,6 +84,8 @@ namespace MuhDefense
             if (Data.Counters == null) Data.Counters = new List<CounterEntry>();
             if (Data.Daily == null) Data.Daily = new List<DailyQuestState>();
             if (Data.ClaimedAchievements == null) Data.ClaimedAchievements = new List<string>();
+            if (Data.HeroProgress == null) Data.HeroProgress = new List<HeroProgress>();
+            if (Data.OwnedHeroSkins == null) Data.OwnedHeroSkins = new List<string>();
             if (Data.UnlockedHeroes == null) Data.UnlockedHeroes = new List<string> { "Heinz" };
             if (string.IsNullOrEmpty(Data.SelectedHero)) Data.SelectedHero = "Heinz";
         }
@@ -562,6 +564,58 @@ namespace MuhDefense
         }
 
         public LevelBonuses LevelBonuses => MuhDefense.Talents.BuildBonuses(Data.Talents ?? new List<string>());
+
+        // ---------------------------------------------------------------- Helden-Training und Skins
+
+        HeroProgress Progress(HeroType h)
+        {
+            var p = Data.HeroProgress.Find(x => x.Id == h.Id);
+            if (p == null)
+            {
+                p = new HeroProgress { Id = h.Id };
+                Data.HeroProgress.Add(p);
+            }
+            return p;
+        }
+
+        public int HeroTrainingLevel(HeroType h) => Progress(h).Training;
+
+        public string WhyCannotTrain(HeroType h)
+        {
+            int next = HeroTrainingLevel(h) + 1;
+            if (next > MuhDefense.HeroTraining.MaxLevel) return "Voll trainiert";
+            if (!IsHeroUnlocked(h)) return "Held noch gesperrt";
+            if (HeroHutLevel < next) return $"Heldenhütte Stufe {next} nötig";
+            if (!CanAfford(Resource.Milch, MuhDefense.HeroTraining.CostFor(next))) return "Zu wenig Milch";
+            return null;
+        }
+
+        public bool TrainHero(HeroType h)
+        {
+            if (WhyCannotTrain(h) != null) return false;
+            var p = Progress(h);
+            Spend(Resource.Milch, MuhDefense.HeroTraining.CostFor(p.Training + 1));
+            p.Training++;
+            return true;
+        }
+
+        public bool OwnsHeroSkin(HeroSkin s) => Data.OwnedHeroSkins.Contains(s.Id);
+
+        public bool BuyHeroSkin(HeroSkin s)
+        {
+            if (OwnsHeroSkin(s) || Data.Gems < s.Gems) return false;
+            Data.Gems -= s.Gems;
+            Data.OwnedHeroSkins.Add(s.Id);
+            return true;
+        }
+
+        public HeroSkin SelectedHeroSkin(HeroType h) => HeroSkin.Get(Progress(h).Skin);
+
+        public void SelectHeroSkin(HeroType h, HeroSkin s)
+        {
+            if (s != null && !OwnsHeroSkin(s)) return;
+            Progress(h).Skin = s != null ? s.Id : "";
+        }
 
         public int CrownCount
         {

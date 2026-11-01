@@ -367,7 +367,7 @@ namespace MuhDefense
 
             if (type == FarmBuildingType.Heldenhuette && b.Level > 0)
             {
-                if (UiKit.IconBtn("Helden wählen", UiKit.Icon(State.SelectedHero.ModelName), UiKit.YellowButton, GUILayout.Height(52f))) farm.HeroesOpen = true;
+                if (UiKit.IconBtn("Helden und Training", UiKit.Icon(State.SelectedHero.ModelName), UiKit.YellowButton, GUILayout.Height(52f))) farm.HeroesOpen = true;
             }
             if (UiKit.Btn("Verschieben", UiKit.Button, GUILayout.Height(40f))) farm.BeginMoving();
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.Select(null);
@@ -448,7 +448,7 @@ namespace MuhDefense
         /// <summary>Heldenhütte: Helden wählen und freischalten (mit Sternen oder Diamanten).</summary>
         void DrawHeroes()
         {
-            Rect box = UiKit.DrawOverlay(blockers, 900f, 560f);
+            Rect box = UiKit.DrawOverlay(blockers, 940f, 680f);
             GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
             GUILayout.BeginHorizontal();
             UiKit.Heading("Helden", UiKit.Title, GUILayout.Height(40f));
@@ -472,13 +472,16 @@ namespace MuhDefense
                 var icon = UiKit.Icon(h.ModelName);
                 if (icon != null)
                 {
-                    Rect ir = GUILayoutUtility.GetRect(10f, 150f, GUILayout.Height(150f));
+                    Rect ir = GUILayoutUtility.GetRect(10f, 120f, GUILayout.Height(120f));
+                    var skin = State.SelectedHeroSkin(h);
                     if (!unlocked) GUI.color = new Color(0.35f, 0.35f, 0.4f);
+                    else if (skin != null) GUI.color = skin.Tint;
                     GUI.DrawTexture(ir, icon, ScaleMode.ScaleToFit);
                     GUI.color = Color.white;
                 }
                 GUILayout.Label(h.Description, UiKit.Small, GUILayout.Height(54f));
                 GUILayout.Label($"Fähigkeiten: {h.Ability1Name} (ab Stufe {Hero.Ability1Level}), {h.Ability2Name} (ab Stufe {Hero.Ability2Level})", UiKit.Small, GUILayout.Height(40f));
+                DrawHeroTraining(h, unlocked, gem);
                 GUILayout.FlexibleSpace();
                 if (selected)
                 {
@@ -511,7 +514,64 @@ namespace MuhDefense
             GUILayout.EndArea();
         }
 
-        /// <summary>Shop: Diamanten ausgeben (Knechte, Rohstoffe, Kuh-Skins), Echtgeld-Pakete als Vorschau.</summary>
+        /// <summary>Training (Milch) und Aussehen (Diamanten) eines Helden.</summary>
+        void DrawHeroTraining(HeroType h, bool unlocked, Texture2D gem)
+        {
+            int training = State.HeroTrainingLevel(h);
+            GUILayout.Label($"Training {training}/{HeroTraining.MaxLevel}" + (training > 0 ? ": " + HeroTraining.Describe(training) : ""), UiKit.Small, GUILayout.Height(34f));
+            string why = State.WhyCannotTrain(h);
+            GUI.enabled = why == null;
+            string label = training >= HeroTraining.MaxLevel ? "Voll trainiert"
+                : why ?? $"Trainieren: {HeroTraining.CostFor(training + 1)} Milch";
+            if (UiKit.IconBtn(label, UiKit.Icon("Milchflasche"), UiKit.Button, GUILayout.Height(38f)) && State.TrainHero(h))
+            {
+                State.Save();
+                GameAudio.Play(SoundId.LevelUp);
+            }
+            GUI.enabled = true;
+
+            if (!unlocked) return;
+            string skinList = "";
+            foreach (var s in HeroSkin.All)
+            {
+                if (s.Hero == h.Kind) skinList += (skinList.Length > 0 ? ", " : "") + s.Name;
+            }
+            GUILayout.Label("Aussehen: " + skinList, UiKit.Small);
+            GUILayout.BeginHorizontal();
+            var current = State.SelectedHeroSkin(h);
+            if (UiKit.Btn("Normal", current == null ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(34f)))
+            {
+                State.SelectHeroSkin(h, null);
+                State.Save();
+            }
+            foreach (var s in HeroSkin.All)
+            {
+                if (s.Hero != h.Kind) continue;
+                bool owned = State.OwnsHeroSkin(s);
+                if (owned)
+                {
+                    if (UiKit.Btn(s.Name, current == s ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(34f)))
+                    {
+                        State.SelectHeroSkin(h, s);
+                        State.Save();
+                    }
+                }
+                else
+                {
+                    GUI.enabled = State.Gems >= s.Gems;
+                    if (UiKit.IconBtn($"{s.Gems}", gem, UiKit.BlueCard, GUILayout.Height(34f)) && State.BuyHeroSkin(s))
+                    {
+                        State.SelectHeroSkin(h, s);
+                        State.Save();
+                        GameAudio.Play(SoundId.Coin);
+                    }
+                    GUI.enabled = true;
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        /// <summary>Tägliche Aufgaben und Erfolge.</summary>
         void DrawQuests()
         {
             Rect box = UiKit.DrawOverlay(blockers, 820f, 600f);
@@ -595,6 +655,7 @@ namespace MuhDefense
             GUILayout.Space(4f);
         }
 
+        /// <summary>Shop: Diamanten ausgeben (Knechte, Rohstoffe, Kuh-Skins), Echtgeld-Pakete als Vorschau.</summary>
         void DrawGemShop()
         {
             Rect box = UiKit.DrawOverlay(blockers, 860f, 620f);

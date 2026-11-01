@@ -46,6 +46,8 @@ namespace MuhDefense
         Transform body;
         LineRenderer rangeCircle;
         float cooldown;
+        /// <summary>Trainingsstufe aus der Heldenhütte (0..5).</summary>
+        int training;
 
         public void Init(LevelManager level, Vector2Int cell, HeroType type)
         {
@@ -54,11 +56,18 @@ namespace MuhDefense
             Cell = cell;
             name = type.Name;
             transform.position = LevelManager.CellCenter(cell);
+            training = GameFlow.Farm.HeroTrainingLevel(type);
             RecalculateStats();
             body = new GameObject("Körper").transform;
             body.SetParent(transform, false);
             Visuals.Prim(PrimitiveType.Cylinder, transform, new Vector3(0f, 0.04f, 0f), new Vector3(0.85f, 0.04f, 0.85f), new Color(1f, 0.82f, 0.25f), "Heldenring");
-            if (ModelLibrary.Spawn(type.ModelName, body, type.Kind == HeroKind.Berta ? 0.85f : 1.15f) == null)
+            var model = ModelLibrary.Spawn(type.ModelName, body, type.Kind == HeroKind.Berta ? 0.85f : 1.15f);
+            var skin = GameFlow.Farm.SelectedHeroSkin(type);
+            if (model != null && skin != null)
+            {
+                foreach (var r in model.GetComponentsInChildren<Renderer>()) r.sharedMaterial = Visuals.TintedVertexMaterial(skin.Tint);
+            }
+            if (model == null)
             {
                 Visuals.Prim(PrimitiveType.Capsule, body, new Vector3(0f, 0.45f, 0f), new Vector3(0.35f, 0.32f, 0.35f), new Color(0.8f, 0.2f, 0.15f), "Körper");
                 Visuals.Prim(PrimitiveType.Sphere, body, new Vector3(0f, 0.9f, 0f), Vector3.one * 0.28f, new Color(1f, 0.78f, 0.62f), "Kopf");
@@ -115,6 +124,9 @@ namespace MuhDefense
                     };
                     break;
             }
+            // Dauerhaftes Training in der Heldenhütte
+            Stats.Damage *= HeroTraining.DamageFactor(training);
+            Stats.Range *= HeroTraining.RangeFactor(training);
         }
 
         /// <summary>Startstufe (Heldenhütte, Talent „Veteran“).</summary>
@@ -203,7 +215,7 @@ namespace MuhDefense
         public void UseAbility1()
         {
             if (!Ability1Ready) return;
-            Ability1CooldownLeft = Type.Ability1Cooldown * level.Bonuses.AbilityCooldownFactor;
+            Ability1CooldownLeft = Type.Ability1Cooldown * level.Bonuses.AbilityCooldownFactor * HeroTraining.CooldownFactor(training);
             var enemies = level.Enemies;
             switch (Type.Kind)
             {
@@ -255,7 +267,7 @@ namespace MuhDefense
         public void UseAbility2()
         {
             if (!Ability2Ready) return;
-            Ability2CooldownLeft = Type.Ability2Cooldown * level.Bonuses.AbilityCooldownFactor;
+            Ability2CooldownLeft = Type.Ability2Cooldown * level.Bonuses.AbilityCooldownFactor * HeroTraining.CooldownFactor(training);
             var enemies = level.Enemies;
             switch (Type.Kind)
             {

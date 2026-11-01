@@ -15,6 +15,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 4 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen, Hofladen-Kontor)
 - Heldenhütte (Held wählen), Talentbaum „Bauernwissen“ (Sterne gegen dauerhafte Boni), Diamanten-Shop
 - Tägliche Aufgaben und 15 Erfolge mit Belohnungen
+- Helden in der Heldenhütte trainieren (Milch) und Skins kaufen (Diamanten)
 - Hof mit 30 × 18 Feldern: zoomen (zwei Finger, Mausrad, +/−) und verschieben (Wiese ziehen)
 - Mais und Milch werden in Echtzeit produziert, auch während eines Levels oder wenn das Spiel geschlossen ist
 - Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern

@@ -32,6 +32,18 @@ namespace MuhDefense
         public int DailyDay = -1;
         public List<DailyQuestState> Daily = new List<DailyQuestState>();
         public List<string> ClaimedAchievements = new List<string>();
+        /// <summary>Trainingsstufen der Helden (Heldenhütte).</summary>
+        public List<HeroProgress> HeroProgress = new List<HeroProgress>();
+        public List<string> OwnedHeroSkins = new List<string>();
+    }
+
+    [Serializable]
+    public class HeroProgress
+    {
+        public string Id;
+        public int Training;
+        /// <summary>Gewähltes Aussehen (leer = Standard).</summary>
+        public string Skin = "";
     }
 
     [Serializable]
