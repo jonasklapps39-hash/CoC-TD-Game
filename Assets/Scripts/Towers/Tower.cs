@@ -40,6 +40,9 @@ namespace MuhDefense
         /// <summary>Höhe der Turmspitze über dem Boden (für die Upgrade-Abzeichen).</summary>
         float modelTop = 1.15f;
         LineRenderer rangeCircle;
+        /// <summary>Rückstoß-Animation beim Schießen (1 = gerade geschossen).</summary>
+        float kick;
+        float baseScale = 1f;
 
         public void Init(LevelManager level, TowerType type, Vector2Int cell, int allowedMaxTier, int pricePaid = -1)
         {
@@ -125,6 +128,14 @@ namespace MuhDefense
         }
 
         // ---------------------------------------------------------------- Kampf
+
+        void LateUpdate()
+        {
+            if (kick <= 0f || turret == null) return;
+            kick = Mathf.Max(0f, kick - Time.deltaTime * 6f);
+            // kurz stauchen und wieder aufrichten
+            turret.localScale = new Vector3(1f + 0.08f * kick, 1f - 0.14f * kick, 1f + 0.08f * kick) * baseScale;
+        }
 
         void Update()
         {
@@ -216,6 +227,7 @@ namespace MuhDefense
         {
             Vector3 from = transform.position + Vector3.up * 0.8f;
             float damage = Stats.Damage;
+            kick = 1f;
             if (Stats.CritChance > 0f && Random.value < Stats.CritChance)
             {
                 damage *= Stats.CritMultiplier;
@@ -298,6 +310,7 @@ namespace MuhDefense
             if (spots.Count == 0) return false;
             var targets = FindTargets(Mathf.Max(1, Stats.Projectiles));
             GameAudio.Play(SoundId.Splat, 0.6f);
+            kick = 1f;
             for (int i = 0; i < Mathf.Max(1, Stats.Projectiles); i++)
             {
                 Vector3 spot;
@@ -341,6 +354,7 @@ namespace MuhDefense
             }
             if (hit)
             {
+                kick = 1f;
                 var color = freezeNow ? new Color(0.85f, 0.95f, 1f, 1f) : new Color(0.7f, 0.9f, 1f, 0.9f);
                 RingEffect.Spawn(level.transform, transform.position, Mathf.Min(Range, 6f), color, 0.45f);
                 if (freezeNow) GameAudio.Play(SoundId.Freeze);
@@ -376,6 +390,7 @@ namespace MuhDefense
                     e.TakeDamage(Stats.Damage);
                 }
             }
+            kick = 1f;
             RingEffect.Spawn(level.transform, transform.position, Mathf.Min(Range, 6f), new Color(0.6f, 0.35f, 0.2f, 0.9f), 0.45f);
             GameAudio.Play(SoundId.Hit, 0.8f);
             return true;
@@ -436,7 +451,8 @@ namespace MuhDefense
                         Vector3.one * (Tiers[p] >= 5 ? 0.24f : 0.14f), color, "Abzeichen");
                 }
             }
-            turret.localScale = Vector3.one * (1f + 0.035f * total);
+            baseScale = 1f + 0.035f * total;
+            turret.localScale = Vector3.one * baseScale;
         }
 
         public static string ModelNameFor(TowerType type) => type.ModelName;

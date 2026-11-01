@@ -20,6 +20,9 @@ namespace MuhDefense
         LevelManager level;
         Vector3 target;
         float waitTimer;
+        Transform model;
+        bool walking;
+        float animOffset;
 
         public void Init(LevelManager level, Vector3 position)
         {
@@ -28,7 +31,41 @@ namespace MuhDefense
             transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
             waitTimer = Random.Range(0f, 3f);
             target = level.RandomPastureSpot();
+            animOffset = Random.Range(0f, 10f);
+            model = new GameObject("Modell").transform;
+            model.SetParent(transform, false);
             BuildModel();
+        }
+
+        /// <summary>Wackeln beim Laufen, Kopf runter beim Grasen, Zappeln beim Entführen.</summary>
+        void LateUpdate()
+        {
+            if (model == null) return;
+            float t = Time.time + animOffset;
+            switch (State)
+            {
+                case CowState.Carried:
+                    model.localRotation = Quaternion.Euler(Mathf.Sin(t * 18f) * 12f, 0f, Mathf.Sin(t * 14f) * 15f);
+                    model.localPosition = Vector3.zero;
+                    break;
+                case CowState.Returning:
+                    model.localPosition = new Vector3(0f, Mathf.Abs(Mathf.Sin(t * 16f)) * 0.06f, 0f);
+                    model.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 16f) * 6f);
+                    break;
+                default:
+                    if (walking)
+                    {
+                        model.localPosition = new Vector3(0f, Mathf.Abs(Mathf.Sin(t * 9f)) * 0.025f, 0f);
+                        model.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 9f) * 3f);
+                    }
+                    else
+                    {
+                        // grasen: leicht nach vorn nicken
+                        model.localPosition = Vector3.zero;
+                        model.localRotation = Quaternion.Euler(6f + Mathf.Sin(t * 2.5f) * 4f, 0f, 0f);
+                    }
+                    break;
+            }
         }
 
         void Update()
@@ -36,6 +73,7 @@ namespace MuhDefense
             switch (State)
             {
                 case CowState.Grazing:
+                    walking = waitTimer <= 0f;
                     if (waitTimer > 0f)
                     {
                         waitTimer -= Time.deltaTime;
@@ -92,13 +130,13 @@ namespace MuhDefense
 
         void BuildModel()
         {
-            var model = ModelLibrary.Spawn("Kuh", transform, 0.62f);
-            if (model != null)
+            var spawned = ModelLibrary.Spawn("Kuh", model, 0.62f);
+            if (spawned != null)
             {
                 var skin = CowSkin.Get(GameFlow.Farm.Data.CowSkin);
                 if (skin.Tint != Color.white)
                 {
-                    foreach (var r in model.GetComponentsInChildren<Renderer>()) r.sharedMaterial = Visuals.TintedVertexMaterial(skin.Tint);
+                    foreach (var r in spawned.GetComponentsInChildren<Renderer>()) r.sharedMaterial = Visuals.TintedVertexMaterial(skin.Tint);
                 }
                 return;
             }
@@ -108,17 +146,17 @@ namespace MuhDefense
             var black = new Color(0.1f, 0.1f, 0.1f);
             var pink = new Color(1f, 0.7f, 0.75f);
 
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, 0.3f, 0f), new Vector3(0.28f, 0.24f, 0.48f), white, "Körper");
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, 0.36f, -0.06f), new Vector3(0.29f, 0.12f, 0.16f), black, "Fleck");
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, 0.42f, 0.3f), new Vector3(0.2f, 0.2f, 0.18f), white, "Kopf");
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0f, 0.37f, 0.4f), new Vector3(0.16f, 0.1f, 0.04f), pink, "Maul");
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(-0.08f, 0.55f, 0.3f), new Vector3(0.03f, 0.08f, 0.03f), white, "Horn");
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0.08f, 0.55f, 0.3f), new Vector3(0.03f, 0.08f, 0.03f), white, "Horn");
+            Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0f, 0.3f, 0f), new Vector3(0.28f, 0.24f, 0.48f), white, "Körper");
+            Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0f, 0.36f, -0.06f), new Vector3(0.29f, 0.12f, 0.16f), black, "Fleck");
+            Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0f, 0.42f, 0.3f), new Vector3(0.2f, 0.2f, 0.18f), white, "Kopf");
+            Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0f, 0.37f, 0.4f), new Vector3(0.16f, 0.1f, 0.04f), pink, "Maul");
+            Visuals.Prim(PrimitiveType.Cube, model, new Vector3(-0.08f, 0.55f, 0.3f), new Vector3(0.03f, 0.08f, 0.03f), white, "Horn");
+            Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0.08f, 0.55f, 0.3f), new Vector3(0.03f, 0.08f, 0.03f), white, "Horn");
             for (int x = -1; x <= 1; x += 2)
             {
                 for (int z = -1; z <= 1; z += 2)
                 {
-                    Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(0.09f * x, 0.1f, 0.17f * z), new Vector3(0.06f, 0.2f, 0.06f), white, "Bein");
+                    Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0.09f * x, 0.1f, 0.17f * z), new Vector3(0.06f, 0.2f, 0.06f), white, "Bein");
                 }
             }
         }

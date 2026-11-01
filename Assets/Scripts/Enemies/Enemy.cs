@@ -60,6 +60,8 @@ namespace MuhDefense
         public float BonusReward { get; private set; }
         /// <summary>Kurzes Zusammenzucken nach einem Treffer (0..1).</summary>
         float hitPunch;
+        /// <summary>Kurzes Aufploppen beim Erscheinen.</summary>
+        float spawnAge;
         /// <summary>Lebens-Faktor der Welle (für abgeworfene und abgespaltene Aliens).</summary>
         public float HpMultiplier { get; private set; }
         /// <summary>Wie viele Viertel des Lebens schon verloren sind (Ernte-Roboter wirft dann Flitzer ab).</summary>
@@ -117,6 +119,7 @@ namespace MuhDefense
                 shieldRing.widthMultiplier = 0.05f + 0.02f * Mathf.Sin(Time.time * 8f);
             }
             if (hitPunch > 0f) hitPunch = Mathf.Max(0f, hitPunch - dt * 6f);
+            spawnAge += dt;
 
             if (freezeTimer > 0f)
             {
@@ -149,7 +152,10 @@ namespace MuhDefense
                 : Mathf.Abs(Mathf.Sin(Time.time * speed * 6f)) * 0.06f;
             model.localPosition = new Vector3(0f, bob, 0f);
             float squash = 1f - 0.18f * hitPunch;
-            model.localScale = new Vector3(1f + 0.12f * hitPunch, squash, 1f + 0.12f * hitPunch);
+            // beim Erscheinen kurz überschießend aufploppen
+            float k = Mathf.Clamp01(spawnAge / 0.3f);
+            float pop = k >= 1f ? 1f : Mathf.Sin(k * Mathf.PI * 0.5f) * (1f + 0.25f * Mathf.Sin(k * Mathf.PI));
+            model.localScale = new Vector3(1f + 0.12f * hitPunch, squash, 1f + 0.12f * hitPunch) * pop;
         }
 
         void UpdateHealing(float dt)

@@ -173,10 +173,16 @@ namespace MuhDefense
             return new Vector3(Random.Range(p.xMin + 0.35f, p.xMax - 0.35f), 0f, Random.Range(p.yMin + 0.35f, p.yMax - 0.35f));
         }
 
+        /// <summary>Stärke des Bildschirmwackelns (Bosse).</summary>
+        public float ShakeAmount { get; private set; }
+
+        public void Shake(float amount) => ShakeAmount = Mathf.Max(ShakeAmount, amount);
+
         void Update()
         {
             // Jedes Bild setzen: Beim Neustart setzt das alte Level beim Zerstören die Zeit sonst auf 1x zurück.
             ApplyTimeScale();
+            if (ShakeAmount > 0f) ShakeAmount = Mathf.Max(0f, ShakeAmount - Time.unscaledDeltaTime * 1.5f);
 
             if (FarmerFrenzyTimer > 0f && State == LevelState.WaveRunning) FarmerFrenzyTimer -= Time.deltaTime;
 
@@ -294,6 +300,14 @@ namespace MuhDefense
             var type = EnemyType.All[kind];
             enemy.Init(this, type, hpMultiplier, pathWorld);
             Enemies.Add(enemy);
+            if (type.IsBoss)
+            {
+                // Auftritt des Bosses: Wackeln, Knall, Warnung
+                Shake(0.7f);
+                GameAudio.Play(SoundId.Boom);
+                RingEffect.Spawn(transform, pathWorld[0], 2.5f, new Color(1f, 0.3f, 0.2f, 1f), 0.8f);
+                AddFloatingText(CellCenter(new Vector2Int(Def.Width / 2, Def.Height / 2)) + Vector3.up, $"BOSS: {type.Name}!", new Color(1f, 0.35f, 0.25f));
+            }
             if (type.Description.Length > 0 && NewEnemyIntro == null && GameFlow.Farm.MarkEnemySeen(kind))
             {
                 NewEnemyIntro = type;
@@ -418,7 +432,15 @@ namespace MuhDefense
             if (Hero != null) Hero.AddXp(Mathf.RoundToInt((enemy.IsBoss ? 60 : 3) * Bonuses.HeroXpFactor));
             GameFlow.Farm.Count(Counter.Kills);
             if (enemy.IsBoss) GameFlow.Farm.Count(Counter.BossKills);
-            Effects.Burst(transform, enemy.AimPoint, enemy.Type.Color, enemy.IsBoss ? 20 : 8, 3f);
+            Effects.Burst(transform, enemy.AimPoint, enemy.Type.Color, enemy.IsBoss ? 40 : 8, enemy.IsBoss ? 5f : 3f);
+            if (enemy.IsBoss)
+            {
+                Shake(1f);
+                GameAudio.Play(SoundId.Boom);
+                RingEffect.Spawn(transform, enemy.transform.position, 1.5f, new Color(1f, 0.85f, 0.3f, 1f), 0.6f);
+                RingEffect.Spawn(transform, enemy.transform.position, 3f, new Color(1f, 0.5f, 0.2f, 1f), 0.9f);
+                Effects.Burst(transform, enemy.AimPoint + Vector3.up * 0.5f, new Color(1f, 0.85f, 0.3f), 20, 4f, 0.12f);
+            }
             GameAudio.Play(SoundId.Pop);
             GameAudio.Play(SoundId.Coin);
         }

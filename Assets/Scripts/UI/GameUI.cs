@@ -30,7 +30,13 @@ namespace MuhDefense
         void Update()
         {
             if (cam == null) cam = Camera.main;
-            if (cam != null) UiKit.FitCamera(cam, level.Def.Width, level.Def.Height, 62f);
+            if (cam == null) return;
+            UiKit.FitCamera(cam, level.Def.Width, level.Def.Height, 62f);
+            if (level.ShakeAmount > 0f)
+            {
+                var off = Random.insideUnitSphere * level.ShakeAmount * 0.3f;
+                cam.transform.position += new Vector3(off.x, 0f, off.z);
+            }
         }
 
         void OnGUI()

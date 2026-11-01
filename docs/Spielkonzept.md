@@ -377,6 +377,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Helden trainieren und Skins:** in der Heldenhütte jeden Helden mit Milch bis Stufe 5 trainieren (je Stufe +8 % Schaden, +4 % Reichweite, Fähigkeiten 6 % schneller; Trainingsstufe ≤ Hütten-Stufe); je Held 2 Skins für Diamanten (z. B. Cowboy-Heinz, Disco-Oma, Schoko-Berta, goldene Varianten)
 - [x] **Hof-Tutorial:** 6 kurze Schritte beim ersten Start (umsehen, bauen, erstes Level, einsammeln, Werkstatt verbessern, Tipps), gehen von selbst weiter, jederzeit überspringbar
 - [x] **Android-App automatisch bauen:** GitHub Actions (game-ci) baut die APK in der Cloud, Download unter *Actions → Artifacts* (Einrichtung: `docs/Android-Build.md`)
+- [x] **Feinschliff:** Türme federn beim Schießen, Kühe wackeln beim Laufen, nicken beim Grasen und zappeln beim Entführen, Aliens ploppen beim Erscheinen auf, Bosse kündigen sich mit Warnung, Knall und Bildschirmwackeln an und explodieren groß
 
 ### Upgrade-System
 
