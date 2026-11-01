@@ -1,0 +1,78 @@
+# Baut die Android-App (APK) von Muh Defense in der Cloud – ohne Unity auf dem eigenen Rechner.
+# Einmalig einrichten: siehe docs/Android-Build.md (drei Secrets: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD).
+# Starten: GitHub → Actions → „Android-App bauen“ → „Run workflow“, oder automatisch bei jedem Push mit Spiel-Änderungen.
+name: Android-App bauen
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Assets/**"
+      - "Packages/**"
+      - "ProjectSettings/**"
+      - ".github/workflows/android.yml"
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lizenz prüfen
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -n "$UNITY_LICENSE" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Noch keine Unity-Lizenz hinterlegt – Build übersprungen. Anleitung: docs/Android-Build.md"
+          fi
+
+  build:
+    name: APK bauen
+    needs: check
+    if: needs.check.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Platz schaffen
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          unityVersion: auto
+          buildMethod: MuhDefense.EditorTools.AndroidSetup.BuildForCi
+          androidExportType: androidPackage
+
+      - name: APK suchen
+        run: find build -name "*.apk" -exec ls -lh {} \;
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MuhDefense-APK
+          path: build/Android/*.apk
+          retention-days: 14

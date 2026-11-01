@@ -19,7 +19,37 @@ namespace MuhDefense.EditorTools
         public static void Configure()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            ApplySettings();
+            CreateMainScene();
 
+            bool switched = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android
+                || EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+            ShowResult(switched);
+        }
+
+        /// <summary>
+        /// Wird von GitHub Actions aufgerufen (game-ci, buildMethod): stellt alles ein und baut die APK nach build/Android/MuhDefense.apk.
+        /// </summary>
+        public static void BuildForCi()
+        {
+            ApplySettings();
+            CreateMainScene();
+            Directory.CreateDirectory("build/Android");
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { ScenePath },
+                locationPathName = "build/Android/MuhDefense.apk",
+                target = BuildTarget.Android,
+                options = BuildOptions.None,
+            };
+            EditorUserBuildSettings.buildAppBundle = false;
+            var report = BuildPipeline.BuildPlayer(options);
+            Debug.Log("Muh Defense Build: " + report.summary.result + ", " + report.summary.totalSize + " Bytes");
+            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded) EditorApplication.Exit(1);
+        }
+
+        static void ApplySettings()
+        {
             // App-Name und Paketname (eindeutige Kennung im Play Store)
             PlayerSettings.productName = "Muh Defense";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName);
@@ -35,11 +65,11 @@ namespace MuhDefense.EditorTools
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
-            CreateMainScene();
+            PlayerSettings.bundleVersion = "0.1";
+        }
 
-            bool switched = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android
-                || EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
-
+        static void ShowResult(bool switched)
+        {
             if (switched)
             {
                 EditorUtility.DisplayDialog("Muh Defense",

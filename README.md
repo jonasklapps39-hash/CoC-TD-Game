@@ -44,6 +44,10 @@ Zeiten und Kosten sind für schnelles Testen kurz gehalten.
 
 Noch **nicht** enthalten: echte Käufe von Diamanten (Diamanten gibt es nur im Spiel).
 
+## Android-App ohne Unity bauen
+
+GitHub Actions baut die APK in der Cloud – Anleitung in [`docs/Android-Build.md`](docs/Android-Build.md).
+
 ## Starten
 
 1. **Unity Hub** öffnen → **Add** → **Add project from disk** → diesen Ordner auswählen.
