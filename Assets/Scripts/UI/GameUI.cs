@@ -13,6 +13,14 @@ namespace MuhDefense
         readonly List<Rect> blockers = new List<Rect>();
         bool confirmLeave;
 
+        // Drag & Drop von Turm- oder Helden-Karte auf die Karte
+        const float DragThreshold = 12f;
+        TowerType pressedTower;
+        bool pressedHero;
+        Vector2 pressRaw;
+        Vector2 currentRaw;
+        bool dragging;
+
         public void Init(LevelManager level)
         {
             this.level = level;
@@ -30,6 +38,9 @@ namespace MuhDefense
             if (level == null || cam == null) return;
 
             Vector2 rawMouse = UiKit.BeginGui();
+            currentRaw = rawMouse;
+            // Vor dem Zeichnen: "blockers" enthält noch die Bedienelemente des letzten Durchlaufs
+            HandleDrag(rawMouse);
             blockers.Clear();
 
             DrawWorldOverlays();
@@ -65,6 +76,60 @@ namespace MuhDefense
         }
 
         bool Playing => level.State == LevelState.Building || level.State == LevelState.WaveRunning;
+
+        // ---------------------------------------------------------------- Drag & Drop
+
+        /// <summary>Karte festhalten und auf die Karte ziehen: Vorschau folgt dem Finger, Loslassen baut den Turm.</summary>
+        void HandleDrag(Vector2 rawMouse)
+        {
+            var e = Event.current;
+            if (pressedTower == null && !pressedHero) return;
+
+            if (e.type == EventType.MouseDrag)
+            {
+                if (!dragging && (rawMouse - pressRaw).magnitude > DragThreshold * UiKit.Scale)
+                {
+                    dragging = true;
+                    GUIUtility.hotControl = 0; // Kartenknopf soll beim Loslassen nicht zusätzlich auslösen
+                    if (pressedHero) level.BeginPlacingHero();
+                    else level.BeginPlacing(pressedTower);
+                }
+                if (dragging)
+                {
+                    bool overUi = UiKit.IsOverUi(rawMouse, blockers);
+                    if (!overUi && UiKit.ScreenToGround(rawMouse, cam, out var world)) level.SetPlacementPreview(world);
+                    else level.SetPlacementPreview(null);
+                    e.Use();
+                }
+            }
+            else if (e.type == EventType.MouseUp)
+            {
+                if (dragging)
+                {
+                    bool placing = level.PlacingType != null || level.PlacingHero;
+                    if (placing && !UiKit.IsOverUi(rawMouse, blockers) && UiKit.ScreenToGround(rawMouse, cam, out var world))
+                    {
+                        level.HandleClick(world);
+                    }
+                    // Nicht gebaut (belegt, zu teuer, über der Leiste losgelassen) → abbrechen
+                    if (level.PlacingType != null || level.PlacingHero) level.CancelPlacing();
+                    e.Use();
+                }
+                dragging = false;
+                pressedTower = null;
+                pressedHero = false;
+            }
+        }
+
+        /// <summary>Merkt sich, dass eine Karte gedrückt wurde (für Drag & Drop).</summary>
+        void RememberPress(Rect r, TowerType tower, bool hero)
+        {
+            var e = Event.current;
+            if (e.type != EventType.MouseDown || e.button != 0 || !GUI.enabled || !r.Contains(e.mousePosition)) return;
+            pressedTower = tower;
+            pressedHero = hero;
+            pressRaw = currentRaw;
+        }
 
         // ---------------------------------------------------------------- Kopfzeile
 
@@ -108,8 +173,10 @@ namespace MuhDefense
             if (level.Hero == null)
             {
                 GUI.enabled = Playing;
-                if (UiKit.IconBtn(level.PlacingHero ? "Platz wählen …" : "Held: Bauer Heinz", UiKit.Icon("BauerHeinz"),
-                        level.PlacingHero ? UiKit.ActiveButton : UiKit.YellowButton, GUILayout.Height(56f)))
+                Rect heroRect = GUILayoutUtility.GetRect(10f, 56f, GUILayout.Height(56f));
+                RememberPress(heroRect, null, true);
+                if (UiKit.BtnRect(heroRect, level.PlacingHero ? "Platz wählen …" : "Held: Bauer Heinz",
+                        level.PlacingHero ? UiKit.ActiveButton : UiKit.YellowButton, UiKit.Icon("BauerHeinz")))
                 {
                     if (level.PlacingHero) level.CancelPlacing();
                     else level.BeginPlacingHero();
@@ -132,7 +199,7 @@ namespace MuhDefense
 
             if (level.PlacingHero)
             {
-                GUILayout.Label("Tippe auf ein hell markiertes Feld.", UiKit.Small);
+                GUILayout.Label("Tippe auf ein hell markiertes Feld – oder zieh die Karte direkt dorthin.", UiKit.Small);
                 if (UiKit.Btn("Abbrechen", UiKit.RedButton, GUILayout.Height(40f))) level.CancelPlacing();
             }
             else if (level.PlacingType != null)
@@ -167,6 +234,7 @@ namespace MuhDefense
             bool affordable = level.Money >= type.Cost;
             Rect r = GUILayoutUtility.GetRect(112f, 78f, GUILayout.Width(112f), GUILayout.Height(78f));
             GUI.enabled = Playing && (active || affordable);
+            RememberPress(r, type, false);
             if (GUI.Button(r, GUIContent.none, active ? UiKit.ActiveButton : UiKit.BlueCard))
             {
                 GameAudio.Play(SoundId.Click);

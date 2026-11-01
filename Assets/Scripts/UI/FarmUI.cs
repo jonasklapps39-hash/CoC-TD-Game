@@ -14,6 +14,63 @@ namespace MuhDefense
 
         FarmState State => farm.Farm;
 
+        // Drag & Drop: Gebäude festhalten und ziehen
+        const float DragThreshold = 12f;
+        BuildingData pressedBuilding;
+        Vector2 pressRaw;
+        bool draggingGhost;
+        bool moveByDrag;
+
+        /// <summary>
+        /// Gebäude festhalten und ziehen verschiebt es (Loslassen auf freiem Platz bestätigt, sonst springt es zurück).
+        /// Beim Bauen und Verschieben folgt die Vorschau dem Finger.
+        /// </summary>
+        void HandleDrag(Vector2 rawMouse)
+        {
+            var e = Event.current;
+            bool blocked = farm.ShopOpen || farm.MapOpen || UiKit.IsOverUi(rawMouse, blockers);
+
+            if (e.type == EventType.MouseDown && e.button == 0 && !blocked && UiKit.ScreenToGround(rawMouse, cam, out var down))
+            {
+                if (farm.Mode != FarmMode.Normal)
+                {
+                    draggingGhost = true;
+                }
+                else
+                {
+                    pressedBuilding = State.BuildingAt(new Vector2Int(Mathf.FloorToInt(down.x), Mathf.FloorToInt(down.z)));
+                    pressRaw = rawMouse;
+                }
+            }
+            else if (e.type == EventType.MouseDrag)
+            {
+                if (pressedBuilding != null && !draggingGhost && (rawMouse - pressRaw).magnitude > DragThreshold * UiKit.Scale)
+                {
+                    farm.Select(pressedBuilding);
+                    farm.BeginMoving();
+                    draggingGhost = true;
+                    moveByDrag = true;
+                }
+                if (draggingGhost && UiKit.ScreenToGround(rawMouse, cam, out var world))
+                {
+                    farm.DragGhostTo(world);
+                    e.Use();
+                }
+            }
+            else if (e.type == EventType.MouseUp)
+            {
+                if (draggingGhost && moveByDrag)
+                {
+                    if (farm.GhostValid) farm.ConfirmPlacement();
+                    else farm.CancelMode();
+                    e.Use();
+                }
+                draggingGhost = false;
+                moveByDrag = false;
+                pressedBuilding = null;
+            }
+        }
+
         public void Init(FarmManager farm)
         {
             this.farm = farm;
@@ -31,6 +88,8 @@ namespace MuhDefense
             if (farm == null || cam == null) return;
 
             Vector2 rawMouse = UiKit.BeginGui();
+            // Vor dem Zeichnen: "blockers" enthält noch die Bedienelemente des letzten Durchlaufs
+            HandleDrag(rawMouse);
             blockers.Clear();
 
             DrawWorldOverlays();
@@ -115,7 +174,7 @@ namespace MuhDefense
         {
             var type = farm.Mode == FarmMode.Placing ? farm.PlacingType : farm.Selected.TypeDef;
             UiKit.Heading(farm.Mode == FarmMode.Placing ? $"{type.Name} bauen" : $"{type.Name} verschieben", UiKit.Title);
-            GUILayout.Label("Tippe auf den Hof, um den Platz auszuwählen. Grün = frei, rot = belegt.", UiKit.Small);
+            GUILayout.Label("Zieh das Gebäude an den gewünschten Platz oder tippe auf den Hof. Grün = frei, rot = belegt.", UiKit.Small);
             if (farm.Mode == FarmMode.Placing)
             {
                 GUILayout.Label($"Kosten: {type.CostForLevel(1)} {FarmBuildingType.ResourceName(type.CostResource)}\n" +

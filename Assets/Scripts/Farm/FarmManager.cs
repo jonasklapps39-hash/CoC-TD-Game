@@ -90,17 +90,26 @@ namespace MuhDefense
 
             if (Mode != FarmMode.Normal)
             {
-                int size = Mode == FarmMode.Placing ? PlacingType.Size : Selected.TypeDef.Size;
-                int offset = (size - 1) / 2;
-                MoveGhost(new Vector2Int(
-                    Mathf.Clamp(cell.x - offset, 0, FarmState.Width - size),
-                    Mathf.Clamp(cell.y - offset, 0, FarmState.Height - size)));
+                DragGhostTo(world);
                 return;
             }
 
             var b = Farm.BuildingAt(cell);
             Select(b);
             if (b != null && b.TypeDef.IsProducer && b.Stored >= 1) Collect(b);
+        }
+
+        /// <summary>Vorschau beim Platzieren oder Verschieben unter den Finger setzen (auch beim Ziehen).</summary>
+        public void DragGhostTo(Vector3 world)
+        {
+            if (Mode == FarmMode.Normal) return;
+            var cell = new Vector2Int(Mathf.FloorToInt(world.x), Mathf.FloorToInt(world.z));
+            int size = Mode == FarmMode.Placing ? PlacingType.Size : Selected.TypeDef.Size;
+            int offset = (size - 1) / 2;
+            var target = new Vector2Int(
+                Mathf.Clamp(cell.x - offset, 0, FarmState.Width - size),
+                Mathf.Clamp(cell.y - offset, 0, FarmState.Height - size));
+            if (target != ghostCell) MoveGhost(target);
         }
 
         public void Select(BuildingData b)

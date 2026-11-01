@@ -61,11 +61,12 @@ Tipp: Im Game-Fenster ein Querformat wie *1920×1080* einstellen.
 
 **Hof**
 - Gebäude antippen → Infos, verbessern, verschieben, einsammeln
-- „Bauen“ → Gebäude wählen → auf den Hof tippen (grün = frei) → „Bestätigen“
+- Gebäude **festhalten und ziehen** → verschieben (loslassen auf freiem Platz)
+- „Bauen“ → Gebäude wählen → an den Platz ziehen oder tippen (grün = frei) → „Bestätigen“
 - „Zur Weltkarte“ → Level wählen
 
 **Level**
-- Turm in der Seitenleiste wählen → auf ein hell markiertes Feld tippen
+- Turm-Karte **auf die Karte ziehen** und loslassen (Vorschau mit Reichweite, grün = frei) – oder Karte antippen und dann aufs Feld tippen
 - Auf einen Turm tippen → Upgrade-Fenster unten (3 Pfade), Zielmodus, verkaufen
 - Fähigkeiten der Stufe-5-Türme erscheinen als Knöpfe in der Seitenleiste
 - „Welle starten“, wenn du bereit bist

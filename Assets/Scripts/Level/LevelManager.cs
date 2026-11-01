@@ -484,10 +484,64 @@ namespace MuhDefense
 
         public void CancelPlacing()
         {
+            HidePlacementPreview();
             if (PlacingType == null && !PlacingHero) return;
             PlacingType = null;
             PlacingHero = false;
             map.ShowBuildable(false, IsBuildable);
+        }
+
+        // ---------------------------------------------------------------- Vorschau beim Ziehen (Drag & Drop)
+
+        GameObject placementGhost;
+        GameObject placementMarker;
+        object ghostFor;
+
+        /// <summary>Zeigt den Turm (oder Helden) unter dem Finger, grün = frei, rot = belegt. null blendet die Vorschau aus.</summary>
+        public void SetPlacementPreview(Vector3? world)
+        {
+            object target = PlacingHero ? (object)"Held" : PlacingType;
+            if (world == null || target == null)
+            {
+                HidePlacementPreview();
+                return;
+            }
+            if (placementGhost == null || ghostFor != target) CreatePlacementGhost(target);
+
+            var cell = new Vector2Int(Mathf.FloorToInt(world.Value.x), Mathf.FloorToInt(world.Value.z));
+            placementGhost.transform.position = CellCenter(cell);
+            bool ok = IsBuildable(cell);
+            placementMarker.GetComponent<Renderer>().sharedMaterial =
+                Visuals.Mat(ok ? new Color(0.35f, 0.95f, 0.35f) : new Color(0.95f, 0.3f, 0.25f), false);
+        }
+
+        void CreatePlacementGhost(object target)
+        {
+            HidePlacementPreview();
+            ghostFor = target;
+            placementGhost = new GameObject("Vorschau");
+            placementGhost.transform.SetParent(transform, false);
+            placementMarker = Visuals.Prim(PrimitiveType.Cube, placementGhost.transform, new Vector3(0f, 0.02f, 0f),
+                new Vector3(0.96f, 0.04f, 0.96f), Color.green, "Markierung", outline: false);
+            float range;
+            if (PlacingHero)
+            {
+                ModelLibrary.Spawn("BauerHeinz", placementGhost.transform, 1.15f);
+                range = 2.6f;
+            }
+            else
+            {
+                ModelLibrary.Spawn(Tower.ModelNameFor(PlacingType), placementGhost.transform, 0.92f, ModelLibrary.Fit.Footprint);
+                range = PlacingType.Base.GlobalRange ? 1.2f : PlacingType.Base.Range;
+            }
+            Visuals.Circle(placementGhost.transform, range, new Color(1f, 1f, 1f, 0.85f));
+        }
+
+        void HidePlacementPreview()
+        {
+            if (placementGhost != null) Destroy(placementGhost);
+            placementGhost = null;
+            ghostFor = null;
         }
 
         bool TryPlace(TowerType type, Vector2Int cell)

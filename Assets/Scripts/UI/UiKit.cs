@@ -92,6 +92,28 @@ namespace MuhDefense
             return true;
         }
 
+        /// <summary>Liegt der Zeiger über einem Bedienelement?</summary>
+        public static bool IsOverUi(Vector2 rawMouse, List<Rect> blockers)
+        {
+            Vector2 v = rawMouse / Scale;
+            foreach (var r in blockers)
+            {
+                if (r.Contains(v)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Punkt auf dem Boden unter dem Zeiger.</summary>
+        public static bool ScreenToGround(Vector2 rawMouse, Camera cam, out Vector3 world)
+        {
+            world = default;
+            var ray = cam.ScreenPointToRay(new Vector3(rawMouse.x, Screen.height - rawMouse.y, 0f));
+            var ground = new Plane(Vector3.up, Vector3.zero);
+            if (!ground.Raycast(ray, out float enter)) return false;
+            world = ray.GetPoint(enter);
+            return true;
+        }
+
         public static bool EscapePressed()
         {
             var e = Event.current;

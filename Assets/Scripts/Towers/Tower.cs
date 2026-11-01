@@ -303,7 +303,7 @@ namespace MuhDefense
             }
         }
 
-        string ModelNameFor(TowerType type)
+        public static string ModelNameFor(TowerType type)
         {
             if (type == TowerType.Bienenstock) return "Bienenstock";
             if (type == TowerType.Windmuehle) return "Windmuehle";
