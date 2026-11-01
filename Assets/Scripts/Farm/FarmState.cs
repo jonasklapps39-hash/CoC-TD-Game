@@ -83,6 +83,16 @@ namespace MuhDefense
                 if (Data.Levels.Count > 0) Data.TutorialStep = -1;
                 Data.Version = 4;
             }
+            if (Data.Version < 5)
+            {
+                // Sterne gibt es jetzt je Schwierigkeitsgrad. Alte Sterne zählen als „Mittel“, alte Kronen als „Schwer“.
+                foreach (var p in Data.Levels)
+                {
+                    if (p.HardCleared) p.HardStars = Mathf.Max(1, p.BestStars);
+                    p.HardCleared = false;
+                }
+                Data.Version = 5;
+            }
             if (Data.OwnedSkins == null || Data.OwnedSkins.Count == 0) Data.OwnedSkins = new List<string> { "standard" };
             if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
             if (Data.Talents == null) Data.Talents = new List<string>();
@@ -115,7 +125,7 @@ namespace MuhDefense
 
         static SaveData CreateNewFarm()
         {
-            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 4 };
+            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 5 };
             AddStartBuilding(data, FarmBuildingType.Bauernhaus, 13, 8);
             AddStartBuilding(data, FarmBuildingType.Maisfeld, 8, 11);
             AddStartBuilding(data, FarmBuildingType.Kuhstall, 19, 11);
@@ -419,21 +429,41 @@ namespace MuhDefense
             return true;
         }
 
-        public int BestStars(string levelId)
+        LevelProgress FindLevel(string levelId) => Data.Levels.Find(p => p.Id == levelId);
+
+        /// <summary>Beste Sterne eines Levels auf einem Schwierigkeitsgrad.</summary>
+        public int Stars(string levelId, Difficulty d)
         {
-            foreach (var p in Data.Levels)
-            {
-                if (p.Id == levelId) return p.BestStars;
-            }
-            return 0;
+            var p = FindLevel(levelId);
+            if (p == null) return 0;
+            return d == Difficulty.Leicht ? p.EasyStars : d == Difficulty.Schwer ? p.HardStars : p.BestStars;
         }
 
+        /// <summary>Beste Sterne eines Levels über alle Schwierigkeitsgrade (für das Freischalten des nächsten Levels).</summary>
+        public int BestStars(string levelId)
+        {
+            var p = FindLevel(levelId);
+            return p == null ? 0 : Mathf.Max(p.EasyStars, Mathf.Max(p.BestStars, p.HardStars));
+        }
+
+        /// <summary>Erst „Leicht“ schaffen, dann wird „Mittel“ frei, danach „Schwer“.</summary>
+        public bool IsDifficultyUnlocked(string levelId, Difficulty d)
+        {
+            switch (d)
+            {
+                case Difficulty.Mittel: return Stars(levelId, Difficulty.Leicht) > 0 || Stars(levelId, Difficulty.Mittel) > 0;
+                case Difficulty.Schwer: return Stars(levelId, Difficulty.Mittel) > 0 || Stars(levelId, Difficulty.Schwer) > 0;
+                default: return true;
+            }
+        }
+
+        /// <summary>Alle Sterne zusammen – jeder Schwierigkeitsgrad zählt einzeln (bis zu 9 pro Level).</summary>
         public int TotalStars
         {
             get
             {
                 int n = 0;
-                foreach (var p in Data.Levels) n += p.BestStars + (p.HardCleared ? 1 : 0);
+                foreach (var p in Data.Levels) n += p.EasyStars + p.BestStars + p.HardStars;
                 return n;
             }
         }
@@ -630,7 +660,7 @@ namespace MuhDefense
                 int n = 0;
                 foreach (var p in Data.Levels)
                 {
-                    if (p.HardCleared) n++;
+                    if (p.HardStars > 0) n++;
                 }
                 return n;
             }
@@ -737,38 +767,20 @@ namespace MuhDefense
             }
         }
 
-        public bool HardCleared(string levelId)
+        public void RecordStars(string levelId, int stars, Difficulty d)
         {
-            foreach (var p in Data.Levels)
+            var p = FindLevel(levelId);
+            if (p == null)
             {
-                if (p.Id == levelId) return p.HardCleared;
+                p = new LevelProgress { Id = levelId };
+                Data.Levels.Add(p);
             }
-            return false;
-        }
-
-        /// <returns>true, wenn das Level zum ersten Mal auf „Schwer“ geschafft wurde.</returns>
-        public bool RecordHardClear(string levelId)
-        {
-            foreach (var p in Data.Levels)
+            switch (d)
             {
-                if (p.Id != levelId) continue;
-                if (p.HardCleared) return false;
-                p.HardCleared = true;
-                return true;
+                case Difficulty.Leicht: p.EasyStars = Mathf.Max(p.EasyStars, stars); break;
+                case Difficulty.Schwer: p.HardStars = Mathf.Max(p.HardStars, stars); break;
+                default: p.BestStars = Mathf.Max(p.BestStars, stars); break;
             }
-            Data.Levels.Add(new LevelProgress { Id = levelId, HardCleared = true });
-            return true;
-        }
-
-        public void RecordStars(string levelId, int stars)
-        {
-            foreach (var p in Data.Levels)
-            {
-                if (p.Id != levelId) continue;
-                p.BestStars = Mathf.Max(p.BestStars, stars);
-                return;
-            }
-            Data.Levels.Add(new LevelProgress { Id = levelId, BestStars = stars });
         }
     }
 }

@@ -911,19 +911,28 @@ namespace MuhDefense
                 if (levelIcon != null) GUILayout.Label(levelIcon, GUILayout.Width(72f), GUILayout.Height(72f));
                 GUILayout.BeginVertical();
                 UiKit.Heading(def.Name, UiKit.Title, GUILayout.Height(30f));
-                float rf = DifficultyRules.RewardFactor(GameFlow.CurrentDifficulty);
-                GUILayout.Label(unlocked
-                    ? $"Belohnung bei 3 Sternen: {Mathf.RoundToInt(def.RewardCorn * rf)} Mais, {Mathf.RoundToInt(def.RewardMilk * rf)} Milch" +
-                      (State.HardCleared(def.Id) ? "   •   Krone (Schwer geschafft)" : "")
-                    : regionOpen ? "Gesperrt – schaffe zuerst das vorherige Level." : "Gesperrt – zu wenige Sterne.", UiKit.Small);
+                var diff = GameFlow.CurrentDifficulty;
+                bool diffOpen = State.IsDifficultyUnlocked(def.Id, diff);
+                float rf = DifficultyRules.RewardFactor(diff);
+                string info;
+                if (!unlocked) info = regionOpen ? "Gesperrt – schaffe zuerst das vorherige Level." : "Gesperrt – zu wenige Sterne.";
+                else if (!diffOpen) info = diff == Difficulty.Mittel ? "„Mittel“ gesperrt – schaffe das Level zuerst auf „Leicht“." : "„Schwer“ gesperrt – schaffe das Level zuerst auf „Mittel“.";
+                else info = $"Belohnung bei 3 Sternen: {Mathf.RoundToInt(def.RewardCorn * rf)} Mais, {Mathf.RoundToInt(def.RewardMilk * rf)} Milch";
+                GUILayout.Label(info, UiKit.Small);
+                if (unlocked)
+                {
+                    GUILayout.Label($"Leicht: {StarText(def.Id, Difficulty.Leicht)}   •   Mittel: {StarText(def.Id, Difficulty.Mittel)}   •   " +
+                                    $"Schwer: {StarText(def.Id, Difficulty.Schwer)}", UiKit.Small);
+                }
                 GUILayout.EndVertical();
+                // Sterne für den gewählten Schwierigkeitsgrad
                 Rect stars = GUILayoutUtility.GetRect(130f, 60f, GUILayout.Width(130f));
-                UiKit.DrawStars(stars, State.BestStars(def.Id), 36f);
-                GUI.enabled = unlocked;
-                if (UiKit.Btn("Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(60f)))
+                UiKit.DrawStars(stars, State.Stars(def.Id, diff), 36f);
+                GUI.enabled = unlocked && diffOpen;
+                if (UiKit.Btn(unlocked && !diffOpen ? "Gesperrt" : "Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(60f)))
                 {
                     farm.MapOpen = false;
-                    farm.PlayLevel(def, GameFlow.CurrentDifficulty);
+                    farm.PlayLevel(def, diff);
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
@@ -933,6 +942,13 @@ namespace MuhDefense
 
             GUILayout.Label("Tipp: Werkstätten auf dem Hof schalten neue Türme frei und erlauben höhere Turm-Stufen im Level.", UiKit.Small);
             GUILayout.EndArea();
+        }
+
+        string StarText(string levelId, Difficulty d)
+        {
+            if (!State.IsDifficultyUnlocked(levelId, d)) return "gesperrt";
+            int n = State.Stars(levelId, d);
+            return n == 1 ? "1 Stern" : $"{n} Sterne";
         }
 
         // ---------------------------------------------------------------- Anzeigen über den Gebäuden

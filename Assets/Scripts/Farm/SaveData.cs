@@ -87,8 +87,11 @@ namespace MuhDefense
     public class LevelProgress
     {
         public string Id;
+        /// <summary>Beste Sterne auf „Mittel“ (heißt aus Kompatibilität mit alten Spielständen so).</summary>
         public int BestStars;
-        /// <summary>Auf „Schwer“ geschafft (Krone, zählt als zusätzlicher Stern).</summary>
+        public int EasyStars;
+        public int HardStars;
+        /// <summary>Alt (Version 4): auf „Schwer“ geschafft. Wird beim Laden in <see cref="HardStars"/> übernommen.</summary>
         public bool HardCleared;
     }
 }

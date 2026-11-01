@@ -23,9 +23,6 @@ namespace MuhDefense
         /// <summary>Faktor für Mais und Milch als Belohnung.</summary>
         public static float RewardFactor(Difficulty d) => d == Difficulty.Leicht ? 0.7f : d == Difficulty.Schwer ? 1.5f : 1f;
 
-        /// <summary>Auf „Leicht“ gibt es höchstens 2 Sterne.</summary>
-        public static int MaxStars(Difficulty d) => d == Difficulty.Leicht ? 2 : 3;
-
         /// <summary>Diamanten, wenn man das Level zum ersten Mal auf „Schwer“ schafft.</summary>
         public const int HardFirstClearGems = 15;
 
@@ -33,9 +30,9 @@ namespace MuhDefense
         {
             switch (d)
             {
-                case Difficulty.Leicht: return "Schwächere Aliens, mehr Start-Münzen. Weniger Belohnung, höchstens 2 Sterne.";
-                case Difficulty.Schwer: return "Stärkere, schnellere Aliens. 50 % mehr Belohnung und eine Krone (+1 Stern, Diamanten).";
-                default: return "Das normale Spiel.";
+                case Difficulty.Leicht: return "Schwächere Aliens, mehr Start-Münzen, 70 % Belohnung. Schalte damit „Mittel“ frei.";
+                case Difficulty.Schwer: return "Stärkere, schnellere Aliens. 150 % Belohnung, beim ersten Sieg 15 Diamanten extra.";
+                default: return "Das normale Spiel. Schalte damit „Schwer“ frei.";
             }
         }
     }

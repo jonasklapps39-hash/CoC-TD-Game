@@ -15,7 +15,9 @@ namespace MuhDefense
         /// <summary>Diamanten für neue Sterne und das erste Schaffen.</summary>
         public int Gems;
         /// <summary>Zum ersten Mal auf „Schwer“ geschafft.</summary>
-        public bool NewCrown;
+        public bool FirstHardClear;
+        /// <summary>Dadurch wurde ein neuer Schwierigkeitsgrad für dieses Level frei (Mittel oder Schwer).</summary>
+        public string UnlockedDifficulty = "";
     }
 
     /// <summary>
@@ -43,7 +45,7 @@ namespace MuhDefense
         }
 
         /// <summary>Gewählter Schwierigkeitsgrad (gilt für das nächste und das laufende Level).</summary>
-        public static Difficulty CurrentDifficulty = Difficulty.Mittel;
+        public static Difficulty CurrentDifficulty = Difficulty.Leicht;
 
         public static void StartLevel(LevelDefinition def, Difficulty difficulty)
         {
@@ -94,12 +96,16 @@ namespace MuhDefense
             int milk = Mathf.RoundToInt(def.RewardMilk * stars / 3f * factor);
             int cornAdded = (int)Farm.Add(Resource.Mais, corn);
             int milkAdded = (int)Farm.Add(Resource.Milch, milk);
-            int previousBest = Farm.BestStars(def.Id);
-            int gems = Mathf.Max(0, stars - previousBest) * FarmState.GemsPerNewStar + (previousBest == 0 ? FarmState.GemsFirstClear : 0);
-            bool newCrown = difficulty == Difficulty.Schwer && Farm.RecordHardClear(def.Id);
-            if (newCrown) gems += DifficultyRules.HardFirstClearGems;
+            // Sterne und Diamanten zählen je Schwierigkeitsgrad
+            int previous = Farm.Stars(def.Id, difficulty);
+            bool firstClearEver = Farm.BestStars(def.Id) == 0;
+            int gems = Mathf.Max(0, stars - previous) * FarmState.GemsPerNewStar + (firstClearEver ? FarmState.GemsFirstClear : 0);
+            bool firstHard = difficulty == Difficulty.Schwer && previous == 0;
+            if (firstHard) gems += DifficultyRules.HardFirstClearGems;
+            Difficulty? next = difficulty == Difficulty.Leicht ? Difficulty.Mittel : difficulty == Difficulty.Mittel ? Difficulty.Schwer : (Difficulty?)null;
+            bool nextWasLocked = next.HasValue && !Farm.IsDifficultyUnlocked(def.Id, next.Value);
             Farm.AddGems(gems);
-            Farm.RecordStars(def.Id, stars);
+            Farm.RecordStars(def.Id, stars, difficulty);
             Farm.Save();
             return new LevelReward
             {
@@ -109,7 +115,8 @@ namespace MuhDefense
                 CornLost = corn - cornAdded,
                 MilkLost = milk - milkAdded,
                 Gems = gems,
-                NewCrown = newCrown,
+                FirstHardClear = firstHard,
+                UnlockedDifficulty = nextWasLocked ? DifficultyRules.Name(next.Value) : "",
             };
         }
 

@@ -76,12 +76,12 @@ namespace MuhDefense
             new AchievementDef { Id = "a_towers", Name = "Turmbauer", Description = "Baue 100 Türme.", Counter = Counter.TowersBuilt, Target = 100, Gems = 15, Icon = "MistgabelBauer" },
             new AchievementDef { Id = "a_upgrades", Name = "Tüftler", Description = "Kaufe 200 Turm-Upgrades.", Counter = Counter.Upgrades, Target = 200, Gems = 20, Icon = "TraktorTesla" },
             new AchievementDef { Id = "a_collect", Name = "Fleißiger Bauer", Description = "Sammle 10 000 Mais und Milch auf dem Hof.", Counter = Counter.Collected, Target = 10000, Gems = 20, Icon = "Maiskolben" },
-            new AchievementDef { Id = "a_region1", Name = "Held vom Heimattal", Description = "Hol alle 15 Sterne im Heimattal.", Value = f => RegionStars(f, 0), Target = 15, Gems = 30, Icon = "KuhUfo" },
-            new AchievementDef { Id = "a_region2", Name = "Herr des Maisfelds", Description = "Hol alle 15 Sterne im Maisfeld-Labyrinth.", Value = f => RegionStars(f, 1), Target = 15, Gems = 30, Icon = "ErnteRoboter" },
-            new AchievementDef { Id = "a_region3", Name = "Retter der Kühe", Description = "Hol alle 15 Sterne an der Absturzstelle.", Value = f => RegionStars(f, 2), Target = 15, Gems = 40, Icon = "AlienKaiser" },
+            new AchievementDef { Id = "a_region1", Name = "Held vom Heimattal", Description = "Hol in jedem Heimattal-Level 3 Sterne.", Value = f => RegionStars(f, 0), Target = 15, Gems = 30, Icon = "KuhUfo" },
+            new AchievementDef { Id = "a_region2", Name = "Herr des Maisfelds", Description = "Hol in jedem Maisfeld-Level 3 Sterne.", Value = f => RegionStars(f, 1), Target = 15, Gems = 30, Icon = "ErnteRoboter" },
+            new AchievementDef { Id = "a_region3", Name = "Retter der Kühe", Description = "Hol in jedem Level der Absturzstelle 3 Sterne.", Value = f => RegionStars(f, 2), Target = 15, Gems = 40, Icon = "AlienKaiser" },
             new AchievementDef { Id = "a_emperor", Name = "Kaiser-Bezwinger", Description = "Besiege Alien-Kaiser Zorbax.", Value = f => f.BestStars("absturz-5") > 0 ? 1 : 0, Target = 1, Gems = 50, Icon = "AlienKaiser" },
             new AchievementDef { Id = "a_crowns", Name = "Kronenträger", Description = "Schaffe 5 Levels auf „Schwer“.", Value = f => f.CrownCount, Target = 5, Gems = 30, Icon = "Diamant" },
-            new AchievementDef { Id = "a_stars", Name = "Sternensammler", Description = "Sammle 40 Sterne.", Value = f => f.TotalStars, Target = 40, Gems = 30, Icon = "Maiskolben" },
+            new AchievementDef { Id = "a_stars", Name = "Sternensammler", Description = "Sammle 60 Sterne (alle Schwierigkeitsgrade zählen).", Value = f => f.TotalStars, Target = 60, Gems = 30, Icon = "Maiskolben" },
             new AchievementDef { Id = "a_farmhouse", Name = "Großbauer", Description = "Verbessere das Bauernhaus auf Stufe 5.", Value = f => f.FarmhouseLevel, Target = 5, Gems = 30, Icon = "Bauernhaus" },
         };
 

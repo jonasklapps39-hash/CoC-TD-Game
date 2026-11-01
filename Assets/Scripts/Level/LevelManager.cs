@@ -39,7 +39,7 @@ namespace MuhDefense
         /// <summary>Dauerhafte Boni aus dem Talentbaum „Bauernwissen“.</summary>
         public LevelBonuses Bonuses { get; private set; } = new LevelBonuses();
         public int Stars { get; private set; }
-        public int BestStars => GameFlow.Farm.BestStars(Def.Id);
+        public int BestStars => GameFlow.Farm.Stars(Def.Id, Difficulty);
         /// <summary>Belohnung für den Hof, sobald das Level gewonnen ist.</summary>
         public LevelReward Reward { get; private set; }
         /// <summary>Türme, die durch die Werkstätten auf dem Hof freigeschaltet sind.</summary>
@@ -356,7 +356,7 @@ namespace MuhDefense
 
             State = LevelState.Won;
             GameAudio.Play(SoundId.Win);
-            Stars = Mathf.Min(CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1, DifficultyRules.MaxStars(Difficulty));
+            Stars = CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1;
             GameFlow.Farm.Count(Counter.LevelsWon);
             if (CowsLost == 0) GameFlow.Farm.Count(Counter.PerfectWins);
             if (Difficulty == Difficulty.Schwer) GameFlow.Farm.Count(Counter.HardWins);

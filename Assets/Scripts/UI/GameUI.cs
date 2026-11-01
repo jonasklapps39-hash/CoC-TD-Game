@@ -552,7 +552,7 @@ namespace MuhDefense
             {
                 Rect starsRect = GUILayoutUtility.GetRect(box.width - 56f, 96f);
                 UiKit.DrawStars(starsRect, level.Stars, 86f);
-                GUILayout.Label($"Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}   •   Bestes Ergebnis: {level.BestStars} Sterne", UiKit.Center);
+                GUILayout.Label($"Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}   •   Bestes Ergebnis auf {DifficultyRules.Name(level.Difficulty)}: {level.BestStars} Sterne", UiKit.Center);
 
                 var reward = level.Reward;
                 if (reward != null)
@@ -579,10 +579,10 @@ namespace MuhDefense
                     {
                         GUILayout.Label("Zorbax ist besiegt und das Mutterschiff fliegt heulend davon. Die Kühe sind gerettet – vorerst …", UiKit.Center);
                     }
-                    if (reward.NewCrown) GUILayout.Label("Krone verdient: auf „Schwer“ geschafft! +1 Stern", UiKit.Center);
-                    else if (level.Difficulty == Difficulty.Leicht && level.CowsLost == 0)
+                    if (reward.FirstHardClear) GUILayout.Label("Zum ersten Mal auf „Schwer“ geschafft – Respekt!", UiKit.Center);
+                    if (reward.UnlockedDifficulty.Length > 0)
                     {
-                        GUILayout.Label("Auf „Leicht“ gibt es höchstens 2 Sterne – versuch es auf „Mittel“!", UiKit.Center);
+                        GUILayout.Label($"Neu freigeschaltet: dieses Level auf „{reward.UnlockedDifficulty}“!", UiKit.Center);
                     }
                 }
             }
