@@ -13,6 +13,8 @@ namespace MuhDefense
         public int NextBuildingId = 1;
         public List<BuildingData> Buildings = new List<BuildingData>();
         public List<LevelProgress> Levels = new List<LevelProgress>();
+        /// <summary>Alien-Arten, die schon vorgestellt wurden (Fenster „Neuer Gegner“).</summary>
+        public List<string> SeenEnemies = new List<string>();
     }
 
     [Serializable]

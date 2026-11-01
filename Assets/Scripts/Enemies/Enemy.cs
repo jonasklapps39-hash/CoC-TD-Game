@@ -19,6 +19,10 @@ namespace MuhDefense
         /// <summary>Große Aliens (Brocken, Boss) lassen sich nur von starker Kälte einfrieren.</summary>
         public bool IsBig => Type.Kind == EnemyKind.Brocken || IsBoss;
         public bool IsFrozen => freezeTimer > 0f;
+        public bool IsCamo => Type.Camo;
+        public bool IsFlying => Type.Flying;
+        /// <summary>Flughöhe des Ufos über dem Boden.</summary>
+        float HoverHeight => IsFlying ? 1.4f : 0f;
 
         /// <summary>Je höher, desto weiter ist das Alien gekommen (Kuh-Träger zuerst).</summary>
         public float Priority => returning ? 1000f + travelled : travelled;
@@ -26,8 +30,8 @@ namespace MuhDefense
         /// <summary>Index des Weg-Punkts hinter dem Alien in Richtung Eingang.</summary>
         public int WaypointTowardsEntrance => returning ? targetIndex : Mathf.Max(0, targetIndex - 1);
 
-        public Vector3 AimPoint => transform.position + Vector3.up * (0.45f * Type.Scale);
-        public Vector3 HealthBarPoint => transform.position + Vector3.up * (1.05f * Type.Scale + (Carried != null ? 0.6f : 0f));
+        public Vector3 AimPoint => transform.position + Vector3.up * (HoverHeight + 0.45f * Type.Scale);
+        public Vector3 HealthBarPoint => transform.position + Vector3.up * (HoverHeight + 1.05f * Type.Scale + (Carried != null && !IsFlying ? 0.6f : 0f));
 
         LevelManager level;
         Vector3[] path;
@@ -51,17 +55,22 @@ namespace MuhDefense
         float permanentVulnerability;
         GameObject iceBlock;
         GameObject flame;
+        float healTimer;
+        /// <summary>Kurzes Zusammenzucken nach einem Treffer (0..1).</summary>
+        float hitPunch;
 
         public void Init(LevelManager level, EnemyType type, float hpMultiplier, Vector3[] path)
         {
             this.level = level;
-            this.path = path;
+            // Ufos fliegen in gerader Linie vom Eingang zur Weide
+            this.path = type.Flying ? new[] { path[0], path[path.Length - 1] } : path;
             Type = type;
             MaxHp = type.Hp * hpMultiplier;
             Hp = MaxHp;
             name = type.Name;
-            transform.position = path[0];
+            transform.position = this.path[0];
             targetIndex = 1;
+            healTimer = type.HealInterval;
             BuildModel();
         }
 
@@ -73,7 +82,14 @@ namespace MuhDefense
             UpdateEffects(dt);
             if (!Alive) return;
 
-            if (freezeTimer > 0f) return;
+            if (Type.HealPercent > 0f) UpdateHealing(dt);
+            if (hitPunch > 0f) hitPunch = Mathf.Max(0f, hitPunch - dt * 6f);
+
+            if (freezeTimer > 0f)
+            {
+                ApplyModelPose(0f);
+                return;
+            }
 
             if (waitingForCow)
             {
@@ -88,12 +104,41 @@ namespace MuhDefense
 
             float speed = Type.Speed * slowFactor * (Carried != null ? 0.75f : 1f);
             Move(speed * dt);
+            ApplyModelPose(speed);
+        }
 
-            if (model != null)
+        /// <summary>Wackeln beim Laufen, Schweben beim Ufo, Zusammenzucken bei Treffern.</summary>
+        void ApplyModelPose(float speed)
+        {
+            if (model == null) return;
+            float bob = IsFlying
+                ? HoverHeight + Mathf.Sin(Time.time * 2.5f) * 0.12f
+                : Mathf.Abs(Mathf.Sin(Time.time * speed * 6f)) * 0.06f;
+            model.localPosition = new Vector3(0f, bob, 0f);
+            float squash = 1f - 0.18f * hitPunch;
+            model.localScale = new Vector3(1f + 0.12f * hitPunch, squash, 1f + 0.12f * hitPunch);
+        }
+
+        void UpdateHealing(float dt)
+        {
+            healTimer -= dt;
+            if (healTimer > 0f) return;
+            healTimer = Type.HealInterval;
+            bool healed = false;
+            foreach (var e in level.Enemies)
             {
-                float bob = Mathf.Abs(Mathf.Sin(Time.time * speed * 6f)) * 0.06f;
-                model.localPosition = new Vector3(0f, bob, 0f);
+                if (e == this || !e.Alive || e.Hp >= e.MaxHp) continue;
+                if (Vector3.Distance(e.transform.position, transform.position) > Type.HealRadius) continue;
+                e.Heal(e.MaxHp * Type.HealPercent);
+                healed = true;
             }
+            if (healed) RingEffect.Spawn(level.transform, transform.position, Type.HealRadius, new Color(0.4f, 1f, 0.5f, 0.9f), 0.5f);
+        }
+
+        public void Heal(float amount)
+        {
+            if (!Alive) return;
+            Hp = Mathf.Min(MaxHp, Hp + amount);
         }
 
         void UpdateEffects(float dt)
@@ -185,7 +230,7 @@ namespace MuhDefense
         {
             if (Carried != null)
             {
-                Carried.transform.position = transform.position + Vector3.up * (0.9f * Type.Scale);
+                Carried.transform.position = transform.position + Vector3.up * (IsFlying ? 0.45f : 0.9f * Type.Scale);
                 Carried.transform.Rotate(0f, 120f * Time.deltaTime, 0f, Space.World);
             }
         }
@@ -203,6 +248,7 @@ namespace MuhDefense
             float dealt = Mathf.Max(damage - armor, damage * 0.25f);
             dealt *= 1f + permanentVulnerability + (IsFrozen ? frozenVulnerability - 1f : 0f);
             Hp -= dealt;
+            if (dealt >= 1f) hitPunch = 1f;
             if (Hp <= 0f) Die();
             return dealt;
         }
@@ -311,17 +357,6 @@ namespace MuhDefense
             if (flame != null) flame.SetActive(on);
         }
 
-        static string ModelName(EnemyKind kind)
-        {
-            switch (kind)
-            {
-                case EnemyKind.Flitzer: return "Flitzer";
-                case EnemyKind.Brocken: return "Brocken";
-                case EnemyKind.Boss: return "Boss";
-                default: return "Gruenling";
-            }
-        }
-
         void BuildModel()
         {
             model = new GameObject("Modell").transform;
@@ -330,7 +365,7 @@ namespace MuhDefense
             root.SetParent(model, false);
             root.localScale = Vector3.one * Type.Scale;
 
-            if (ModelLibrary.Spawn(ModelName(Type.Kind), root, 1.0f) != null) return;
+            if (ModelLibrary.Spawn(Type.ModelName, root, IsFlying ? 0.9f : 1.0f) != null) return;
 
             // Ersatz aus Grundkörpern, falls das Modell fehlt
             Color body = Type.Color;

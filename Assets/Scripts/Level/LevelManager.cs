@@ -51,6 +51,8 @@ namespace MuhDefense
         public bool Paused { get; private set; }
         /// <summary>Tutorial: gerade geschenkter Turm, der noch vorgestellt wird.</summary>
         public TowerType GiftedTower { get; private set; }
+        /// <summary>Neue Alien-Art, die gerade vorgestellt wird (Spiel ist so lange angehalten).</summary>
+        public EnemyType NewEnemyIntro { get; private set; }
 
         public readonly List<Enemy> Enemies = new List<Enemy>();
         public readonly List<Tower> Towers = new List<Tower>();
@@ -95,6 +97,48 @@ namespace MuhDefense
 
             gameObject.AddComponent<GameUI>().Init(this);
             ApplyTimeScale();
+        }
+
+        // ---------------------------------------------------------------- Unterstützung durch andere Türme
+
+        static bool Supports(Tower supporter, Tower target)
+        {
+            if (supporter == target) return false;
+            Vector3 d = supporter.transform.position - target.transform.position;
+            d.y = 0f;
+            return d.magnitude <= supporter.Stats.Range;
+        }
+
+        /// <summary>Ein Wetterhahn (oder ähnliches) in Reichweite macht getarnte Aliens für diesen Turm sichtbar.</summary>
+        public bool RevealsCamoFor(Tower tower)
+        {
+            foreach (var t in Towers)
+            {
+                if (t.Stats.RevealsCamo && Supports(t, tower)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Reichweiten-Bonus durch Unterstützungs-Türme (der stärkste zählt).</summary>
+        public float RangeBonusAt(Tower tower)
+        {
+            float best = 0f;
+            foreach (var t in Towers)
+            {
+                if (t.Stats.SupportRangeBonus > best && Supports(t, tower)) best = t.Stats.SupportRangeBonus;
+            }
+            return best;
+        }
+
+        /// <summary>Tempo-Bonus durch Unterstützungs-Türme (der stärkste zählt).</summary>
+        public float RateBonusAt(Tower tower)
+        {
+            float best = 0f;
+            foreach (var t in Towers)
+            {
+                if (t.Stats.SupportRateBonus > best && Supports(t, tower)) best = t.Stats.SupportRateBonus;
+            }
+            return best;
         }
 
         /// <summary>Höchste Turm-Stufe in diesem Level (vom Hof bestimmt), 0 = nicht freigeschaltet.</summary>
@@ -156,7 +200,7 @@ namespace MuhDefense
 
         void ApplyTimeScale()
         {
-            Time.timeScale = Paused ? 0f : GameSpeed;
+            Time.timeScale = Paused || NewEnemyIntro != null ? 0f : GameSpeed;
         }
 
         void OnDestroy()
@@ -181,6 +225,12 @@ namespace MuhDefense
                 }
                 GiftedTower = gift.Tower;
             }
+        }
+
+        public void DismissEnemyIntro()
+        {
+            NewEnemyIntro = null;
+            ApplyTimeScale();
         }
 
         public void DismissGift()
@@ -217,8 +267,15 @@ namespace MuhDefense
         {
             var enemy = new GameObject("Alien").AddComponent<Enemy>();
             enemy.transform.SetParent(transform, false);
-            enemy.Init(this, EnemyType.All[kind], hpMultiplier, pathWorld);
+            var type = EnemyType.All[kind];
+            enemy.Init(this, type, hpMultiplier, pathWorld);
             Enemies.Add(enemy);
+            if (type.Description.Length > 0 && NewEnemyIntro == null && GameFlow.Farm.MarkEnemySeen(kind))
+            {
+                NewEnemyIntro = type;
+                GameFlow.Farm.Save();
+                ApplyTimeScale();
+            }
         }
 
         void WaveCleared()

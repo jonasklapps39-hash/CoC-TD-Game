@@ -83,6 +83,23 @@ namespace MuhDefense
         const EnemyKind G = EnemyKind.Gruenling;
         const EnemyKind F = EnemyKind.Flitzer;
         const EnemyKind B = EnemyKind.Brocken;
+        const EnemyKind S = EnemyKind.Schleicher;
+        const EnemyKind U = EnemyKind.Ufo;
+        const EnemyKind M = EnemyKind.Sanitaeter;
+
+        /// <summary>Fügt einzelnen Wellen (1 = erste Welle) zusätzliche Alien-Gruppen hinzu.</summary>
+        static WaveDefinition[] With(WaveDefinition[] waves, params (int wave, SpawnGroup group)[] extras)
+        {
+            foreach (var (wave, group) in extras)
+            {
+                var w = waves[wave - 1];
+                var groups = new SpawnGroup[w.Groups.Length + 1];
+                w.Groups.CopyTo(groups, 0);
+                groups[groups.Length - 1] = group;
+                waves[wave - 1] = new WaveDefinition(w.Bonus, groups);
+            }
+            return waves;
+        }
 
         public static readonly LevelDefinition[] All = { Level1(), Level2(), Level3(), Level4(), Level5() };
 
@@ -124,7 +141,10 @@ namespace MuhDefense
             Pasture = new RectInt(13, 3, 3, 3),
             StartMoney = 280,
             CowCount = 10,
-            Waves = StandardWaves(),
+            Waves = With(StandardWaves(),
+                (5, new SpawnGroup(S, 4, 1.2f, 6f)),
+                (7, new SpawnGroup(S, 6, 1f, 3f)),
+                (9, new SpawnGroup(S, 8, 0.8f, 5f))),
             HpMultiplier = 1.35f,
             RewardCorn = 450,
             RewardMilk = 450,
@@ -145,7 +165,13 @@ namespace MuhDefense
             Pasture = new RectInt(13, 3, 3, 3),
             StartMoney = 320,
             CowCount = 10,
-            Waves = StandardWaves(),
+            Waves = With(StandardWaves(),
+                (4, new SpawnGroup(S, 5, 1f, 4f)),
+                (5, new SpawnGroup(U, 3, 2f, 4f)),
+                (7, new SpawnGroup(U, 5, 1.5f, 2f)),
+                (8, new SpawnGroup(S, 8, 0.8f, 6f)),
+                (9, new SpawnGroup(U, 6, 1.2f, 8f)),
+                (10, new SpawnGroup(U, 4, 1.5f, 3f))),
             HpMultiplier = 1.8f,
             RewardCorn = 650,
             RewardMilk = 650,
@@ -166,7 +192,15 @@ namespace MuhDefense
             Pasture = new RectInt(13, 3, 3, 3),
             StartMoney = 400,
             CowCount = 10,
-            Waves = ExtendedWaves(),
+            Waves = With(ExtendedWaves(),
+                (4, new SpawnGroup(M, 2, 3f, 4f)),
+                (5, new SpawnGroup(S, 6, 1f, 3f)),
+                (6, new SpawnGroup(M, 3, 2.5f, 2f)),
+                (6, new SpawnGroup(U, 5, 1.4f, 6f)),
+                (8, new SpawnGroup(M, 4, 2f, 5f)),
+                (9, new SpawnGroup(S, 10, 0.7f, 4f)),
+                (10, new SpawnGroup(U, 8, 1f, 5f)),
+                (11, new SpawnGroup(M, 5, 1.5f, 3f))),
             HpMultiplier = 2.2f,
             RewardCorn = 900,
             RewardMilk = 900,
@@ -186,7 +220,16 @@ namespace MuhDefense
             Pasture = new RectInt(13, 3, 3, 3),
             StartMoney = 450,
             CowCount = 10,
-            Waves = ExtendedWaves(finalBosses: 2),
+            Waves = With(ExtendedWaves(finalBosses: 2),
+                (3, new SpawnGroup(S, 6, 1f, 3f)),
+                (4, new SpawnGroup(U, 4, 1.5f, 4f)),
+                (5, new SpawnGroup(M, 3, 2f, 3f)),
+                (7, new SpawnGroup(S, 10, 0.7f, 2f)),
+                (8, new SpawnGroup(U, 8, 1f, 4f)),
+                (9, new SpawnGroup(M, 5, 1.5f, 6f)),
+                (10, new SpawnGroup(U, 10, 0.8f, 2f)),
+                (11, new SpawnGroup(S, 14, 0.5f, 6f)),
+                (12, new SpawnGroup(M, 6, 1.5f, 8f))),
             HpMultiplier = 2.7f,
             RewardCorn = 1200,
             RewardMilk = 1200,

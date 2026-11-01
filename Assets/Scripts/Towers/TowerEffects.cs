@@ -56,6 +56,7 @@ namespace MuhDefense
             flames.localScale = new Vector3(1f, 0.8f + 0.3f * Mathf.Sin(age * 14f), 1f);
             foreach (var e in level.Enemies)
             {
+                if (e.IsFlying) continue;
                 Vector3 d = e.transform.position - transform.position;
                 d.y = 0f;
                 if (d.magnitude <= radius) e.ApplyBurn(dps * (e.IsArmored ? armoredMultiplier : 1f), 0.5f, meltsArmor);
@@ -133,7 +134,7 @@ namespace MuhDefense
             {
                 if (i >= enemies.Count) continue;
                 var e = enemies[i];
-                if (hit.Contains(e)) continue;
+                if (hit.Contains(e) || e.IsFlying) continue;
                 Vector3 off = e.transform.position - transform.position;
                 off.y = 0f;
                 if (off.magnitude > hitRadius) continue;

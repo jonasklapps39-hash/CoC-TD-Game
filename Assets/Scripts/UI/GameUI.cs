@@ -45,6 +45,7 @@ namespace MuhDefense
                 case LevelState.Lost: DrawEndScreen(false); break;
             }
             if (level.Paused) DrawPauseMenu();
+            else if (level.NewEnemyIntro != null) DrawEnemyIntro();
             else if (level.GiftedTower != null) DrawGift();
 
             if (UiKit.EscapePressed())
@@ -296,6 +297,20 @@ namespace MuhDefense
                 GUILayout.Space(6f);
                 if (GUILayout.Button("Level verlassen", UiKit.Button, GUILayout.Height(52f))) confirmLeave = true;
             }
+            GUILayout.EndArea();
+        }
+
+        void DrawEnemyIntro()
+        {
+            var type = level.NewEnemyIntro;
+            Rect box = UiKit.DrawOverlay(blockers, 560f, 330f);
+            GUILayout.BeginArea(new Rect(box.x + 24f, box.y + 20f, box.width - 48f, box.height - 40f));
+            GUILayout.Label("Neuer Gegner!", UiKit.Big);
+            GUILayout.Label(type.Name, UiKit.Center);
+            GUILayout.Space(6f);
+            GUILayout.Label(type.Description, UiKit.Label);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Verstanden!", UiKit.BigButton, GUILayout.Height(56f))) level.DismissEnemyIntro();
             GUILayout.EndArea();
         }
 

@@ -18,15 +18,17 @@ namespace MuhDefense
         float flightTime;
         float age;
         int pierceLeft;
+        Tower source;
         readonly HashSet<Enemy> alreadyHit = new HashSet<Enemy>();
 
-        public static void Spawn(LevelManager level, Vector3 from, Enemy target, float damage, TowerStats stats, bool arc,
+        public static void Spawn(LevelManager level, Tower source, Vector3 from, Enemy target, float damage, TowerStats stats, bool arc,
             PrimitiveType shape, Vector3 scale, Color color)
         {
             var go = Visuals.Prim(shape, level.transform, from, scale, color, "Geschoss");
             go.transform.position = from;
             var p = go.AddComponent<Projectile>();
             p.level = level;
+            p.source = source;
             p.target = target;
             p.stats = stats;
             p.damage = damage;
@@ -81,6 +83,7 @@ namespace MuhDefense
                 foreach (var e in level.Enemies)
                 {
                     if (!e.Alive || alreadyHit.Contains(e)) continue;
+                    if (source != null && !source.CanTarget(e)) continue;
                     float d = Vector3.Distance(e.transform.position, transform.position);
                     if (d < best)
                     {
@@ -106,6 +109,7 @@ namespace MuhDefense
             {
                 if (i >= enemies.Count) continue;
                 var e = enemies[i];
+                if (e.IsFlying && !stats.HitsAir) continue;
                 Vector3 d = e.transform.position - center;
                 d.y = 0f;
                 if (d.magnitude > stats.Splash) continue;

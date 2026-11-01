@@ -224,6 +224,55 @@ def build_alien(body, dark, scale=1.0, armor=None, crown=False, jet=False, bulky
             tube((0.1 * side * s, 0.22 * s, 0.36 * s), 0.07 * s, 0.1 * s, GLOW_RED, r2=0.02 * s)
 
 
+def build_sneaker():
+    """Schleicher: getarntes Alien mit Kapuze und Messer."""
+    body = (0.42, 0.38, 0.5)
+    dark = (0.2, 0.18, 0.26)
+    build_alien(body, dark, scale=0.95, gun=False)
+    s = 0.95
+    # Kapuze über dem Kopf
+    ball((0, 0.08 * s, 1.0 * s), (0.66 * s, 0.6 * s, 0.62 * s), dark, subsurf=2)
+    tube((0, 0.22 * s, 1.28 * s), 0.12 * s, 0.3 * s, dark, rot=(math.radians(-50), 0, 0), r2=0.01 * s)
+    # Halstuch über dem Mund
+    ball((0, -0.18 * s, 0.76 * s), (0.42 * s, 0.22 * s, 0.16 * s), (0.3, 0.12, 0.35))
+    # Messer in der rechten Hand
+    tube((0.28 * s, -0.22 * s, 0.42 * s), 0.02 * s, 0.1 * s, DARK_WOOD)
+    tube((0.28 * s, -0.22 * s, 0.56 * s), 0.035 * s, 0.22 * s, METAL, r2=0.004 * s, segs=6)
+
+
+def build_medic():
+    """Sanitäter: weißes Alien mit Kreuz auf dem Brustpanzer und Heiltrank auf dem Rücken."""
+    body = (0.88, 0.94, 0.9)
+    dark = (0.45, 0.6, 0.55)
+    teal = (0.2, 0.65, 0.6)
+    build_alien(body, dark, scale=1.0, armor=teal, gun=False)
+    red = (0.9, 0.15, 0.15)
+    soft_box((0, -0.23, 0.5), (0.18, 0.03, 0.06), red, round_=0.3)
+    soft_box((0, -0.23, 0.5), (0.06, 0.03, 0.18), red, round_=0.3)
+    tube((0, 0.22, 0.6), 0.1, 0.26, (0.3, 1.0, 0.45))
+    tube((0, 0.22, 0.78), 0.04, 0.1, (0.55, 0.4, 0.25))
+    # Spritze in der Hand
+    tube((0.28, -0.24, 0.48), 0.035, 0.18, (0.85, 0.95, 1.0), rot=(math.radians(-60), 0, 0))
+    tube((0.28, -0.34, 0.44), 0.008, 0.1, METAL, rot=(math.radians(-60), 0, 0))
+
+
+def build_cow_ufo():
+    """Kuhfänger-Ufo: kleines Ufo mit Alien-Pilot unter der Glaskuppel."""
+    ball((0, 0, 0.35), (1.3, 1.3, 0.3), METAL, subsurf=2, segs=24)
+    ring((0, 0, 0.35), 0.62, 0.045, DARK_METAL)
+    ball((0, 0, 0.47), (0.56, 0.56, 0.42), (0.55, 0.95, 0.7), subsurf=2)
+    # Pilot schaut aus der Kuppel
+    ball((0, -0.02, 0.62), (0.3, 0.28, 0.28), (0.35, 0.72, 0.22), subsurf=1)
+    eye((-0.07, -0.13, 0.65), 0.1, GLOW_RED, glow=True, lid=(0.35, 0.72, 0.22), lid_tilt=math.radians(28), lid_cover=0.55)
+    eye((0.07, -0.13, 0.65), 0.1, GLOW_RED, glow=True, lid=(0.35, 0.72, 0.22), lid_tilt=math.radians(-28), lid_cover=0.55)
+    for i in range(6):
+        a = i * math.pi / 3
+        ball((math.cos(a) * 0.52, math.sin(a) * 0.52, 0.28), (0.09, 0.09, 0.08), GLOW_RED)
+    # Greifarm-Strahler unten
+    tube((0, 0, 0.16), 0.12, 0.14, DARK_METAL, r2=0.18)
+    ball((0, 0, 0.08), (0.2, 0.2, 0.08), (0.5, 1.0, 0.6))
+
+
 def build_farmer():
     """Mistgabel-Bauer mit Steinsockel (Turm)."""
     tube((0, 0, 0.12), 0.5, 0.24, STONE, segs=16)
@@ -311,6 +360,9 @@ MODELS = [
     ("Flitzer", lambda: build_alien((0.62, 0.38, 0.88), (0.32, 0.16, 0.45), scale=0.85, jet=True, gun=False), 5000),
     ("Brocken", lambda: build_alien((0.38, 0.5, 0.32), (0.18, 0.26, 0.15), scale=1.1, armor=(0.5, 0.52, 0.58), bulky=True), 5500),
     ("Boss", lambda: build_alien((0.8, 0.22, 0.2), (0.4, 0.08, 0.08), scale=1.2, armor=(0.25, 0.25, 0.3), crown=True, bulky=True), 8000),
+    ("Schleicher", build_sneaker, 5000),
+    ("Sanitaeter", build_medic, 5000),
+    ("KuhUfo", build_cow_ufo, 4000),
     ("MistgabelBauer", build_farmer, 7000),
     ("HeuballenKatapult", build_catapult, 6000),
     ("EismilchSprueher", build_sprayer, 6000),

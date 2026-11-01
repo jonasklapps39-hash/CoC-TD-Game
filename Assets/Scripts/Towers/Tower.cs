@@ -20,7 +20,13 @@ namespace MuhDefense
         public TargetMode TargetMode { get; private set; } = TargetMode.First;
         public float AbilityCooldownLeft { get; private set; }
 
-        public float Range => Stats.GlobalRange ? GlobalRangeValue : Stats.Range;
+        public float Range => Stats.GlobalRange ? GlobalRangeValue : Stats.Range * (1f + level.RangeBonusAt(this));
+
+        /// <summary>Getarnte Aliens: eigene Tarnsicht oder ein Wetterhahn in der Nähe.</summary>
+        public bool CanSee(Enemy e) => !e.IsCamo || Stats.SeesCamo || level.RevealsCamoFor(this);
+
+        /// <summary>Darf dieser Turm das Alien angreifen (Tarnung, Fluggegner)?</summary>
+        public bool CanTarget(Enemy e) => e.Alive && (!e.IsFlying || Stats.HitsAir) && CanSee(e);
         public int SellValue => Mathf.RoundToInt(Invested * 0.7f);
         public bool HasAbility => Stats.Ability != TowerAbility.None;
         public bool AbilityReady => HasAbility && AbilityCooldownLeft <= 0f;
@@ -121,7 +127,7 @@ namespace MuhDefense
             if (AbilityCooldownLeft > 0f) AbilityCooldownLeft -= dt;
             cooldown = Mathf.Max(0f, cooldown - dt);
 
-            float rate = Stats.FireRate;
+            float rate = Stats.FireRate * (1f + level.RateBonusAt(this));
             if (Type == TowerType.Mistgabel && level.FarmerFrenzyTimer > 0f) rate *= 2f;
 
             if (Type.Kind == TowerKind.Aura)
@@ -171,7 +177,7 @@ namespace MuhDefense
             var candidates = new List<Enemy>();
             foreach (var e in level.Enemies)
             {
-                if (e.Alive && InRange(e)) candidates.Add(e);
+                if (CanTarget(e) && InRange(e)) candidates.Add(e);
             }
             candidates.Sort((a, b) => Score(b).CompareTo(Score(a)));
             if (candidates.Count > count) candidates.RemoveRange(count, candidates.Count - count);
@@ -191,12 +197,12 @@ namespace MuhDefense
             switch (Type.Kind)
             {
                 case TowerKind.Projectile:
-                    Projectile.Spawn(level, from, target, damage, Stats, false,
+                    Projectile.Spawn(level, this, from, target, damage, Stats, false,
                         PrimitiveType.Cube, new Vector3(0.05f, 0.05f, 0.35f),
                         Stats.ArmorPiercing ? new Color(1f, 0.82f, 0.2f) : new Color(0.75f, 0.75f, 0.8f));
                     break;
                 case TowerKind.Arc:
-                    Projectile.Spawn(level, from, target, damage, Stats, true,
+                    Projectile.Spawn(level, this, from, target, damage, Stats, true,
                         PrimitiveType.Cube, new Vector3(0.28f, 0.22f, 0.28f),
                         Stats.BurnDps > 0f ? new Color(1f, 0.55f, 0.2f) : new Color(0.95f, 0.82f, 0.35f));
                     break;
@@ -208,14 +214,14 @@ namespace MuhDefense
         {
             bool hit = false;
             var enemies = level.Enemies;
-            if (!enemies.Exists(InRange)) return false;
+            if (!enemies.Exists(e => InRange(e) && CanTarget(e))) return false;
             pulseCount++;
             bool freezeNow = Stats.FreezeEveryNthPulse > 0 && pulseCount % Stats.FreezeEveryNthPulse == 0;
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
                 if (i >= enemies.Count) continue;
                 var e = enemies[i];
-                if (!InRange(e)) continue;
+                if (!InRange(e) || !CanTarget(e)) continue;
                 hit = true;
                 e.ApplySlow(Stats.Slow, Stats.SlowDuration);
                 if (Stats.ArmorShred > 0f) e.ShredArmor(Stats.ArmorShred, 2f);

@@ -51,6 +51,17 @@ namespace MuhDefense
         public float Splash;
         public bool GlobalRange;
         public bool SeesCamo;
+        /// <summary>Kann fliegende Aliens (Ufos) treffen.</summary>
+        public bool HitsAir = true;
+
+        // Unterstützung für Türme in Reichweite (Wetterhahn, Hofladen)
+        public bool RevealsCamo;
+        public float SupportRangeBonus;
+        public float SupportRateBonus;
+        /// <summary>Münzen am Ende jeder Welle (Hofladen).</summary>
+        public int IncomePerWave;
+        /// <summary>Kann selbst nicht angreifen (reiner Unterstützungs-Turm).</summary>
+        public bool NoAttack;
 
         public bool ArmorPiercing;
         /// <summary>Schadens-Faktor gegen gepanzerte Aliens.</summary>
@@ -186,7 +197,7 @@ namespace MuhDefense
             Kind = TowerKind.Arc,
             Cost = 180,
             Color = new Color(0.95f, 0.80f, 0.30f),
-            Base = new TowerStats { Range = 3f, Damage = 14f, FireRate = 0.5f, Splash = 1f, ProjectileSpeed = 6f },
+            Base = new TowerStats { Range = 3f, Damage = 14f, FireRate = 0.5f, Splash = 1f, ProjectileSpeed = 6f, HitsAir = false },
             Paths = new[]
             {
                 new UpgradePath("Wucht", Red,
@@ -220,7 +231,7 @@ namespace MuhDefense
             Kind = TowerKind.Aura,
             Cost = 140,
             Color = new Color(0.65f, 0.88f, 1f),
-            Base = new TowerStats { Range = 2f, Damage = 1f, FireRate = 2f, Slow = 0.6f, SlowDuration = 1f },
+            Base = new TowerStats { Range = 2f, Damage = 1f, FireRate = 2f, Slow = 0.6f, SlowDuration = 1f, HitsAir = false },
             Paths = new[]
             {
                 new UpgradePath("Kälte", Red,
@@ -233,7 +244,7 @@ namespace MuhDefense
                         s => { s.Ability = TowerAbility.Eiszeit; s.AbilityCooldown = 40f; s.Damage += 2f; })),
                 new UpgradePath("Druck", Blue,
                     T("Druckpumpe", "+25 % Reichweite.", 90, s => s.Range *= 1.25f),
-                    T("Sprühnebel", "+15 % Reichweite, trifft auch Fluggegner.", 200, s => s.Range *= 1.15f),
+                    T("Sprühnebel", "+15 % Reichweite, trifft auch fliegende Ufos.", 200, s => { s.Range *= 1.15f; s.HitsAir = true; }),
                     T("Milchpfützen", "Verlangsamung hält länger und ist stärker.", 450, s => { s.SlowDuration = 2.5f; s.Slow -= 0.05f; }),
                     T("Hochdruck", "Stößt Aliens ein Stück zurück (nicht Bosse).", 1000, s => s.Knockback = 0.25f),
                     T("Milch-Monsun", "Doppelte Reichweite und stärkerer Rückstoß.", 1700, s => { s.Range *= 2f; s.Knockback = 0.45f; })),

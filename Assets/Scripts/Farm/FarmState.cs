@@ -358,6 +358,16 @@ namespace MuhDefense
             return TowerLevelForWorkshop(workshopLevel);
         }
 
+        /// <returns>true, wenn die Alien-Art zum ersten Mal auftaucht (und merkt sie sich).</returns>
+        public bool MarkEnemySeen(EnemyKind kind)
+        {
+            if (Data.SeenEnemies == null) Data.SeenEnemies = new List<string>();
+            string id = kind.ToString();
+            if (Data.SeenEnemies.Contains(id)) return false;
+            Data.SeenEnemies.Add(id);
+            return true;
+        }
+
         public int BestStars(string levelId)
         {
             foreach (var p in Data.Levels)
