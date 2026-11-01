@@ -97,6 +97,7 @@ namespace MuhDefense
                 Data.Version = 5;
             }
             if (Data.Obstacles == null) Data.Obstacles = new List<ObstacleData>();
+            if (Data.EndlessRecords == null) Data.EndlessRecords = new List<EndlessRecord>();
             // Unbekannte Gebäude (z. B. aus einer neueren Version) würden sonst überall Fehler auslösen
             Data.Buildings.RemoveAll(b => b == null || b.TypeDef == null);
             if (Data.Version < 6)

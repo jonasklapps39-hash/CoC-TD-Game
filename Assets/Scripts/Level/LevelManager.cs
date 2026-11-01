@@ -34,7 +34,18 @@ namespace MuhDefense
         /// <summary>Anzahl der bisher gestarteten Wellen (= Nummer der aktuellen Welle).</summary>
         public int WavesStarted { get; private set; }
         public int CowsLost { get; private set; }
-        public int TotalCows => Def.CowCount + Bonuses.ExtraCows;
+        public int TotalCows => Rules != null && Rules.CowOverride > 0 ? Rules.CowOverride : Def.CowCount + Bonuses.ExtraCows;
+
+        /// <summary>Normales Level, tägliche Herausforderung oder Endlos.</summary>
+        public LevelMode Mode { get; private set; } = LevelMode.Normal;
+        /// <summary>Sonderregeln der Herausforderung (sonst null).</summary>
+        public ChallengeRules Rules { get; private set; }
+        public float EnemySpeedFactor => DifficultyRules.SpeedFactor(Difficulty) * (Rules != null ? Rules.SpeedFactor : 1f);
+        public bool AllCamo => Rules != null && Rules.AllCamo;
+        public bool HeroAllowed => Rules == null || !Rules.NoHero;
+        public bool IsEndless => Mode == LevelMode.Endless;
+        /// <summary>Endlos: geschaffte Wellen und bisheriger Rekord auf dieser Karte.</summary>
+        public int EndlessBest { get; private set; }
         public int CowsRemaining => TotalCows - CowsLost;
         /// <summary>Dauerhafte Boni aus dem Talentbaum „Bauernwissen“.</summary>
         public LevelBonuses Bonuses { get; private set; } = new LevelBonuses();
@@ -86,9 +97,12 @@ namespace MuhDefense
         {
             Def = def;
             Difficulty = difficulty;
+            Mode = GameFlow.CurrentMode;
+            Rules = Mode == LevelMode.Challenge ? GameFlow.CurrentRules : null;
+            if (Mode == LevelMode.Endless) EndlessBest = Challenges.EndlessBest(GameFlow.Farm, def.Id);
             HeroChoice = hero ?? HeroType.Heinz;
             Bonuses = bonuses ?? new LevelBonuses();
-            Money = Mathf.RoundToInt(def.StartMoney * DifficultyRules.StartMoneyFactor(difficulty)) + Bonuses.StartMoney;
+            Money = Mathf.RoundToInt(def.StartMoney * DifficultyRules.StartMoneyFactor(difficulty) * (Rules != null ? Rules.MoneyFactor : 1f)) + Bonuses.StartMoney;
             towerMaxLevels = towerLoadout;
             foreach (var type in TowerType.All)
             {
@@ -165,7 +179,16 @@ namespace MuhDefense
         }
 
         /// <summary>Höchste Turm-Stufe in diesem Level (vom Hof bestimmt), 0 = nicht freigeschaltet.</summary>
-        public int MaxTowerLevel(TowerType type) => towerMaxLevels.TryGetValue(type, out int max) ? max : 0;
+        public int MaxTowerLevel(TowerType type)
+        {
+            int max = towerMaxLevels.TryGetValue(type, out int m) ? m : 0;
+            if (Rules != null)
+            {
+                if (!Rules.Allows(type)) return 0;
+                max = Mathf.Min(max, Rules.MaxTier);
+            }
+            return max;
+        }
 
         public Vector3 RandomPastureSpot()
         {
@@ -267,14 +290,21 @@ namespace MuhDefense
             GiftedTower = null;
         }
 
-        public bool HasMoreWaves => WavesStarted < Def.Waves.Length;
+        public bool HasMoreWaves => IsEndless || WavesStarted < Def.Waves.Length;
+
+        /// <summary>Welle Nummer <paramref name="index"/> (im Endlos-Modus auch über das Level-Ende hinaus).</summary>
+        WaveDefinition WaveAt(int index) => IsEndless ? Challenges.EndlessWave(Def, index) : Def.Waves[index];
+
+        /// <summary>Anzeige „Welle 3/12“ bzw. im Endlos-Modus nur „Welle 3“.</summary>
+        public string WaveLabel => IsEndless ? $"Welle {WavesStarted}" : $"Welle {WavesStarted}/{Def.Waves.Length}";
 
         public void StartNextWave()
         {
             if (State != LevelState.Building || !HasMoreWaves || Paused || NewEnemyIntro != null) return;
 
-            var wave = Def.Waves[WavesStarted];
-            float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted) * DifficultyRules.HpFactor(Difficulty);
+            var wave = WaveAt(WavesStarted);
+            float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted) * DifficultyRules.HpFactor(Difficulty)
+                                 * (Rules != null ? Rules.HpFactor : 1f);
             WavesStarted++;
             State = LevelState.WaveRunning;
             GameAudio.Play(SoundId.WaveStart);
@@ -335,7 +365,7 @@ namespace MuhDefense
         void WaveCleared()
         {
             FarmerFrenzyTimer = 0f;
-            var wave = Def.Waves[WavesStarted - 1];
+            var wave = WaveAt(WavesStarted - 1);
             if (Hero != null) Hero.AddXp(Mathf.RoundToInt((40 + 10 * WavesStarted) * Bonuses.HeroXpFactor));
             foreach (var t in Towers)
             {
@@ -361,7 +391,7 @@ namespace MuhDefense
             GameFlow.Farm.Count(Counter.LevelsWon);
             if (CowsLost == 0) GameFlow.Farm.Count(Counter.PerfectWins);
             if (Difficulty == Difficulty.Schwer) GameFlow.Farm.Count(Counter.HardWins);
-            Reward = GameFlow.CompleteLevel(Def, Stars, Difficulty);
+            Reward = Mode == LevelMode.Challenge ? GameFlow.CompleteChallenge(Def, Stars) : GameFlow.CompleteLevel(Def, Stars, Difficulty);
             CancelPlacing();
             Select(null);
         }
@@ -371,6 +401,8 @@ namespace MuhDefense
             State = LevelState.Lost;
             GameAudio.Play(SoundId.Lose);
             Stars = 0;
+            // Endlos: das Ende ist das Ziel – Belohnung für die geschafften Wellen
+            if (IsEndless) Reward = GameFlow.CompleteEndless(Def, Mathf.Max(0, WavesStarted - 1));
             StopAllCoroutines();
             CancelPlacing();
             Select(null);
@@ -496,7 +528,7 @@ namespace MuhDefense
 
         public void BeginPlacingHero()
         {
-            if (Hero != null) return;
+            if (Hero != null || !HeroAllowed) return;
             Select(null);
             PlacingType = null;
             PlacingHero = true;

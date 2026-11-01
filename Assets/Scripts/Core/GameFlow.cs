@@ -14,6 +14,9 @@ namespace MuhDefense
         public int MilkLost;
         /// <summary>Diamanten für neue Sterne und das erste Schaffen.</summary>
         public int Gems;
+        /// <summary>Endlos: neuer Rekord (Wellen).</summary>
+        public bool NewRecord;
+        public int Waves;
         /// <summary>Zum ersten Mal auf „Schwer“ geschafft.</summary>
         public bool FirstHardClear;
         /// <summary>Dadurch wurde ein neuer Schwierigkeitsgrad für dieses Level frei (Mittel oder Schwer).</summary>
@@ -66,9 +69,59 @@ namespace MuhDefense
 
         /// <summary>Gewählter Schwierigkeitsgrad (gilt für das nächste und das laufende Level).</summary>
         public static Difficulty CurrentDifficulty = Difficulty.Leicht;
+        /// <summary>Modus für das nächste und das laufende Level (Normal, Herausforderung, Endlos).</summary>
+        public static LevelMode CurrentMode = LevelMode.Normal;
+        public static ChallengeRules CurrentRules;
+
+        /// <summary>Startet ein Level in einem besonderen Modus.</summary>
+        public static void StartMode(LevelDefinition def, LevelMode mode, ChallengeRules rules = null)
+        {
+            CurrentMode = mode;
+            CurrentRules = rules;
+            StartLevel(def);
+        }
+
+        /// <summary>Tägliche Herausforderung geschafft: Diamanten (einmal pro Tag) und etwas Mais und Milch.</summary>
+        public static LevelReward CompleteChallenge(LevelDefinition def, int stars)
+        {
+            Farm.Tick();
+            bool first = !Challenges.DoneToday(Farm);
+            int corn = (int)Farm.Add(Resource.Mais, Mathf.RoundToInt(def.RewardCorn * 0.6f));
+            int milk = (int)Farm.Add(Resource.Milch, Mathf.RoundToInt(def.RewardMilk * 0.6f));
+            int gems = first ? Challenges.GemsReward : 0;
+            Farm.AddGems(gems);
+            Farm.Data.ChallengeDay = Quests.Today;
+            if (first) Farm.Count(Counter.Challenges);
+            Farm.AddXp(first ? 60 : 15, new Vector3(FarmState.Width / 2f, 2.5f, FarmState.Height / 2f));
+            Farm.Save();
+            return new LevelReward { Stars = stars, Corn = corn, Milk = milk, Gems = gems };
+        }
+
+        /// <summary>Endlos vorbei: Mais und Milch je geschaffter Welle, Diamanten für einen neuen Rekord.</summary>
+        public static LevelReward CompleteEndless(LevelDefinition def, int waves)
+        {
+            Farm.Tick();
+            int best = Challenges.EndlessBest(Farm, def.Id);
+            bool record = waves > best;
+            int corn = (int)Farm.Add(Resource.Mais, 40 * waves);
+            int milk = (int)Farm.Add(Resource.Milch, 40 * waves);
+            int gems = record ? Mathf.Max(1, (waves - best) / 2) : 0;
+            Farm.AddGems(gems);
+            if (record)
+            {
+                var e = Farm.Data.EndlessRecords.Find(r => r.Id == def.Id);
+                if (e == null) Farm.Data.EndlessRecords.Add(new EndlessRecord { Id = def.Id, Waves = waves });
+                else e.Waves = waves;
+            }
+            Farm.AddXp(5 * waves, new Vector3(FarmState.Width / 2f, 2.5f, FarmState.Height / 2f));
+            Farm.Save();
+            return new LevelReward { Corn = corn, Milk = milk, Gems = gems, NewRecord = record, Waves = waves };
+        }
 
         public static void StartLevel(LevelDefinition def, Difficulty difficulty)
         {
+            CurrentMode = LevelMode.Normal;
+            CurrentRules = null;
             CurrentDifficulty = difficulty;
             Farm.Data.LastDifficulty = (int)difficulty;
             StartLevel(def);
@@ -82,7 +135,9 @@ namespace MuhDefense
             var bonuses = Farm.LevelBonuses;
             // Heldenhütte: jede Stufe lässt den Helden eine Stufe höher starten
             bonuses.HeroStartLevels += Mathf.Max(0, Farm.HeroHutLevel - 1);
-            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), bonuses, Farm.SelectedHero, CurrentDifficulty);
+            // Herausforderung und Endlos laufen immer auf „Mittel“
+            var difficulty = CurrentMode == LevelMode.Normal ? CurrentDifficulty : Difficulty.Mittel;
+            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), bonuses, Farm.SelectedHero, difficulty);
         }
 
         /// <summary>Welche Türme im Level verfügbar sind und bis zu welcher Stufe – bestimmt durch die Werkstätten auf dem Hof.</summary>

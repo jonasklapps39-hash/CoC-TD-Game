@@ -152,7 +152,7 @@ namespace MuhDefense
 
             UiKit.PillLabel(new Rect(18f, 10f, 140f, 36f), UiKit.Icon("Kuh"), $"{level.CowsRemaining}/{level.TotalCows}");
             UiKit.PillLabel(new Rect(176f, 10f, 170f, 36f), UiKit.Icon("Muenze"), level.Money.ToString());
-            UiKit.PillLabel(new Rect(364f, 10f, 190f, 36f), UiKit.Icon("Ufo"), $"Welle {level.WavesStarted}/{level.Def.Waves.Length}");
+            UiKit.PillLabel(new Rect(364f, 10f, 190f, 36f), UiKit.Icon("Ufo"), level.WaveLabel);
 
             var nameRect = new Rect(570f, 8f, vw - UiKit.SideBarWidth - 590f, 40f);
             if (nameRect.width > 80f)
@@ -180,7 +180,7 @@ namespace MuhDefense
 
             GUILayout.BeginArea(new Rect(r.x + 12f, r.y + 12f, UiKit.SideBarWidth - 24f, r.height - 24f));
 
-            if (level.Hero == null)
+            if (level.Hero == null && level.HeroAllowed)
             {
                 GUI.enabled = Playing;
                 Rect heroRect = GUILayoutUtility.GetRect(10f, 56f, GUILayout.Height(56f));
@@ -224,7 +224,7 @@ namespace MuhDefense
 
             if (level.State == LevelState.Building && level.HasMoreWaves)
             {
-                bool lastWave = level.WavesStarted == level.Def.Waves.Length - 1;
+                bool lastWave = !level.IsEndless && level.WavesStarted == level.Def.Waves.Length - 1;
                 string label = lastWave ? "Letzte Welle!" : $"Welle {level.WavesStarted + 1} starten";
                 if (UiKit.Btn(label, UiKit.BigButton, GUILayout.Height(66f))) level.StartNextWave();
             }
@@ -522,7 +522,13 @@ namespace MuhDefense
         {
             Rect box = UiKit.DrawOverlay(blockers, 700f, 470f);
             GUILayout.BeginArea(new Rect(box.x + 28f, box.y + 20f, box.width - 56f, box.height - 40f));
-            UiKit.Heading(level.Def.Name, UiKit.Big, GUILayout.Height(60f));
+            UiKit.Heading(level.Mode == LevelMode.Challenge ? "Tägliche Herausforderung" : level.IsEndless ? "Endlos: " + level.Def.Name : level.Def.Name,
+                UiKit.Big, GUILayout.Height(60f));
+            if (level.Mode != LevelMode.Normal)
+            {
+                DrawModeIntro();
+                return;
+            }
             if (level.Difficulty != Difficulty.Mittel)
             {
                 GUILayout.Label($"Schwierigkeit: {DifficultyRules.Name(level.Difficulty)} – {DifficultyRules.Description(level.Difficulty)}", UiKit.Small);
@@ -557,17 +563,77 @@ namespace MuhDefense
             GUILayout.EndArea();
         }
 
+        /// <summary>Start-Fenster für Herausforderung und Endlos (statt Geschichte und Sterne).</summary>
+        void DrawModeIntro()
+        {
+            if (level.Mode == LevelMode.Challenge)
+            {
+                GUILayout.Label($"Karte: {level.Def.Name}", UiKit.Label);
+                GUILayout.Space(6f);
+                GUILayout.Label("Heutige Regeln:", UiKit.Title);
+                foreach (var line in level.Rules.Lines) GUILayout.Label("• " + line, UiKit.Label);
+                GUILayout.Space(6f);
+                GUILayout.Label(Challenges.DoneToday(GameFlow.Farm)
+                    ? "Heute schon geschafft – nochmal spielen bringt etwas Mais und Milch."
+                    : $"Belohnung: {Challenges.GemsReward} Diamanten, dazu Mais und Milch.", UiKit.Small);
+            }
+            else
+            {
+                GUILayout.Label("Die Aliens hören nicht auf! Nach den Wellen des Levels kommen immer härtere Zufallswellen, " +
+                                "alle 5 Wellen ein Boss. Wie weit kommst du?", UiKit.Label);
+                GUILayout.Space(8f);
+                GUILayout.Label(level.EndlessBest > 0 ? $"Dein Rekord auf dieser Karte: Welle {level.EndlessBest}" : "Noch kein Rekord auf dieser Karte.", UiKit.Title);
+                GUILayout.Label("Belohnung: 40 Mais und 40 Milch pro geschaffter Welle, Diamanten für einen neuen Rekord.", UiKit.Small);
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            if (UiKit.Btn("Zurück zum Hof", UiKit.Button, GUILayout.Height(60f), GUILayout.Width(220f))) level.BackToFarm();
+            if (UiKit.Btn("Los geht's!", UiKit.BigButton, GUILayout.Height(60f))) level.BeginLevel();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
+        void RewardRow(LevelReward reward)
+        {
+            GUILayout.Space(6f);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            var corn = UiKit.Icon("Maiskolben");
+            var milk = UiKit.Icon("Milchflasche");
+            if (corn != null) GUILayout.Label(corn, GUILayout.Width(44f), GUILayout.Height(44f));
+            UiKit.Heading($"+{reward.Corn}", UiKit.Title, GUILayout.Width(110f), GUILayout.Height(44f));
+            if (milk != null) GUILayout.Label(milk, GUILayout.Width(44f), GUILayout.Height(44f));
+            UiKit.Heading($"+{reward.Milk}", UiKit.Title, GUILayout.Width(110f), GUILayout.Height(44f));
+            if (reward.Gems > 0)
+            {
+                var gem = UiKit.Icon("Diamant");
+                if (gem != null) GUILayout.Label(gem, GUILayout.Width(44f), GUILayout.Height(44f));
+                UiKit.Heading($"+{reward.Gems}", UiKit.Title, GUILayout.Width(90f), GUILayout.Height(44f));
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
         void DrawEndScreen(bool won)
         {
             Rect box = UiKit.DrawOverlay(blockers, 600f, 430f);
             GUILayout.BeginArea(new Rect(box.x + 28f, box.y + 20f, box.width - 56f, box.height - 40f));
             UiKit.Heading(won ? "Gewonnen!" : "Alle Kühe weg!", UiKit.Big, GUILayout.Height(60f));
 
-            if (won)
+            if (level.IsEndless && level.Reward != null)
+            {
+                var er = level.Reward;
+                UiKit.Heading($"Welle {er.Waves} geschafft!", UiKit.Title, GUILayout.Height(40f));
+                GUILayout.Label(er.NewRecord ? $"Neuer Rekord! (bisher Welle {level.EndlessBest})" : $"Dein Rekord: Welle {Mathf.Max(level.EndlessBest, er.Waves)}", UiKit.Center);
+                RewardRow(er);
+            }
+            else if (won)
             {
                 Rect starsRect = GUILayoutUtility.GetRect(box.width - 56f, 96f);
                 UiKit.DrawStars(starsRect, level.Stars, 86f);
-                GUILayout.Label($"Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}   •   Bestes Ergebnis auf {DifficultyRules.Name(level.Difficulty)}: {level.BestStars} Sterne", UiKit.Center);
+                GUILayout.Label(level.Mode == LevelMode.Challenge
+                    ? $"Herausforderung geschafft! Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}"
+                    : $"Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}   •   Bestes Ergebnis auf {DifficultyRules.Name(level.Difficulty)}: {level.BestStars} Sterne", UiKit.Center);
 
                 var reward = level.Reward;
                 if (reward != null)

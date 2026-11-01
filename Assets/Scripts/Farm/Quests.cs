@@ -16,6 +16,7 @@ namespace MuhDefense
         public const string Collected = "collected";
         public const string FarmBuilds = "farm_builds";
         public const string ObstaclesCleared = "obstacles";
+        public const string Challenges = "challenges";
     }
 
     public enum RewardKind
@@ -86,8 +87,17 @@ namespace MuhDefense
             new AchievementDef { Id = "a_stars", Name = "Sternensammler", Description = "Sammle 60 Sterne (alle Schwierigkeitsgrade zählen).", Value = f => f.TotalStars, Target = 60, Gems = 30, Icon = "Maiskolben" },
             new AchievementDef { Id = "a_obstacles", Name = "Landschaftsgärtner", Description = "Räume 30 Hindernisse weg.", Counter = Counter.ObstaclesCleared, Target = 30, Gems = 25, Icon = "Baum" },
             new AchievementDef { Id = "a_farmlevel", Name = "Meisterbauer", Description = "Erreiche Bauernstufe 10.", Value = f => f.FarmLevel, Target = 10, Gems = 40, Icon = "Bauernhaus" },
+            new AchievementDef { Id = "a_challenges", Name = "Herausforderer", Description = "Schaffe 7 tägliche Herausforderungen.", Counter = Counter.Challenges, Target = 7, Gems = 40, Icon = "Diamant" },
+            new AchievementDef { Id = "a_endless", Name = "Ausdauer", Description = "Schaffe im Endlos-Modus Welle 30.", Value = f => MaxEndless(f), Target = 30, Gems = 50, Icon = "Boss" },
             new AchievementDef { Id = "a_farmhouse", Name = "Großbauer", Description = "Verbessere das Bauernhaus auf Stufe 5.", Value = f => f.FarmhouseLevel, Target = 5, Gems = 30, Icon = "Bauernhaus" },
         };
+
+        static int MaxEndless(FarmState f)
+        {
+            int best = 0;
+            foreach (var r in f.Data.EndlessRecords) best = Math.Max(best, r.Waves);
+            return best;
+        }
 
         static int RegionStars(FarmState f, int region)
         {

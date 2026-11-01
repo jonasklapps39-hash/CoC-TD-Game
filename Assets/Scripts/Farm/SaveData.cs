@@ -45,6 +45,16 @@ namespace MuhDefense
         public int FarmXp;
         /// <summary>Zuletzt gewählter Schwierigkeitsgrad auf der Weltkarte.</summary>
         public int LastDifficulty;
+        /// <summary>Tag, an dem die tägliche Herausforderung zuletzt geschafft wurde.</summary>
+        public int ChallengeDay = -1;
+        public List<EndlessRecord> EndlessRecords = new List<EndlessRecord>();
+    }
+
+    [Serializable]
+    public class EndlessRecord
+    {
+        public string Id;
+        public int Waves;
     }
 
     [Serializable]

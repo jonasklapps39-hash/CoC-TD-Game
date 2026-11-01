@@ -1157,7 +1157,7 @@ namespace MuhDefense
 
         void DrawWorldMap()
         {
-            Rect box = UiKit.DrawOverlay(blockers, 760f, 580f);
+            Rect box = UiKit.DrawOverlay(blockers, 800f, 660f);
             GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
             GUILayout.BeginHorizontal();
             UiKit.Heading("Weltkarte – " + Levels.Regions[mapRegion].Name, UiKit.Title, GUILayout.Height(40f));
@@ -1181,6 +1181,23 @@ namespace MuhDefense
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(6f);
+
+            // Tägliche Herausforderung
+            GUILayout.BeginHorizontal(UiKit.BlueCard);
+            var (cDef, cRules) = Challenges.Today(State);
+            bool cDone = Challenges.DoneToday(State);
+            GUILayout.BeginVertical();
+            UiKit.Heading("Herausforderung des Tages" + (cDone ? " – geschafft!" : $" – {Challenges.GemsReward} Diamanten"), nameStyle, GUILayout.Height(24f));
+            GUILayout.Label($"{cDef.Name}: {string.Join(", ", cRules.Lines)}", smallStyle);
+            GUILayout.EndVertical();
+            if (UiKit.Btn(cDone ? "Nochmal" : "Spielen", cDone ? UiKit.Button : UiKit.YellowButton, GUILayout.Width(130f), GUILayout.Height(46f)))
+            {
+                farm.MapOpen = false;
+                State.Save();
+                GameFlow.StartMode(cDef, LevelMode.Challenge, cRules);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
 
             // Schwierigkeitsgrad
             GUILayout.BeginHorizontal();
@@ -1229,12 +1246,23 @@ namespace MuhDefense
                 // Sterne für den gewählten Schwierigkeitsgrad
                 Rect stars = GUILayoutUtility.GetRect(130f, 60f, GUILayout.Width(130f));
                 UiKit.DrawStars(stars, State.Stars(def.Id, diff), 36f);
+                GUILayout.BeginVertical(GUILayout.Width(140f));
                 GUI.enabled = unlocked && diffOpen;
-                if (UiKit.Btn(unlocked && !diffOpen ? "Gesperrt" : "Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(60f)))
+                if (UiKit.Btn(unlocked && !diffOpen ? "Gesperrt" : "Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(46f)))
                 {
                     farm.MapOpen = false;
                     farm.PlayLevel(def, diff);
                 }
+                // Endlos-Modus, sobald das Level einmal geschafft ist
+                GUI.enabled = State.BestStars(def.Id) > 0;
+                int best = Challenges.EndlessBest(State, def.Id);
+                if (UiKit.Btn(best > 0 ? $"Endlos ({best})" : "Endlos", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(30f)))
+                {
+                    farm.MapOpen = false;
+                    State.Save();
+                    GameFlow.StartMode(def, LevelMode.Endless);
+                }
+                GUILayout.EndVertical();
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
                 GUILayout.Space(6f);

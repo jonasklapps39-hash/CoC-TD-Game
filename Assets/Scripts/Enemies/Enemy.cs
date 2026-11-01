@@ -19,7 +19,7 @@ namespace MuhDefense
         /// <summary>Große Aliens (Brocken, Boss) lassen sich nur von starker Kälte einfrieren.</summary>
         public bool IsBig => Type.Big || IsBoss;
         public bool IsFrozen => freezeTimer > 0f;
-        public bool IsCamo => Type.Camo;
+        public bool IsCamo => Type.Camo || (level != null && level.AllCamo);
         public bool IsFlying => Type.Flying;
         /// <summary>Flughöhe des Ufos über dem Boden.</summary>
         float HoverHeight => IsFlying ? 1.4f : 0f;
@@ -155,7 +155,7 @@ namespace MuhDefense
                 targetIndex = path.Length - 2;
             }
 
-            float speed = Type.Speed * slowFactor * (Carried != null ? 0.75f : 1f) * DifficultyRules.SpeedFactor(level.Difficulty);
+            float speed = Type.Speed * slowFactor * (Carried != null ? 0.75f : 1f) * level.EnemySpeedFactor;
             Move(speed * dt);
             ApplyModelPose(speed);
         }
