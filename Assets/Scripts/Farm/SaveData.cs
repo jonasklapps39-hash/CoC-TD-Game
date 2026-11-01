@@ -35,6 +35,8 @@ namespace MuhDefense
         /// <summary>Trainingsstufen der Helden (Heldenhütte).</summary>
         public List<HeroProgress> HeroProgress = new List<HeroProgress>();
         public List<string> OwnedHeroSkins = new List<string>();
+        /// <summary>Schritt im Hof-Tutorial (-1 = fertig oder übersprungen).</summary>
+        public int TutorialStep;
     }
 
     [Serializable]

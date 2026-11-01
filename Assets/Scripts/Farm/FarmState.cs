@@ -77,6 +77,12 @@ namespace MuhDefense
                 }
                 Data.Version = 3;
             }
+            if (Data.Version < 4)
+            {
+                // Wer schon gespielt hat, braucht das Hof-Tutorial nicht mehr
+                if (Data.Levels.Count > 0) Data.TutorialStep = -1;
+                Data.Version = 4;
+            }
             if (Data.OwnedSkins == null || Data.OwnedSkins.Count == 0) Data.OwnedSkins = new List<string> { "standard" };
             if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
             if (Data.Talents == null) Data.Talents = new List<string>();
@@ -109,7 +115,7 @@ namespace MuhDefense
 
         static SaveData CreateNewFarm()
         {
-            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 3 };
+            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 4 };
             AddStartBuilding(data, FarmBuildingType.Bauernhaus, 13, 8);
             AddStartBuilding(data, FarmBuildingType.Maisfeld, 8, 11);
             AddStartBuilding(data, FarmBuildingType.Kuhstall, 19, 11);

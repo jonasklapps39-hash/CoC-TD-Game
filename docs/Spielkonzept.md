@@ -375,6 +375,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
   - Endboss **Alien-Kaiser Zorbax**: riesiger Schild, gibt Aliens in der Nähe alle 8 Sekunden ebenfalls einen Schild
 - [x] **Tägliche Aufgaben und Erfolge:** jeden Tag 3 neue Aufgaben (z. B. „Besiege 150 Aliens“) mit Diamanten, Mais oder Milch als Belohnung; 15 Erfolge mit Abzeichen und Diamanten (Knopf „Aufgaben“ auf dem Hof)
 - [x] **Helden trainieren und Skins:** in der Heldenhütte jeden Helden mit Milch bis Stufe 5 trainieren (je Stufe +8 % Schaden, +4 % Reichweite, Fähigkeiten 6 % schneller; Trainingsstufe ≤ Hütten-Stufe); je Held 2 Skins für Diamanten (z. B. Cowboy-Heinz, Disco-Oma, Schoko-Berta, goldene Varianten)
+- [x] **Hof-Tutorial:** 6 kurze Schritte beim ersten Start (umsehen, bauen, erstes Level, einsammeln, Werkstatt verbessern, Tipps), gehen von selbst weiter, jederzeit überspringbar
 
 ### Upgrade-System
 

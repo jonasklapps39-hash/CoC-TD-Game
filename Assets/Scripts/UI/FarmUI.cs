@@ -182,6 +182,7 @@ namespace MuhDefense
             DrawTopBar();
             DrawSideBar();
             DrawZoomButtons();
+            DrawTutorial();
             if (farm.ShopOpen) DrawShop();
             if (farm.MapOpen) DrawWorldMap();
             if (farm.TalentsOpen) DrawTalents();
@@ -228,6 +229,27 @@ namespace MuhDefense
                 UiKit.PillLabel(gemRect, UiKit.Icon("Diamant"), State.Gems.ToString());
                 if (GUI.Button(gemRect, GUIContent.none, GUIStyle.none)) farm.GemShopOpen = true;
             }
+        }
+
+        /// <summary>Hof-Tutorial: Hinweis-Fenster unten links, bis alle Schritte erledigt sind.</summary>
+        void DrawTutorial()
+        {
+            if (Event.current.type == EventType.Layout) FarmTutorial.Update(State);
+            var step = FarmTutorial.Current(State);
+            if (step == null || farm.AnyWindowOpen || farm.Mode != FarmMode.Normal) return;
+            var r = new Rect(16f, UiKit.RefHeight - 80f - 190f, 440f, 180f);
+            blockers.Add(r);
+            GUI.Box(r, GUIContent.none, UiKit.Dialog);
+            GUILayout.BeginArea(new Rect(r.x + 16f, r.y + 10f, r.width - 32f, r.height - 20f));
+            UiKit.Heading($"{step.Title}  ({State.Data.TutorialStep + 1}/{FarmTutorial.Steps.Length})", UiKit.Title, GUILayout.Height(30f));
+            GUILayout.Label(step.Text, UiKit.Small);
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            if (UiKit.Btn("Überspringen", UiKit.Button, GUILayout.Height(36f), GUILayout.Width(150f))) FarmTutorial.Skip(State);
+            GUILayout.FlexibleSpace();
+            if (step.Done == null && UiKit.Btn("Weiter", UiKit.YellowButton, GUILayout.Height(36f), GUILayout.Width(150f))) FarmTutorial.Next(State);
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
         }
 
         /// <summary>Knöpfe zum Zoomen unten links (funktionieren überall, auch ohne zwei Finger).</summary>
