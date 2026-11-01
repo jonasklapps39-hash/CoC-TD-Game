@@ -13,6 +13,8 @@ namespace MuhDefense
         int mapRegion;
         Vector2 mapScroll;
         Vector2 gemScroll;
+        Vector2 questScroll;
+        bool questAchievements;
 
         FarmState State => farm.Farm;
 
@@ -185,6 +187,7 @@ namespace MuhDefense
             if (farm.TalentsOpen) DrawTalents();
             if (farm.GemShopOpen) DrawGemShop();
             if (farm.HeroesOpen) DrawHeroes();
+            if (farm.QuestsOpen) DrawQuests();
 
             if (UiKit.EscapePressed())
             {
@@ -265,7 +268,14 @@ namespace MuhDefense
                 GUILayout.Space(4f);
                 if (UiKit.Btn($"Bauernwissen ({State.AvailableStars} Sterne)", UiKit.BlueCard, GUILayout.Height(48f))) farm.TalentsOpen = true;
                 GUILayout.Space(4f);
+                GUILayout.BeginHorizontal();
                 if (UiKit.IconBtn("Shop", UiKit.Icon("Diamant"), UiKit.Button, GUILayout.Height(48f))) farm.GemShopOpen = true;
+                int claimable = State.ClaimableCount;
+                if (UiKit.Btn(claimable > 0 ? $"Aufgaben ({claimable}!)" : "Aufgaben", claimable > 0 ? UiKit.YellowButton : UiKit.Button, GUILayout.Height(48f)))
+                {
+                    farm.QuestsOpen = true;
+                }
+                GUILayout.EndHorizontal();
                 GUILayout.Space(6f);
                 GUILayout.BeginHorizontal();
                 if (UiKit.Btn(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
@@ -502,6 +512,89 @@ namespace MuhDefense
         }
 
         /// <summary>Shop: Diamanten ausgeben (Knechte, Rohstoffe, Kuh-Skins), Echtgeld-Pakete als Vorschau.</summary>
+        void DrawQuests()
+        {
+            Rect box = UiKit.DrawOverlay(blockers, 820f, 600f);
+            GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
+            GUILayout.BeginHorizontal();
+            UiKit.Heading(questAchievements ? "Erfolge" : "Tägliche Aufgaben", UiKit.Title, GUILayout.Height(40f));
+            GUILayout.FlexibleSpace();
+            if (UiKit.Btn("Täglich", questAchievements ? UiKit.Button : UiKit.ActiveButton, GUILayout.Width(120f), GUILayout.Height(40f)))
+            {
+                questAchievements = false;
+                questScroll = Vector2.zero;
+            }
+            if (UiKit.Btn("Erfolge", questAchievements ? UiKit.ActiveButton : UiKit.Button, GUILayout.Width(120f), GUILayout.Height(40f)))
+            {
+                questAchievements = true;
+                questScroll = Vector2.zero;
+            }
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.QuestsOpen = false;
+            GUILayout.EndHorizontal();
+
+            questScroll = GUILayout.BeginScrollView(questScroll);
+            if (!questAchievements)
+            {
+                GUILayout.Label("Jeden Tag gibt es drei neue Aufgaben. Um Mitternacht kommen frische.", UiKit.Small);
+                foreach (var q in State.DailyQuests)
+                {
+                    var def = Quests.GetDaily(q.Id);
+                    if (def == null) continue;
+                    QuestRow(def.Text, "Belohnung: " + Quests.RewardText(def.Reward, def.Amount), q.Progress, def.Target, q.Claimed,
+                        def.Reward == RewardKind.Gems ? "Diamant" : def.Reward == RewardKind.Corn ? "Maiskolben" : "Milchflasche",
+                        () => State.ClaimDaily(q));
+                }
+            }
+            else
+            {
+                int done = 0;
+                foreach (var a in Quests.Achievements)
+                {
+                    if (State.IsAchievementClaimed(a)) done++;
+                }
+                GUILayout.Label($"Abzeichen: {done} von {Quests.Achievements.Length}", UiKit.Small);
+                foreach (var a in Quests.Achievements)
+                {
+                    QuestRow(a.Name, $"{a.Description}  •  {a.Gems} Diamanten", State.AchievementProgress(a), a.Target,
+                        State.IsAchievementClaimed(a), a.Icon, () => State.ClaimAchievement(a));
+                }
+            }
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        void QuestRow(string title, string detail, int progress, int target, bool claimed, string icon, System.Func<bool> claim)
+        {
+            GUILayout.BeginHorizontal(claimed ? UiKit.BlueCard : UiKit.Card, GUILayout.Height(78f));
+            var tex = UiKit.Icon(icon);
+            if (tex != null) GUILayout.Label(tex, GUILayout.Width(60f), GUILayout.Height(60f));
+            GUILayout.BeginVertical();
+            UiKit.Heading(title, UiKit.Title, GUILayout.Height(28f));
+            GUILayout.Label(detail, UiKit.Small);
+            Rect bar = GUILayoutUtility.GetRect(200f, 12f, GUILayout.Height(12f));
+            UiKit.DrawBar(bar, target > 0 ? progress / (float)target : 1f, new Color(0.4f, 0.85f, 0.3f));
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(GUILayout.Width(150f));
+            GUILayout.Label($"{progress} / {target}", UiKit.Center);
+            if (claimed)
+            {
+                GUILayout.Label("Abgeholt", UiKit.Center);
+            }
+            else
+            {
+                GUI.enabled = progress >= target;
+                if (UiKit.Btn("Abholen", UiKit.YellowButton, GUILayout.Height(36f)) && claim())
+                {
+                    State.Save();
+                    GameAudio.Play(SoundId.LevelUp);
+                }
+                GUI.enabled = true;
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+        }
+
         void DrawGemShop()
         {
             Rect box = UiKit.DrawOverlay(blockers, 860f, 620f);

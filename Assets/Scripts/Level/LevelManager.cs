@@ -343,6 +343,9 @@ namespace MuhDefense
             State = LevelState.Won;
             GameAudio.Play(SoundId.Win);
             Stars = Mathf.Min(CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1, DifficultyRules.MaxStars(Difficulty));
+            GameFlow.Farm.Count(Counter.LevelsWon);
+            if (CowsLost == 0) GameFlow.Farm.Count(Counter.PerfectWins);
+            if (Difficulty == Difficulty.Schwer) GameFlow.Farm.Count(Counter.HardWins);
             Reward = GameFlow.CompleteLevel(Def, Stars, Difficulty);
             CancelPlacing();
             Select(null);
@@ -365,6 +368,7 @@ namespace MuhDefense
 
         public void BackToFarm()
         {
+            GameFlow.Farm.Save();
             GameFlow.ShowFarm();
         }
 
@@ -412,6 +416,8 @@ namespace MuhDefense
             Money += reward;
             AddFloatingText(enemy.transform.position + Vector3.up * 0.5f, "+" + reward, new Color(1f, 0.9f, 0.3f));
             if (Hero != null) Hero.AddXp(Mathf.RoundToInt((enemy.IsBoss ? 60 : 3) * Bonuses.HeroXpFactor));
+            GameFlow.Farm.Count(Counter.Kills);
+            if (enemy.IsBoss) GameFlow.Farm.Count(Counter.BossKills);
             Effects.Burst(transform, enemy.AimPoint, enemy.Type.Color, enemy.IsBoss ? 20 : 8, 3f);
             GameAudio.Play(SoundId.Pop);
             GameAudio.Play(SoundId.Coin);
@@ -601,6 +607,7 @@ namespace MuhDefense
             tower.transform.SetParent(transform, false);
             tower.Init(this, type, cell, MaxTowerLevel(type), cost);
             Towers.Add(tower);
+            GameFlow.Farm.Count(Counter.TowersBuilt);
             GameAudio.Play(SoundId.Build);
             Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.2f, new Color(0.75f, 0.6f, 0.4f), 8, 2f);
             return true;
@@ -644,6 +651,7 @@ namespace MuhDefense
             if (Money < cost) return;
             Money -= cost;
             tower.Upgrade(path);
+            GameFlow.Farm.Count(Counter.Upgrades);
         }
 
         // ---------------------------------------------------------------- Fähigkeiten (Stufe 5)

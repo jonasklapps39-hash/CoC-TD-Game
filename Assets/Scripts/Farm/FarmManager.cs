@@ -27,8 +27,9 @@ namespace MuhDefense
         public bool TalentsOpen;
         public bool GemShopOpen;
         public bool HeroesOpen;
+        public bool QuestsOpen;
         /// <summary>Irgendein Fenster (Bauen, Weltkarte, Talente, Shop …) ist offen.</summary>
-        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen || GemShopOpen || HeroesOpen;
+        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen || GemShopOpen || HeroesOpen || QuestsOpen;
 
         public void CloseWindows()
         {
@@ -37,6 +38,7 @@ namespace MuhDefense
             TalentsOpen = false;
             GemShopOpen = false;
             HeroesOpen = false;
+            QuestsOpen = false;
         }
 
         public void InstantFinishSelected()
@@ -146,6 +148,7 @@ namespace MuhDefense
         {
             var type = b.TypeDef;
             double collected = Farm.Collect(b);
+            Farm.Count(Counter.Collected, (int)collected);
             var view = Views[b.Id];
             if (collected >= 1)
             {

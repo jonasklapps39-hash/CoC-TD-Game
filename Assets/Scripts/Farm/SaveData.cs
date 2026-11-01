@@ -26,6 +26,27 @@ namespace MuhDefense
         public string SelectedHero = "Heinz";
         /// <summary>Mit Diamanten freigeschaltete Helden (über Sterne freigeschaltete zählen automatisch).</summary>
         public List<string> UnlockedHeroes = new List<string> { "Heinz" };
+        /// <summary>Zähler für Aufgaben und Erfolge (besiegte Aliens, gebaute Türme …).</summary>
+        public List<CounterEntry> Counters = new List<CounterEntry>();
+        /// <summary>Tag, für den die täglichen Aufgaben gelten.</summary>
+        public int DailyDay = -1;
+        public List<DailyQuestState> Daily = new List<DailyQuestState>();
+        public List<string> ClaimedAchievements = new List<string>();
+    }
+
+    [Serializable]
+    public class CounterEntry
+    {
+        public string Id;
+        public long Value;
+    }
+
+    [Serializable]
+    public class DailyQuestState
+    {
+        public string Id;
+        public int Progress;
+        public bool Claimed;
     }
 
     [Serializable]

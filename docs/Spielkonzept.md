@@ -373,6 +373,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Drittes Gebiet „Absturzstelle“** (ab 26 Sternen): 5 Levels zwischen Kristallen und Wrackteilen
   - Neues Alien **Schild-Alien**: Energieschild schluckt die ersten Treffer komplett (blauer Balken)
   - Endboss **Alien-Kaiser Zorbax**: riesiger Schild, gibt Aliens in der Nähe alle 8 Sekunden ebenfalls einen Schild
+- [x] **Tägliche Aufgaben und Erfolge:** jeden Tag 3 neue Aufgaben (z. B. „Besiege 150 Aliens“) mit Diamanten, Mais oder Milch als Belohnung; 15 Erfolge mit Abzeichen und Diamanten (Knopf „Aufgaben“ auf dem Hof)
 
 ### Upgrade-System
 

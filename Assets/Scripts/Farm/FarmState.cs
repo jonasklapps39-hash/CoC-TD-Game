@@ -81,6 +81,9 @@ namespace MuhDefense
             if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
             if (Data.Talents == null) Data.Talents = new List<string>();
             if (Data.SeenEnemies == null) Data.SeenEnemies = new List<string>();
+            if (Data.Counters == null) Data.Counters = new List<CounterEntry>();
+            if (Data.Daily == null) Data.Daily = new List<DailyQuestState>();
+            if (Data.ClaimedAchievements == null) Data.ClaimedAchievements = new List<string>();
             if (Data.UnlockedHeroes == null) Data.UnlockedHeroes = new List<string> { "Heinz" };
             if (string.IsNullOrEmpty(Data.SelectedHero)) Data.SelectedHero = "Heinz";
         }
@@ -312,6 +315,7 @@ namespace MuhDefense
         {
             if (WhyCannotBuild(type) != null || !IsAreaFree(x, y, type.Size, -1)) return null;
             Spend(type.CostResource, type.CostForLevel(1));
+            Count(Counter.FarmBuilds);
             double now = Now;
             var b = new BuildingData
             {
@@ -328,6 +332,7 @@ namespace MuhDefense
             Tick();
             var type = b.TypeDef;
             Spend(type.CostResource, type.CostForLevel(b.Level + 1));
+            Count(Counter.FarmBuilds);
             b.UpgradeEnd = Now + type.SecondsForLevel(b.Level + 1);
             return true;
         }
@@ -557,6 +562,120 @@ namespace MuhDefense
         }
 
         public LevelBonuses LevelBonuses => MuhDefense.Talents.BuildBonuses(Data.Talents ?? new List<string>());
+
+        public int CrownCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (var p in Data.Levels)
+                {
+                    if (p.HardCleared) n++;
+                }
+                return n;
+            }
+        }
+
+        // ---------------------------------------------------------------- Aufgaben und Erfolge
+
+        /// <summary>Zählt einen Zähler hoch (auch die passenden täglichen Aufgaben).</summary>
+        public void Count(string counter, int amount = 1)
+        {
+            if (amount <= 0) return;
+            var entry = Data.Counters.Find(c => c.Id == counter);
+            if (entry == null)
+            {
+                entry = new CounterEntry { Id = counter };
+                Data.Counters.Add(entry);
+            }
+            entry.Value += amount;
+
+            EnsureDaily();
+            foreach (var q in Data.Daily)
+            {
+                var def = Quests.GetDaily(q.Id);
+                if (def != null && def.Counter == counter) q.Progress = Mathf.Min(def.Target, q.Progress + amount);
+            }
+        }
+
+        public long CounterValue(string counter)
+        {
+            var entry = Data.Counters.Find(c => c.Id == counter);
+            return entry != null ? entry.Value : 0;
+        }
+
+        /// <summary>Neuer Tag → neue Aufgaben.</summary>
+        public void EnsureDaily()
+        {
+            int today = Quests.Today;
+            if (Data.DailyDay == today && Data.Daily.Count > 0) return;
+            Data.DailyDay = today;
+            Data.Daily.Clear();
+            foreach (var id in Quests.PickForDay(today)) Data.Daily.Add(new DailyQuestState { Id = id });
+        }
+
+        public List<DailyQuestState> DailyQuests
+        {
+            get
+            {
+                EnsureDaily();
+                return Data.Daily;
+            }
+        }
+
+        public bool ClaimDaily(DailyQuestState q)
+        {
+            var def = Quests.GetDaily(q.Id);
+            if (def == null || q.Claimed || q.Progress < def.Target) return false;
+            q.Claimed = true;
+            GiveReward(def.Reward, def.Amount);
+            return true;
+        }
+
+        void GiveReward(RewardKind kind, int amount)
+        {
+            switch (kind)
+            {
+                case RewardKind.Corn: Add(Resource.Mais, amount); break;
+                case RewardKind.Milk: Add(Resource.Milch, amount); break;
+                default: AddGems(amount); break;
+            }
+        }
+
+        public int AchievementProgress(AchievementDef a)
+        {
+            long v = a.Value != null ? a.Value(this) : CounterValue(a.Counter);
+            return (int)Math.Min(a.Target, v);
+        }
+
+        public bool IsAchievementClaimed(AchievementDef a) => Data.ClaimedAchievements.Contains(a.Id);
+
+        public bool ClaimAchievement(AchievementDef a)
+        {
+            if (IsAchievementClaimed(a) || AchievementProgress(a) < a.Target) return false;
+            Data.ClaimedAchievements.Add(a.Id);
+            AddGems(a.Gems);
+            return true;
+        }
+
+        /// <summary>Wie viele Belohnungen gerade abgeholt werden können (für das Abzeichen am Knopf).</summary>
+        public int ClaimableCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (var q in DailyQuests)
+                {
+                    var def = Quests.GetDaily(q.Id);
+                    if (def != null && !q.Claimed && q.Progress >= def.Target) n++;
+                }
+                foreach (var a in Quests.Achievements)
+                {
+                    if (!IsAchievementClaimed(a) && AchievementProgress(a) >= a.Target) n++;
+                }
+                return n;
+            }
+        }
 
         public bool HardCleared(string levelId)
         {
