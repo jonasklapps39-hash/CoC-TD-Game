@@ -288,6 +288,10 @@ namespace MuhDefense
         {
             var wave = Def.Waves[WavesStarted - 1];
             if (Hero != null) Hero.AddXp(40 + 10 * WavesStarted);
+            foreach (var t in Towers)
+            {
+                if (t.Stats.IncomePerWave > 0) AddMoney(t.Stats.IncomePerWave, t.transform.position + Vector3.up * 1.2f);
+            }
             if (wave.Bonus > 0)
             {
                 Money += wave.Bonus;
@@ -367,8 +371,9 @@ namespace MuhDefense
         public void OnEnemyKilled(Enemy enemy)
         {
             Enemies.Remove(enemy);
-            Money += enemy.Type.Reward;
-            AddFloatingText(enemy.transform.position + Vector3.up * 0.5f, "+" + enemy.Type.Reward, new Color(1f, 0.9f, 0.3f));
+            int reward = Mathf.RoundToInt(enemy.Type.Reward * (1f + enemy.BonusReward));
+            Money += reward;
+            AddFloatingText(enemy.transform.position + Vector3.up * 0.5f, "+" + reward, new Color(1f, 0.9f, 0.3f));
             if (Hero != null) Hero.AddXp(enemy.IsBoss ? 60 : 3);
             Effects.Burst(transform, enemy.AimPoint, enemy.Type.Color, enemy.IsBoss ? 20 : 8, 3f);
             GameAudio.Play(SoundId.Pop);
@@ -513,11 +518,32 @@ namespace MuhDefense
             if (SelectedTower != null) SelectedTower.SetSelected(true);
         }
 
+        /// <summary>Münzen dazu, mit schwebender Anzeige.</summary>
+        public void AddMoney(int amount, Vector3 at)
+        {
+            Money += amount;
+            AddFloatingText(at, "+" + amount, new Color(1f, 0.9f, 0.3f));
+            GameAudio.Play(SoundId.Coin);
+        }
+
+        /// <summary>Preis eines Upgrades, mit Rabatt durch einen Hofladen in der Nähe.</summary>
+        public int UpgradeCost(Tower tower, int path)
+        {
+            var tier = tower.NextTier(path);
+            if (tier == null) return 0;
+            float discount = 0f;
+            foreach (var t in Towers)
+            {
+                if (t.Stats.SupportDiscount > discount && Supports(t, tower)) discount = t.Stats.SupportDiscount;
+            }
+            return Mathf.RoundToInt(tier.Cost * (1f - discount));
+        }
+
         public void UpgradeSelected(int path)
         {
             var tower = SelectedTower;
             if (tower == null || tower.WhyCannotUpgrade(path) != null) return;
-            int cost = tower.NextTier(path).Cost;
+            int cost = UpgradeCost(tower, path);
             if (Money < cost) return;
             Money -= cost;
             tower.Upgrade(path);

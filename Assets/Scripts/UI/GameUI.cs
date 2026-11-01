@@ -110,15 +110,22 @@ namespace MuhDefense
             }
 
             GUILayout.Label("Türme", UiKit.Title);
-            foreach (var type in level.AvailableTowers)
+            // Turm-Karten in zwei Spalten
+            for (int i = 0; i < level.AvailableTowers.Count; i += 2)
             {
-                bool active = level.PlacingType == type;
-                GUI.enabled = playing && (active || level.Money >= type.Cost);
-                if (GUILayout.Button($"{type.Name}\n{type.Cost} Münzen", active ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(56f)))
+                GUILayout.BeginHorizontal();
+                for (int k = i; k < Mathf.Min(i + 2, level.AvailableTowers.Count); k++)
                 {
-                    if (active) level.CancelPlacing();
-                    else level.BeginPlacing(type);
+                    var type = level.AvailableTowers[k];
+                    bool active = level.PlacingType == type;
+                    GUI.enabled = playing && (active || level.Money >= type.Cost);
+                    if (GUILayout.Button($"{type.ShortName}\n{type.Cost}", active ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(50f), GUILayout.Width(112f)))
+                    {
+                        if (active) level.CancelPlacing();
+                        else level.BeginPlacing(type);
+                    }
                 }
+                GUILayout.EndHorizontal();
             }
             GUI.enabled = true;
             if (level.AvailableTowers.Count < TowerType.All.Length)
@@ -300,8 +307,9 @@ namespace MuhDefense
                     }
                     else
                     {
-                        GUI.enabled = level.Money >= next.Cost;
-                        if (GUILayout.Button($"Kaufen: {next.Cost}", UiKit.ActiveButton, GUILayout.Height(40f))) level.UpgradeSelected(p);
+                        int cost = level.UpgradeCost(tower, p);
+                        GUI.enabled = level.Money >= cost;
+                        if (GUILayout.Button(cost < next.Cost ? $"Kaufen: {cost} (statt {next.Cost})" : $"Kaufen: {cost}", UiKit.ActiveButton, GUILayout.Height(40f))) level.UpgradeSelected(p);
                         GUI.enabled = true;
                     }
                 }

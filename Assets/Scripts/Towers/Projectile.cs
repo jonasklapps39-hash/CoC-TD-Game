@@ -72,6 +72,7 @@ namespace MuhDefense
             if (target != null && target.Alive && !alreadyHit.Contains(target))
             {
                 alreadyHit.Add(target);
+                ApplyHitEffects(target);
                 target.TakeDamage(damage, stats.ArmorPiercing, stats.ArmoredBonus);
                 Effects.Burst(level.transform, transform.position, new Color(0.85f, 0.85f, 0.9f), 2, 1.5f, 0.06f);
                 GameAudio.Play(SoundId.Hit);
@@ -101,6 +102,16 @@ namespace MuhDefense
                 }
             }
             Destroy(gameObject);
+        }
+
+        /// <summary>Zusatzwirkungen eines Treffers: Gift, Honig, Panzerschwächung, Verwundbarkeit, Bonus-Münzen.</summary>
+        void ApplyHitEffects(Enemy e)
+        {
+            if (stats.DotDps > 0f) e.ApplyDot(stats.DotDps, stats.DotDuration);
+            if (stats.Slow < 1f) e.ApplySlow(stats.Slow, stats.SlowDuration);
+            if (stats.ArmorShred > 0f) e.ShredArmor(stats.ArmorShred, 2f);
+            if (stats.PermanentVulnerability > 0f) e.AddPermanentVulnerability(stats.PermanentVulnerability);
+            if (stats.BonusReward > 0f) e.MarkBonusReward(stats.BonusReward);
         }
 
         void ArcImpact()

@@ -62,6 +62,14 @@ namespace MuhDefense
         public int IncomePerWave;
         /// <summary>Kann selbst nicht angreifen (reiner Unterstützungs-Turm).</summary>
         public bool NoAttack;
+        /// <summary>Münzen alle paar Sekunden während einer Welle (Hofladen).</summary>
+        public int IncomeDuringWave;
+        /// <summary>Upgrades von Türmen in Reichweite werden um diesen Anteil billiger (Hofladen).</summary>
+        public float SupportDiscount;
+        /// <summary>Schadens-Faktor gegen fliegende Aliens (Windmühle).</summary>
+        public float AirDamageMultiplier = 1f;
+        /// <summary>Fliegende Aliens werden so lange festgehalten (Windmühle).</summary>
+        public float AirStun;
 
         public bool ArmorPiercing;
         /// <summary>Schadens-Faktor gegen gepanzerte Aliens.</summary>
@@ -93,6 +101,8 @@ namespace MuhDefense
         public float DotDuration;
         public float ArmorShred;
         public float PermanentVulnerability;
+        /// <summary>Zusätzliche Münzen für Aliens, die von diesem Turm getroffen wurden (Anteil).</summary>
+        public float BonusReward;
 
         public TowerAbility Ability = TowerAbility.None;
         public float AbilityCooldown;
@@ -140,6 +150,8 @@ namespace MuhDefense
         public const int PathCount = 3;
 
         public string Name;
+        /// <summary>Kurzer Name für die Turm-Karten in der Seitenleiste.</summary>
+        public string ShortName;
         public string Description;
         public TowerKind Kind;
         public int Cost;
@@ -157,6 +169,7 @@ namespace MuhDefense
         public static readonly TowerType Mistgabel = new TowerType
         {
             Name = "Mistgabel-Bauer",
+            ShortName = "Mistgabel",
             Description = "Wirft Mistgabeln auf einzelne Aliens. Günstig und zuverlässig.",
             Kind = TowerKind.Projectile,
             Cost = 100,
@@ -193,6 +206,7 @@ namespace MuhDefense
         public static readonly TowerType Heuballen = new TowerType
         {
             Name = "Heuballen-Katapult",
+            ShortName = "Katapult",
             Description = "Schleudert Heuballen im Bogen. Flächenschaden, gut gegen Gruppen und Panzer.",
             Kind = TowerKind.Arc,
             Cost = 180,
@@ -227,6 +241,7 @@ namespace MuhDefense
         public static readonly TowerType Eismilch = new TowerType
         {
             Name = "Eismilch-Sprüher",
+            ShortName = "Eismilch",
             Description = "Versprüht eiskalte Milch und verlangsamt alle Aliens in der Nähe.",
             Kind = TowerKind.Aura,
             Cost = 140,
@@ -258,7 +273,139 @@ namespace MuhDefense
             },
         };
 
-        public static readonly TowerType[] All = { Mistgabel, Heuballen, Eismilch };
+        public static readonly TowerType Bienenstock = new TowerType
+        {
+            Name = "Bienenstock",
+            ShortName = "Bienen",
+            Description = "Bienen verfolgen die Aliens, treffen auch Ufos und stechen mit Gift (Schaden über Zeit).",
+            Kind = TowerKind.Projectile,
+            Cost = 160,
+            Color = new Color(1f, 0.8f, 0.2f),
+            Base = new TowerStats { Range = 2.8f, Damage = 2f, FireRate = 1.1f, Projectiles = 2, ProjectileSpeed = 6f, DotDps = 3f, DotDuration = 2f },
+            Paths = new[]
+            {
+                new UpgradePath("Schwarm", Red,
+                    T("Mehr Bienen", "3 Bienen pro Angriff.", 110, s => s.Projectiles += 1),
+                    T("Fleißige Bienen", "+30 % Tempo.", 180, s => s.FireRate *= 1.3f),
+                    T("Großer Schwarm", "5 Bienen pro Angriff.", 420, s => s.Projectiles += 2),
+                    T("Killerbienen", "Doppelter Schaden und Gift.", 900, s => { s.Damage *= 2f; s.DotDps *= 2f; }),
+                    T("Bienenkönigin", "8 Bienen pro Angriff, jede trifft 2 Aliens.", 1700, s => { s.Projectiles += 3; s.Pierce += 1; })),
+                new UpgradePath("Gift", Blue,
+                    T("Stärkeres Gift", "+50 % Gift.", 100, s => s.DotDps *= 1.5f),
+                    T("Langes Gift", "Gift wirkt doppelt so lange.", 200, s => s.DotDuration *= 2f),
+                    T("Panzerstich", "Stiche schwächen den Panzer um 3.", 450, s => s.ArmorShred = 3f),
+                    T("Wespennest", "Dreifaches Gift.", 950, s => s.DotDps *= 3f),
+                    T("Hornissenplage", "Gestochene Aliens nehmen dauerhaft 20 % mehr Schaden.", 1700,
+                        s => { s.PermanentVulnerability = 0.2f; s.DotDps *= 1.5f; })),
+                new UpgradePath("Honig", Green,
+                    T("Klebriger Honig", "Stiche verlangsamen leicht.", 90, s => { s.Slow = 0.8f; s.SlowDuration = 1.5f; }),
+                    T("Weiter Flug", "+30 % Reichweite, sieht getarnte Aliens.", 200, s => { s.Range *= 1.3f; s.SeesCamo = true; }),
+                    T("Honigfalle", "Stärkere Verlangsamung.", 420, s => s.Slow = 0.6f),
+                    T("Honigsee", "Verlangsamung hält doppelt so lange, +30 % Reichweite.", 900, s => { s.SlowDuration *= 2f; s.Range *= 1.3f; }),
+                    T("Goldener Honig", "Getroffene Aliens bringen 50 % mehr Münzen.", 1600, s => s.BonusReward = 0.5f)),
+            },
+        };
+
+        public static readonly TowerType Windmuehle = new TowerType
+        {
+            Name = "Windmühle",
+            ShortName = "Windmühle",
+            Description = "Pustet Aliens den Weg zurück. Richtet vierfachen Schaden an fliegenden Ufos an.",
+            Kind = TowerKind.Aura,
+            Cost = 220,
+            Color = new Color(0.85f, 0.9f, 1f),
+            Base = new TowerStats { Range = 2.2f, Damage = 2f, FireRate = 0.6f, Knockback = 0.3f, AirDamageMultiplier = 4f },
+            Paths = new[]
+            {
+                new UpgradePath("Orkan", Red,
+                    T("Starker Wind", "Stößt weiter zurück.", 120, s => s.Knockback += 0.15f),
+                    T("Großes Rad", "+25 % Reichweite.", 220, s => s.Range *= 1.25f),
+                    T("Sturmböe", "Stößt noch weiter zurück und pustet öfter.", 480, s => { s.Knockback += 0.2f; s.FireRate *= 1.3f; }),
+                    T("Wirbelsturm", "Stößt auch große Aliens zurück und macht +6 Schaden.", 1000, s => { s.Damage += 6f; s.Knockback += 0.2f; }),
+                    T("Tornado", "Riesige Reichweite, sehr starker Rückstoß.", 1800, s => { s.Range *= 1.5f; s.Knockback += 0.4f; })),
+                new UpgradePath("Ufo-Fänger", Blue,
+                    T("Aufwind", "Sechsfacher Schaden an Ufos.", 110, s => s.AirDamageMultiplier = 6f),
+                    T("Luftwirbel", "Hält Ufos kurz fest.", 240, s => s.AirStun = 0.6f),
+                    T("Fallwind", "+8 Schaden.", 500, s => s.Damage += 8f),
+                    T("Ufo-Falle", "Hält Ufos länger fest, zehnfacher Schaden an Ufos.", 950, s => { s.AirStun = 1.4f; s.AirDamageMultiplier = 10f; }),
+                    T("Himmelsfänger", "Aliens in Reichweite werden dauerhaft verwundbar (+40 % Schaden).", 1700,
+                        s => { s.PermanentVulnerability = 0.4f; s.Damage += 6f; })),
+                new UpgradePath("Böen", Green,
+                    T("Gleichmäßiger Wind", "+30 % Tempo.", 100, s => s.FireRate *= 1.3f),
+                    T("Gegenwind", "Verlangsamt Aliens in Reichweite.", 200, s => { s.Slow = 0.7f; s.SlowDuration = 1.5f; }),
+                    T("Staubwolke", "Sieht getarnte Aliens, +20 % Reichweite.", 450, s => { s.SeesCamo = true; s.Range *= 1.2f; }),
+                    T("Dauerböe", "Doppeltes Tempo.", 950, s => s.FireRate *= 2f),
+                    T("Wetterküche", "Starke Verlangsamung und +10 Schaden.", 1700, s => { s.Slow = 0.45f; s.Damage += 10f; })),
+            },
+        };
+
+        public static readonly TowerType Wetterhahn = new TowerType
+        {
+            Name = "Wetterhahn",
+            ShortName = "Wetterhahn",
+            Description = "Greift nicht an, aber Türme in seiner Nähe sehen getarnte Aliens und haben 10 % mehr Reichweite.",
+            Kind = TowerKind.Aura,
+            Cost = 150,
+            Color = new Color(0.95f, 0.45f, 0.2f),
+            Base = new TowerStats { Range = 2.5f, Damage = 0f, FireRate = 1f, NoAttack = true, RevealsCamo = true, SupportRangeBonus = 0.1f },
+            Paths = new[]
+            {
+                new UpgradePath("Radar", Red,
+                    T("Hoher Mast", "Unterstützt Türme in größerem Umkreis.", 90, s => s.Range *= 1.3f),
+                    T("Weitsicht", "Türme in der Nähe: +20 % Reichweite.", 200, s => s.SupportRangeBonus = 0.2f),
+                    T("Radarhahn", "Noch größerer Umkreis.", 450, s => s.Range *= 1.4f),
+                    T("Adlerauge", "Türme in der Nähe: +30 % Reichweite.", 900, s => s.SupportRangeBonus = 0.3f),
+                    T("Wetterstation", "Riesiger Umkreis, +40 % Reichweite.", 1600, s => { s.Range *= 1.5f; s.SupportRangeBonus = 0.4f; })),
+                new UpgradePath("Kampfhahn", Blue,
+                    T("Weckruf", "Türme in der Nähe: +10 % Tempo.", 120, s => s.SupportRateBonus = 0.1f),
+                    T("Ansporn", "Türme in der Nähe: +15 % Tempo.", 240, s => s.SupportRateBonus = 0.15f),
+                    T("Schlachtruf", "Türme in der Nähe: +25 % Tempo.", 550, s => s.SupportRateBonus = 0.25f),
+                    T("Kampfgeist", "Türme in der Nähe: +35 % Tempo.", 1100, s => s.SupportRateBonus = 0.35f),
+                    T("Goldener Hahn", "Türme in der Nähe: +50 % Tempo.", 1900, s => s.SupportRateBonus = 0.5f)),
+                new UpgradePath("Krähen", Green,
+                    T("Krähenfreund", "Eine Krähe pickt Aliens in der Nähe (wenig Schaden).", 100,
+                        s => { s.NoAttack = false; s.Damage = 3f; s.FireRate = 1f; s.HitsAir = true; }),
+                    T("Krähenpaar", "Doppeltes Tempo.", 200, s => s.FireRate *= 2f),
+                    T("Krähenschwarm", "+6 Schaden.", 450, s => s.Damage += 6f),
+                    T("Rabenmutter", "Krähen schwächen Panzer um 3.", 900, s => { s.ArmorShred = 3f; s.Damage += 4f; }),
+                    T("Rabenkönig", "Sehr schnelles Picken, +10 Schaden.", 1600, s => { s.FireRate *= 2f; s.Damage += 10f; })),
+            },
+        };
+
+        public static readonly TowerType Hofladen = new TowerType
+        {
+            Name = "Hofladen",
+            ShortName = "Hofladen",
+            Description = "Greift nicht an, bringt aber nach jeder Welle 40 Münzen extra.",
+            Kind = TowerKind.Aura,
+            Cost = 250,
+            Color = new Color(0.9f, 0.3f, 0.25f),
+            Base = new TowerStats { Range = 2f, Damage = 0f, FireRate = 1f, NoAttack = true, IncomePerWave = 40 },
+            Paths = new[]
+            {
+                new UpgradePath("Großmarkt", Red,
+                    T("Mehr Ware", "60 Münzen pro Welle.", 150, s => s.IncomePerWave = 60),
+                    T("Marktstand", "90 Münzen pro Welle.", 280, s => s.IncomePerWave = 90),
+                    T("Wochenmarkt", "140 Münzen pro Welle.", 600, s => s.IncomePerWave = 140),
+                    T("Großmarkt", "220 Münzen pro Welle.", 1200, s => s.IncomePerWave = 220),
+                    T("Handelsimperium", "350 Münzen pro Welle.", 2200, s => s.IncomePerWave = 350)),
+                new UpgradePath("Bio-Siegel", Blue,
+                    T("Stammkunden", "Upgrades von Türmen in der Nähe 5 % billiger.", 120, s => s.SupportDiscount = 0.05f),
+                    T("Bio-Siegel", "Upgrades in der Nähe 10 % billiger.", 250, s => s.SupportDiscount = 0.1f),
+                    T("Großer Laden", "Größerer Umkreis.", 500, s => s.Range *= 1.5f),
+                    T("Genossenschaft", "Upgrades in der Nähe 15 % billiger.", 1000, s => s.SupportDiscount = 0.15f),
+                    T("Bauernverband", "Upgrades in der Nähe 20 % billiger, noch größerer Umkreis.", 1800,
+                        s => { s.SupportDiscount = 0.2f; s.Range *= 1.3f; })),
+                new UpgradePath("Lieferdienst", Green,
+                    T("Fahrradbote", "Während der Welle alle 5 Sekunden 5 Münzen.", 140, s => s.IncomeDuringWave = 5),
+                    T("Lieferwagen", "Alle 5 Sekunden 10 Münzen.", 280, s => s.IncomeDuringWave = 10),
+                    T("Express", "Alle 5 Sekunden 20 Münzen.", 600, s => s.IncomeDuringWave = 20),
+                    T("Lieferflotte", "Alle 5 Sekunden 35 Münzen.", 1200, s => s.IncomeDuringWave = 35),
+                    T("Milchstraße", "Alle 5 Sekunden 60 Münzen.", 2200, s => s.IncomeDuringWave = 60)),
+            },
+        };
+
+        public static readonly TowerType[] All = { Mistgabel, Heuballen, Eismilch, Bienenstock, Windmuehle, Wetterhahn, Hofladen };
 
         public static string AbilityName(TowerAbility ability)
         {

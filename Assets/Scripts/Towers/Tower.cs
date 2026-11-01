@@ -33,6 +33,7 @@ namespace MuhDefense
 
         LevelManager level;
         float cooldown;
+        float incomeTimer;
         int pulseCount;
         Transform turret;
         Transform decorations;
@@ -129,6 +130,17 @@ namespace MuhDefense
             if (AbilityCooldownLeft > 0f) AbilityCooldownLeft -= dt;
             cooldown = Mathf.Max(0f, cooldown - dt);
 
+            if (Stats.IncomeDuringWave > 0)
+            {
+                incomeTimer += dt;
+                if (incomeTimer >= 5f)
+                {
+                    incomeTimer = 0f;
+                    level.AddMoney(Stats.IncomeDuringWave, transform.position + Vector3.up * 1.2f);
+                }
+            }
+            if (Stats.NoAttack) return;
+
             float rate = Stats.FireRate * (1f + level.RateBonusAt(this));
             if (Type == TowerType.Mistgabel && level.FarmerFrenzyTimer > 0f) rate *= 2f;
 
@@ -198,6 +210,11 @@ namespace MuhDefense
 
             switch (Type.Kind)
             {
+                case TowerKind.Projectile when Type == TowerType.Bienenstock:
+                    GameAudio.Play(SoundId.Buzz);
+                    Projectile.Spawn(level, this, from, target, damage, Stats, false,
+                        PrimitiveType.Sphere, new Vector3(0.1f, 0.08f, 0.13f), new Color(1f, 0.8f, 0.1f));
+                    break;
                 case TowerKind.Projectile:
                     GameAudio.Play(SoundId.Fork);
                     Projectile.Spawn(level, this, from, target, damage, Stats, false,
@@ -232,14 +249,17 @@ namespace MuhDefense
                 if (Stats.DotDps > 0f) e.ApplyDot(Stats.DotDps, Stats.DotDuration);
                 if (Stats.PermanentVulnerability > 0f) e.AddPermanentVulnerability(Stats.PermanentVulnerability);
                 if (freezeNow) e.Freeze(Stats.FreezeDuration, Stats.FrozenVulnerability, Stats.FreezeBig);
+                if (e.IsFlying && Stats.AirStun > 0f) e.Freeze(Stats.AirStun, 1f, true);
                 if (Stats.Knockback > 0f) e.PushBack(Stats.Knockback);
-                e.TakeDamage(Stats.Damage);
+                e.TakeDamage(Stats.Damage * (e.IsFlying ? Stats.AirDamageMultiplier : 1f));
             }
             if (hit)
             {
                 var color = freezeNow ? new Color(0.85f, 0.95f, 1f, 1f) : new Color(0.7f, 0.9f, 1f, 0.9f);
                 RingEffect.Spawn(level.transform, transform.position, Mathf.Min(Range, 6f), color, 0.45f);
-                GameAudio.Play(freezeNow ? SoundId.Freeze : SoundId.Spray);
+                if (freezeNow) GameAudio.Play(SoundId.Freeze);
+                else if (Type == TowerType.Eismilch) GameAudio.Play(SoundId.Spray);
+                else if (Type == TowerType.Wetterhahn) GameAudio.Play(SoundId.Hit);
                 if (Stats.Knockback > 0f) GameAudio.Play(SoundId.Wind, 0.5f);
             }
             return hit;
@@ -283,11 +303,25 @@ namespace MuhDefense
             }
         }
 
+        string ModelNameFor(TowerType type)
+        {
+            if (type == TowerType.Bienenstock) return "Bienenstock";
+            if (type == TowerType.Windmuehle) return "Windmuehle";
+            if (type == TowerType.Wetterhahn) return "Wetterhahn";
+            if (type == TowerType.Hofladen) return "Hofladen";
+            switch (type.Kind)
+            {
+                case TowerKind.Arc: return "HeuballenKatapult";
+                case TowerKind.Aura: return "EismilchSprueher";
+                default: return "MistgabelBauer";
+            }
+        }
+
         void BuildModel()
         {
             turret = new GameObject("Turm").transform;
             turret.SetParent(transform, false);
-            var model = ModelLibrary.Spawn(ModelName(Type.Kind), turret, 0.92f, ModelLibrary.Fit.Footprint);
+            var model = ModelLibrary.Spawn(ModelNameFor(Type), turret, 0.92f, ModelLibrary.Fit.Footprint);
             if (model != null)
             {
                 float top = 0f;

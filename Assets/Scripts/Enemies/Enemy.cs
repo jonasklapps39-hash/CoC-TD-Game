@@ -56,6 +56,8 @@ namespace MuhDefense
         GameObject iceBlock;
         GameObject flame;
         float healTimer;
+        /// <summary>Zusätzliche Münzen beim Besiegen (Anteil, z. B. durch goldenen Honig).</summary>
+        public float BonusReward { get; private set; }
         /// <summary>Kurzes Zusammenzucken nach einem Treffer (0..1).</summary>
         float hitPunch;
 
@@ -289,6 +291,8 @@ namespace MuhDefense
             armorShred = Mathf.Max(armorShred, amount);
             armorShredTimer = Mathf.Max(armorShredTimer, duration);
         }
+
+        public void MarkBonusReward(float fraction) => BonusReward = Mathf.Max(BonusReward, fraction);
 
         public void AddPermanentVulnerability(float amount)
         {

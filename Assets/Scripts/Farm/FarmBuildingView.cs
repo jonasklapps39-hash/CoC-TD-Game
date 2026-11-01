@@ -198,6 +198,21 @@ namespace MuhDefense
                     Box(root, new Vector3(0.6f, 0.25f, -0.6f), new Vector3(0.3f, 0.25f, 0.3f), Straw, "Heuballen");
                     break;
 
+                case FarmBuildingKind.HofladenKontor:
+                    Plate(root, s, new Color(0.5f, 0.42f, 0.3f));
+                    Box(root, new Vector3(0f, 0.36f, 0.15f), new Vector3(1.3f, 0.72f, 1.1f), new Color(0.92f, 0.86f, 0.72f), "Laden");
+                    MakeRoof(root, new Vector3(0f, 0.72f, 0.15f), 1.5f, 1.25f, BarnRed);
+                    for (int i = 0; i < 4; i++)
+                    {
+                        Box(root, new Vector3(-0.45f + 0.3f * i, 0.62f, -0.5f), new Vector3(0.3f, 0.05f, 0.35f),
+                            i % 2 == 0 ? BarnRed : Color.white, "Markise");
+                    }
+                    Box(root, new Vector3(-0.35f, 0.18f, -0.62f), new Vector3(0.3f, 0.25f, 0.25f), Wood, "Kiste");
+                    Box(root, new Vector3(0.35f, 0.18f, -0.62f), new Vector3(0.3f, 0.25f, 0.25f), Wood, "Kiste");
+                    Prim(root, PrimitiveType.Sphere, new Vector3(-0.35f, 0.36f, -0.62f), Vector3.one * 0.14f, new Color(0.95f, 0.5f, 0.1f), "Kürbis");
+                    Prim(root, PrimitiveType.Sphere, new Vector3(0.35f, 0.36f, -0.62f), Vector3.one * 0.14f, new Color(1f, 0.85f, 0.25f), "Mais");
+                    break;
+
                 case FarmBuildingKind.Tueftlerschuppen:
                     Plate(root, s, Stone);
                     Box(root, new Vector3(0f, 0.36f, 0.15f), new Vector3(1.3f, 0.72f, 1.1f), new Color(0.45f, 0.55f, 0.65f), "Schuppen");

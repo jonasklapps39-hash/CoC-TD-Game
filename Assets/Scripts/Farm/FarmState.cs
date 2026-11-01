@@ -343,19 +343,24 @@ namespace MuhDefense
 
         // ---------------------------------------------------------------- Türme und Levels
 
-        /// <summary>Höchste Upgrade-Stufe im Level für eine Werkstatt-Stufe (0 = Turm nicht freigeschaltet).</summary>
-        public static int TowerLevelForWorkshop(int workshopLevel) => workshopLevel <= 0 ? 0 : Mathf.Min(workshopLevel + 1, TowerType.MaxTier);
+        /// <summary>Höchste Upgrade-Stufe im Level für eine Werkstatt-Stufe (0 = Turm noch nicht freigeschaltet).</summary>
+        public static int TowerLevelForWorkshop(int workshopLevel, int fromLevel = 1)
+            => workshopLevel < fromLevel ? 0 : Mathf.Min(workshopLevel - fromLevel + 2, TowerType.MaxTier);
 
         /// <summary>Höchste Stufe, bis zu der dieser Turm im Level gebaut werden darf (0 = nicht freigeschaltet).</summary>
         public int TowerMaxLevel(TowerType tower)
         {
-            int workshopLevel = 0;
+            int best = 0;
             foreach (var b in Data.Buildings)
             {
                 var type = b.TypeDef;
-                if (type != null && type.UnlocksTower == tower) workshopLevel = Mathf.Max(workshopLevel, b.Level);
+                if (type == null) continue;
+                foreach (var unlock in type.Unlocks)
+                {
+                    if (unlock.Tower == tower) best = Mathf.Max(best, TowerLevelForWorkshop(b.Level, unlock.FromLevel));
+                }
             }
-            return TowerLevelForWorkshop(workshopLevel);
+            return best;
         }
 
         /// <returns>true, wenn die Alien-Art zum ersten Mal auftaucht (und merkt sie sich).</returns>

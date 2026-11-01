@@ -183,9 +183,12 @@ namespace MuhDefense
             {
                 lines.Add($"Lagert: {type.StorageCapacity[b.Level - 1]} {FarmBuildingType.ResourceName(type.StoredResource)}");
             }
-            if (type.UnlocksTower != null)
+            foreach (var unlock in type.Unlocks)
             {
-                lines.Add($"Turm: {type.UnlocksTower.Name}, Upgrades im Level bis Stufe {FarmState.TowerLevelForWorkshop(b.Level)}");
+                int tier = FarmState.TowerLevelForWorkshop(b.Level, unlock.FromLevel);
+                lines.Add(tier > 0
+                    ? $"{unlock.Tower.Name}: Upgrades im Level bis Stufe {tier}"
+                    : $"{unlock.Tower.Name}: ab Werkstatt-Stufe {unlock.FromLevel}");
             }
             return string.Join("\n", lines);
         }

@@ -389,6 +389,82 @@ def build_sprayer():
         ring((0.32 * s_, 0, 0.8), 0.08, 0.018, METAL, rot=(0, math.radians(90), 0))
 
 
+def build_beehive():
+    """Bienenstock: geflochtener Bienenkorb auf einem Holzbock, Bienen drumherum."""
+    tube((0, 0, 0.1), 0.48, 0.2, STONE, segs=16)
+    for s_ in (-1, 1):
+        for t in (-1, 1):
+            tube((0.18 * s_, 0.18 * t, 0.36), 0.035, 0.34, DARK_WOOD)
+    soft_box((0, 0, 0.55), (0.56, 0.56, 0.06), WOOD, round_=0.3)
+    straw_dark = (0.78, 0.55, 0.2)
+    for i, (r, z) in enumerate([(0.26, 0.66), (0.25, 0.78), (0.22, 0.9), (0.17, 1.0), (0.1, 1.08)]):
+        ring((0, 0, z), r, 0.06, STRAW if i % 2 == 0 else straw_dark)
+    ball((0, 0, 0.84), (0.48, 0.48, 0.56), STRAW)
+    ball((0, -0.24, 0.68), (0.14, 0.06, 0.1), (0.15, 0.1, 0.05))
+    for (x, y, z) in [(0.35, -0.2, 1.0), (-0.32, -0.25, 0.85), (0.1, -0.4, 1.15), (-0.2, 0.3, 1.2)]:
+        ball((x, y, z), (0.1, 0.08, 0.08), (1.0, 0.8, 0.1))
+        ball((x, y + 0.01, z + 0.04), (0.08, 0.03, 0.05), WHITE, subsurf=0, segs=8)
+
+
+def build_windmill():
+    """Windmühle: kleiner Turm mit Dach und vier Flügeln vorne."""
+    tube((0, 0, 0.1), 0.48, 0.2, STONE, segs=16)
+    tube((0, 0, 0.6), 0.3, 0.8, (0.92, 0.88, 0.78), r2=0.22, segs=16)
+    tube((0, 0, 1.1), 0.27, 0.32, (0.72, 0.2, 0.15), r2=0.02, segs=16)
+    soft_box((0, -0.22, 0.35), (0.16, 0.04, 0.26), DARK_WOOD, round_=0.3)
+    tube((0, -0.26, 0.95), 0.05, 0.12, DARK_WOOD, rot=(math.radians(90), 0, 0))
+    for i in range(4):
+        a = math.radians(45 + i * 90)
+        cx, cz = math.cos(a) * 0.36, 0.95 + math.sin(a) * 0.36
+        soft_box((cx, -0.32, cz), (0.16, 0.03, 0.62), WOOD, round_=0.2, rot=(0, -a + math.radians(90), 0))
+        soft_box((math.cos(a) * 0.42, -0.34, 0.95 + math.sin(a) * 0.42), (0.14, 0.015, 0.42), WHITE, round_=0.2,
+                 rot=(0, -a + math.radians(90), 0))
+    ball((0, -0.33, 0.95), (0.1, 0.06, 0.1), DARK_METAL)
+
+
+def build_weathercock():
+    """Wetterhahn: Holzpfahl mit Windrose und einem Hahn obendrauf."""
+    tube((0, 0, 0.1), 0.48, 0.2, STONE, segs=16)
+    tube((0, 0, 0.75), 0.05, 1.1, DARK_WOOD)
+    for (dx, dy, letter_c) in [(0.22, 0, GOLD), (-0.22, 0, GOLD), (0, 0.22, GOLD), (0, -0.22, GOLD)]:
+        tube((dx / 2, dy / 2, 1.0), 0.015, 0.22, DARK_METAL, rot=(math.radians(90) if dy else 0, math.radians(90) if dx else 0, 0))
+        ball((dx, dy, 1.0), (0.06, 0.06, 0.06), letter_c)
+    # Hahn im Profil (von vorne gut zu erkennen)
+    orange = (0.95, 0.45, 0.15)
+    red = (0.9, 0.1, 0.1)
+    ball((0.02, 0, 1.45), (0.5, 0.26, 0.34), orange)
+    ball((-0.24, 0, 1.66), (0.22, 0.2, 0.24), orange)
+    tube((-0.38, 0, 1.65), 0.05, 0.1, GOLD, rot=(0, math.radians(-90), 0), r2=0.003)
+    for i, x in enumerate((-0.3, -0.24, -0.18)):
+        ball((x, 0, 1.8 + (0.02 if i == 1 else 0)), (0.07, 0.06, 0.1), red)
+    ball((-0.3, 0, 1.55), (0.06, 0.05, 0.1), red)
+    for s_ in (-1, 1):
+        ball((-0.3, 0.09 * s_, 1.69), (0.05, 0.03, 0.05), BLACK, subsurf=0, segs=8)
+    for i, c in enumerate([(0.15, 0.45, 0.2), (0.1, 0.25, 0.65), (0.95, 0.3, 0.1), (0.15, 0.45, 0.2)]):
+        a = math.radians(-20 + 22 * i)
+        ball((0.3 + math.cos(a) * 0.12, 0, 1.6 + math.sin(a) * 0.18), (0.12, 0.08, 0.36), c, rot=(0, math.radians(-30 + 20 * i), 0))
+    tube((0.06, 0, 1.29), 0.02, 0.1, GOLD)
+    for s_ in (-1, 1):
+        tube((0.04 * s_, 0, 1.3), 0.015, 0.08, GOLD)
+
+
+def build_farm_shop():
+    """Hofladen: Marktstand mit gestreifter Markise und Kisten voller Gemüse."""
+    tube((0, 0, 0.1), 0.48, 0.2, STONE, segs=16)
+    soft_box((0, 0.05, 0.42), (0.7, 0.45, 0.42), WOOD, round_=0.2)
+    for s_ in (-1, 1):
+        tube((0.32 * s_, -0.15, 0.75), 0.03, 0.7, DARK_WOOD)
+        tube((0.32 * s_, 0.25, 0.75), 0.03, 0.7, DARK_WOOD)
+    for i in range(5):
+        soft_box((-0.3 + 0.15 * i, 0.05, 1.12), (0.15, 0.6, 0.04), (0.85, 0.15, 0.12) if i % 2 == 0 else WHITE, round_=0.2,
+                 rot=(math.radians(-12), 0, 0))
+    for (x, c) in [(-0.2, (0.95, 0.5, 0.1)), (0.0, (0.3, 0.7, 0.2)), (0.2, (0.95, 0.15, 0.15))]:
+        soft_box((x, -0.08, 0.68), (0.18, 0.18, 0.08), DARK_WOOD, round_=0.2)
+        for j in range(3):
+            ball((x - 0.05 + 0.05 * j, -0.08, 0.76), (0.08, 0.08, 0.08), c)
+    soft_box((0, -0.2, 0.92), (0.3, 0.03, 0.12), (0.95, 0.9, 0.7), round_=0.2)
+
+
 def build_ufo():
     ball((0, 0, 0), (1.7, 1.7, 0.34), METAL, subsurf=2, segs=24)
     ring((0, 0, 0), 0.82, 0.05, DARK_METAL)
@@ -419,6 +495,10 @@ MODELS = [
     ("MistgabelBauer", build_farmer, 7000),
     ("HeuballenKatapult", build_catapult, 6000),
     ("EismilchSprueher", build_sprayer, 6000),
+    ("Bienenstock", build_beehive, 5000),
+    ("Windmuehle", build_windmill, 5000),
+    ("Wetterhahn", build_weathercock, 4000),
+    ("Hofladen", build_farm_shop, 5000),
     ("Ufo", build_ufo, 5000),
     ("Baum", build_tree, 2500),
 ]
