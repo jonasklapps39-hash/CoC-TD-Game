@@ -502,6 +502,180 @@ def build_tree():
         ball((dx, dy, dz), (s_, s_, s_ * 0.92), LEAF, subsurf=1)
 
 
+# ---------------------------------------------------------------- Hof-Gebäude (Vorderseite nach -Y, in Unity zur Kamera gedreht)
+
+BARN_RED = (0.75, 0.18, 0.13)
+ROOF_RED = (0.62, 0.16, 0.12)
+ROOF_DARK = (0.32, 0.24, 0.22)
+CREAM = (0.95, 0.9, 0.78)
+GLASS = (0.55, 0.85, 1.0)
+GRASS = (0.4, 0.68, 0.22)
+SOIL = (0.45, 0.29, 0.15)
+
+
+def roof(center, width, depth, color, overhang=0.12):
+    """Satteldach mit First entlang X (um 45° gedrehter, abgerundeter Würfel)."""
+    side = (depth + overhang * 2) / math.sqrt(2)
+    soft_box(center, (width + overhang * 2, side, side), color, round_=0.12, rot=(math.radians(45), 0, 0))
+
+
+def window(x, y, z, w=0.22, h=0.24):
+    soft_box((x, y, z), (w + 0.06, 0.04, h + 0.06), WHITE, round_=0.3)
+    soft_box((x, y - 0.015, z), (w, 0.04, h), GLASS, round_=0.3)
+    soft_box((x, y - 0.03, z), (0.025, 0.02, h), WHITE, round_=0.3)
+
+
+def build_farmhouse():
+    soft_box((0, 0, 0.1), (2.7, 2.7, 0.2), (0.55, 0.62, 0.35), round_=0.2)
+    soft_box((0, 0.1, 0.32), (2.1, 1.7, 0.24), STONE, round_=0.25)
+    soft_box((0, 0.1, 0.95), (2.0, 1.6, 1.1), CREAM, round_=0.12)
+    roof((0, 0.1, 1.5), 2.0, 1.6, ROOF_RED, 0.18)
+    tube((0.6, 0.45, 2.15), 0.13, 0.7, STONE, segs=10)
+    ball((0.6, 0.45, 2.55), (0.28, 0.28, 0.18), (0.85, 0.85, 0.85))
+    soft_box((0, -0.71, 0.75), (0.42, 0.06, 0.7), DARK_WOOD, round_=0.25)
+    ball((0.12, -0.75, 0.75), (0.05, 0.03, 0.05), GOLD, subsurf=0, segs=8)
+    for x in (-0.65, 0.65):
+        window(x, -0.71, 1.0)
+        soft_box((x, -0.75, 0.82), (0.32, 0.12, 0.08), DARK_WOOD, round_=0.3)
+        for k in (-0.08, 0.0, 0.08):
+            ball((x + k, -0.77, 0.88), (0.08, 0.08, 0.08), (1.0, 0.4, 0.55) if k == 0 else (1.0, 0.85, 0.2))
+    # Vordach mit Pfosten
+    soft_box((0, -0.95, 1.36), (1.0, 0.5, 0.06), ROOF_DARK, round_=0.3, rot=(math.radians(-12), 0, 0))
+    for x in (-0.42, 0.42):
+        tube((x, -1.12, 0.82), 0.04, 1.05, WOOD)
+    soft_box((0, -0.95, 0.47), (1.1, 0.55, 0.06), WOOD, round_=0.3)
+    window(0, -0.71, 1.62, 0.18, 0.18)
+
+
+def build_cornfield():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), SOIL, round_=0.3)
+    for i in range(4):
+        for j in range(4):
+            x, y = -0.66 + 0.44 * i, -0.66 + 0.44 * j
+            h = 0.55 + 0.08 * ((i * 3 + j) % 3)
+            tube((x, y, 0.12 + h / 2), 0.03, h, (0.35, 0.62, 0.18), segs=6)
+            for s_ in (-1, 1):
+                ball((x + 0.08 * s_, y, 0.12 + h * 0.6), (0.18, 0.05, 0.06), LEAF, rot=(0, math.radians(30 * s_), 0))
+            ball((x + 0.04, y - 0.03, 0.12 + h * 0.75), (0.08, 0.08, 0.18), (1.0, 0.82, 0.2))
+    for (x, y) in [(-0.92, -0.92), (0.92, -0.92), (-0.92, 0.92), (0.92, 0.92)]:
+        tube((x, y, 0.25), 0.04, 0.4, WOOD, segs=6)
+
+
+def build_cowshed():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    soft_box((0, 0.1, 0.6), (1.5, 1.3, 0.95), BARN_RED, round_=0.12)
+    roof((0, 0.1, 1.07), 1.5, 1.3, ROOF_DARK, 0.12)
+    soft_box((0, -0.56, 0.45), (0.62, 0.06, 0.66), WHITE, round_=0.2)
+    soft_box((0, -0.6, 0.45), (0.52, 0.04, 0.56), (0.55, 0.12, 0.1), round_=0.2)
+    for a in (35, -35):
+        soft_box((0, -0.63, 0.45), (0.06, 0.03, 0.7), WHITE, round_=0.3, rot=(0, math.radians(a), 0))
+    window(0, -0.56, 0.98, 0.2, 0.16)
+    # Kuh schaut aus dem Tor
+    soft_box((0.42, -0.68, 0.45), (0.24, 0.22, 0.22), WHITE, round_=0.4)
+    soft_box((0.42, -0.8, 0.4), (0.22, 0.08, 0.12), PINK, round_=0.4)
+    ball((0.36, -0.79, 0.52), (0.06, 0.04, 0.06), BLACK, subsurf=0, segs=8)
+    ball((0.48, -0.79, 0.52), (0.06, 0.04, 0.06), BLACK, subsurf=0, segs=8)
+    tube((-0.6, -0.72, 0.2), 0.18, 0.3, STRAW, rot=(0, math.radians(90), 0))
+
+
+def build_silo():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), STONE, round_=0.3)
+    tube((0, 0.1, 0.95), 0.55, 1.7, (0.86, 0.8, 0.6), segs=20)
+    for z in (0.45, 0.95, 1.45):
+        ring((0, 0.1, z), 0.56, 0.03, (0.6, 0.5, 0.3))
+    ball((0, 0.1, 1.82), (1.14, 1.14, 0.6), (0.62, 0.64, 0.7), subsurf=2)
+    for z in range(6):
+        soft_box((0, -0.47, 0.3 + z * 0.25), (0.3, 0.04, 0.03), DARK_METAL, round_=0.3)
+    for s_ in (-1, 1):
+        tube((0.15 * s_, -0.47, 1.0), 0.02, 1.6, DARK_METAL, segs=6)
+    soft_box((0.62, -0.42, 0.28), (0.3, 0.3, 0.3), DARK_WOOD, round_=0.3)
+    ball((0.62, -0.42, 0.48), (0.22, 0.22, 0.14), (1.0, 0.82, 0.2))
+
+
+def build_milk_tank():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), STONE, round_=0.3)
+    for x in (-0.35, 0.35):
+        for y in (-0.25, 0.45):
+            tube((x, y, 0.35), 0.05, 0.6, DARK_METAL, segs=8)
+    tube((0, 0.1, 0.95), 0.5, 1.2, WHITE, rot=(0, math.radians(90), 0), segs=20)
+    for x in (-0.6, 0.6):
+        ball((x, 0.1, 0.95), (0.3, 1.0, 1.0), WHITE)
+    for x in (-0.3, 0.3):
+        ring((x, 0.1, 0.95), 0.505, 0.04, MILK_BLUE, rot=(0, math.radians(90), 0))
+    tube((0, 0.1, 1.5), 0.12, 0.16, METAL, segs=10)
+    tube((0.55, -0.45, 0.25), 0.15, 0.36, METAL, segs=12)
+    tube((0.55, -0.45, 0.47), 0.1, 0.08, METAL, segs=12)
+
+
+def build_worker_hut():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    soft_box((0, 0.15, 0.48), (1.0, 0.95, 0.72), WOOD, round_=0.15)
+    roof((0, 0.15, 0.84), 1.0, 0.95, STRAW, 0.14)
+    soft_box((0, -0.34, 0.38), (0.3, 0.05, 0.52), DARK_WOOD, round_=0.3)
+    window(0.3, -0.33, 0.58, 0.16, 0.16)
+    tube((-0.55, -0.55, 0.5), 0.025, 0.85, WOOD, rot=(0, math.radians(12), 0))
+    soft_box((-0.6, -0.55, 0.95), (0.18, 0.03, 0.04), METAL, round_=0.3)
+    # Schubkarre
+    soft_box((0.5, -0.6, 0.3), (0.34, 0.26, 0.14), (0.3, 0.55, 0.3), round_=0.3)
+    tube((0.5, -0.78, 0.18), 0.09, 0.05, BLACK, rot=(0, math.radians(90), 0), segs=10)
+    ball((0.5, -0.6, 0.38), (0.24, 0.18, 0.08), STRAW)
+
+
+def build_smithy():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), STONE, round_=0.3)
+    soft_box((0, 0.2, 0.5), (1.4, 1.0, 0.8), (0.58, 0.56, 0.53), round_=0.15)
+    roof((0, 0.2, 0.9), 1.4, 1.0, ROOF_DARK, 0.12)
+    soft_box((0.42, 0.4, 1.35), (0.3, 0.3, 0.8), (0.45, 0.42, 0.4), round_=0.2)
+    ball((0.42, 0.4, 1.8), (0.24, 0.24, 0.2), (1.0, 0.55, 0.15))
+    soft_box((0, -0.31, 0.42), (0.5, 0.05, 0.5), (0.2, 0.15, 0.12), round_=0.3)
+    ball((0, -0.32, 0.36), (0.36, 0.08, 0.24), (1.0, 0.5, 0.1))
+    soft_box((-0.45, -0.6, 0.32), (0.34, 0.16, 0.12), (0.18, 0.18, 0.2), round_=0.3)
+    soft_box((-0.45, -0.6, 0.18), (0.14, 0.12, 0.16), (0.18, 0.18, 0.2), round_=0.3)
+    ring((0.45, -0.34, 0.95), 0.12, 0.03, GOLD, rot=(math.radians(90), 0, 0))
+
+
+def build_carpentry():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    soft_box((0, 0.2, 0.5), (1.4, 1.0, 0.8), WOOD, round_=0.15)
+    roof((0, 0.2, 0.9), 1.4, 1.0, ROOF_RED, 0.12)
+    soft_box((0, -0.31, 0.42), (0.55, 0.05, 0.58), DARK_WOOD, round_=0.3)
+    for i in range(3):
+        tube((-0.35 + 0.0 * i, -0.62 + 0.0, 0.14 + 0.2 * i if i < 2 else 0.24), 0.1, 0.7, DARK_WOOD, rot=(0, math.radians(90), 0))
+    tube((-0.3, -0.62, 0.14), 0.1, 0.7, DARK_WOOD, rot=(0, math.radians(90), 0))
+    tube((-0.3, -0.62, 0.32), 0.1, 0.7, DARK_WOOD, rot=(0, math.radians(90), 0))
+    soft_box((0.5, -0.6, 0.3), (0.4, 0.26, 0.3), WOOD, round_=0.3)
+    soft_box((0.5, -0.72, 0.5), (0.36, 0.02, 0.16), METAL, round_=0.3, rot=(0, math.radians(15), 0))
+    window(0.4, -0.31, 0.62, 0.18, 0.18)
+
+
+def build_tinker_shed():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), STONE, round_=0.3)
+    soft_box((0, 0.2, 0.48), (1.3, 1.0, 0.76), (0.45, 0.56, 0.68), round_=0.15)
+    roof((0, 0.2, 0.86), 1.3, 1.0, (0.28, 0.33, 0.42), 0.12)
+    soft_box((-0.2, -0.31, 0.4), (0.4, 0.05, 0.54), (0.25, 0.3, 0.38), round_=0.3)
+    tube((0.6, -0.55, 0.6), 0.08, 1.0, (0.75, 0.5, 0.3), segs=10)
+    for z in (0.35, 0.55, 0.75):
+        ring((0.6, -0.55, z), 0.11, 0.025, GOLD)
+    ball((0.6, -0.55, 1.18), (0.26, 0.26, 0.26), (0.6, 0.92, 1.0))
+    ring((0.25, -0.33, 0.7), 0.13, 0.04, METAL, rot=(math.radians(90), 0, 0))
+    soft_box((-0.6, -0.6, 0.2), (0.3, 0.3, 0.28), DARK_METAL, round_=0.3)
+
+
+def build_shop_office():
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    soft_box((0, 0.2, 0.5), (1.4, 1.0, 0.8), CREAM, round_=0.15)
+    roof((0, 0.2, 0.9), 1.4, 1.0, ROOF_RED, 0.12)
+    for i in range(6):
+        soft_box((-0.6 + 0.24 * i, -0.48, 0.88), (0.24, 0.42, 0.04), BARN_RED if i % 2 == 0 else WHITE, round_=0.2,
+                 rot=(math.radians(-18), 0, 0))
+    soft_box((0, -0.31, 0.4), (0.4, 0.05, 0.56), DARK_WOOD, round_=0.3)
+    for (x, c) in [(-0.55, (0.95, 0.5, 0.1)), (0.55, (1.0, 0.82, 0.2))]:
+        soft_box((x, -0.62, 0.22), (0.34, 0.3, 0.26), WOOD, round_=0.3)
+        for k in (-0.08, 0.08):
+            ball((x + k, -0.62, 0.4), (0.13, 0.13, 0.13), c)
+    soft_box((0, -0.34, 1.12), (0.5, 0.04, 0.16), (0.95, 0.88, 0.6), round_=0.3)
+
+
 # Name, Bau-Funktion, höchstens Dreiecke
 MODELS = [
     ("Kuh", build_cow, 6000),
@@ -522,6 +696,16 @@ MODELS = [
     ("Wetterhahn", build_weathercock, 4000),
     ("Hofladen", build_farm_shop, 5000),
     ("Ufo", build_ufo, 5000),
+    ("Bauernhaus", build_farmhouse, 8000),
+    ("Maisfeld", build_cornfield, 6000),
+    ("Kuhstall", build_cowshed, 6000),
+    ("Maissilo", build_silo, 5000),
+    ("Milchtank", build_milk_tank, 5000),
+    ("Knechthuette", build_worker_hut, 5000),
+    ("Schmiede", build_smithy, 6000),
+    ("Zimmerei", build_carpentry, 6000),
+    ("Tueftlerschuppen", build_tinker_shed, 6000),
+    ("HofladenKontor", build_shop_office, 6000),
     ("Muenze", build_coin, 2000),
     ("Maiskolben", build_corn, 2000),
     ("Milchflasche", build_milk, 2000),

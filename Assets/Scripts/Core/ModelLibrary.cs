@@ -22,9 +22,9 @@ namespace MuhDefense
 
         /// <summary>
         /// Erzeugt das Modell als Kind von <paramref name="parent"/>: Mitte der Grundfläche im Ursprung, Unterkante auf y = 0,
-        /// Blickrichtung +Z.
+        /// Blickrichtung +Z (oder um <paramref name="yaw"/> Grad gedreht).
         /// </summary>
-        public static GameObject Spawn(string name, Transform parent, float size, Fit fit = Fit.Height)
+        public static GameObject Spawn(string name, Transform parent, float size, Fit fit = Fit.Height, float yaw = 0f)
         {
             if (!cache.TryGetValue(name, out var prefab))
             {
@@ -37,7 +37,7 @@ namespace MuhDefense
             var go = Object.Instantiate(prefab, parent, false);
             go.name = name;
             go.transform.localPosition = Vector3.zero;
-            go.transform.localRotation = Quaternion.identity;
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             go.transform.localScale = Vector3.one;
 
             var renderers = go.GetComponentsInChildren<Renderer>();

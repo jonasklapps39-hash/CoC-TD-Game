@@ -259,7 +259,7 @@ namespace MuhDefense
         {
             int w = FarmState.Width, h = FarmState.Height;
             Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(w / 2f, -0.45f, h / 2f), new Vector3(w + 14f, 0.5f, h + 14f),
-                new Color(0.30f, 0.52f, 0.22f), "Untergrund");
+                new Color(0.30f, 0.55f, 0.18f), "Untergrund", outline: false);
 
             var grassA = new Color(0.45f, 0.72f, 0.32f);
             var grassB = new Color(0.42f, 0.68f, 0.30f);
@@ -268,7 +268,7 @@ namespace MuhDefense
                 for (int y = 0; y < h; y++)
                 {
                     Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(x + 0.5f, -0.1f, y + 0.5f), new Vector3(1f, 0.2f, 1f),
-                        (x + y) % 2 == 0 ? grassA : grassB, "Wiese");
+                        (x + y) % 2 == 0 ? grassA : grassB, "Wiese", outline: false);
                 }
             }
 
@@ -308,6 +308,7 @@ namespace MuhDefense
                 tree.SetParent(transform, false);
                 tree.localPosition = new Vector3(x, 0f, z);
                 float scale = 0.8f + (float)rng.NextDouble() * 0.6f;
+                if (ModelLibrary.Spawn("Baum", tree, 1.9f * scale) != null) continue;
                 tree.localScale = Vector3.one * scale;
                 Visuals.Prim(PrimitiveType.Cylinder, tree, new Vector3(0f, 0.4f, 0f), new Vector3(0.18f, 0.4f, 0.18f), new Color(0.45f, 0.3f, 0.18f), "Stamm");
                 Visuals.Prim(PrimitiveType.Sphere, tree, new Vector3(0f, 1.1f, 0f), new Vector3(0.9f, 0.9f, 0.9f), new Color(0.22f, 0.5f, 0.2f), "Krone");

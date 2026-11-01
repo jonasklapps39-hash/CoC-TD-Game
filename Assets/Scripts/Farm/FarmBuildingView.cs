@@ -106,6 +106,10 @@ namespace MuhDefense
             root.SetParent(p, false);
             root.localScale = new Vector3(grow, grow, grow);
 
+            // Modell aus Blender (Vorderseite zeigt in Blender nach -Y, deshalb zur Hof-Kamera drehen)
+            if (ModelLibrary.Spawn(type.Id, root, s * 0.94f, ModelLibrary.Fit.Footprint, 180f) != null) return;
+
+            // Ersatz aus Grundkörpern, falls das Modell fehlt
             switch (type.Kind)
             {
                 case FarmBuildingKind.Bauernhaus:

@@ -7,40 +7,36 @@ Handyspiel, das Hof-Aufbau im Stil von Clash of Clans mit Tower Defense im Stil 
 
 Das vollständige Spielkonzept steht in [docs/Spielkonzept.md](docs/Spielkonzept.md).
 
-## Aktueller Stand: Hof + Tower Defense (Etappe 1–3)
+## Aktueller Stand
 
-Der komplette Spielkreislauf ist als Prototyp spielbar: **Level spielen → Hof ausbauen → stärkere Türme → nächstes Level.**
+Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → stärkere Türme → nächstes Level.**
 
 **Hof (Base, wie in Clash of Clans)**
-- Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 3 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen)
-- Maisfelder und Kühe produzieren in Echtzeit Mais und Milch – auch während eines Levels oder wenn das Spiel geschlossen ist. Antippen sammelt ein.
-- Bauen und Verbessern kostet Rohstoffe und Bauzeit. Jeder Knecht baut ein Gebäude gleichzeitig.
-- Das Bauernhaus begrenzt Anzahl und Stufe der anderen Gebäude.
-- Gebäude lassen sich verschieben. Der Hof wird automatisch gespeichert.
+- Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 4 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen, Hofladen-Kontor)
+- Mais und Milch werden in Echtzeit produziert, auch während eines Levels oder wenn das Spiel geschlossen ist
+- Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern
 
 **Levels (Tower Defense, wie in Bloons TD6)**
-- Weltkarte mit 5 Levels im Heimattal (10 bis 12 Wellen, Bosse am Ende)
-- 3 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher
-- Upgrade-System wie in Bloons TD6: je 3 Pfade mit 5 Stufen (ein Pfad bis 5, ein zweiter bis 2), Fähigkeiten auf Stufe 5, Zielmodus (Erster, Letzter, Stärkster, Nächster)
-- 4 Aliens: Grünling, Flitzer, Brocken (gepanzert), Oberbrocken Gorg (Boss)
-- Aliens schnappen sich Kühe von der Weide. Sterne: 3 ohne Verluste, 2 bei höchstens 2 verlorenen Kühen, sonst 1.
-- Tempo-Knopf (1x/2x) und Pause-Menü (Weiterspielen, Neu starten, Level verlassen)
-- Level 1 ist ein Tutorial: vor Welle 3 gibt es das Heuballen-Katapult, vor Welle 6 den Eismilch-Sprüher geschenkt
+- Weltkarte mit 5 Levels im Heimattal (Level 1 als Tutorial)
+- 7 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher, Bienenstock, Windmühle, Wetterhahn, Hofladen
+- Upgrade-System wie in Bloons TD6: je 3 Pfade mit 5 Stufen (105 Upgrades), Fähigkeiten auf Stufe 5, Zielmodus
+- Held **Bauer Heinz**: Stufe 1–10, Fähigkeiten „Ladung Schrot“ und „Traktor-Raserei“
+- 7 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Boss Oberbrocken Gorg
+- Tempo 1x/2x, Pause-Menü, Sterne-Wertung nach geretteten Kühen
 
-**Verbindung**
-- Levels bringen Mais, Milch und Sterne für den Hof (anteilig nach Sternen).
-- Werkstätten schalten Türme frei: höchste Upgrade-Stufe im Level = Werkstatt-Stufe + 1 (Werkstatt Stufe 4 = alle Upgrades).
-- Ein Level wird freigeschaltet, wenn das vorherige geschafft ist.
+**Verbindung:** Levels bringen Mais, Milch und Sterne. Werkstätten schalten Türme frei und bestimmen die höchste Upgrade-Stufe im Level.
 
-**Grafik (Stil 7, Bloons-TD6-Look) – im Umbau**
-- Eigener Shader `MuhDefense/Toon` (Cel-Shading und Umrisslinien) für alles im Spiel
-- Modelle aus Blender für Kuh, Grünling, Flitzer, Brocken, Boss, die 3 Türme, Ufo und Bäume (`Assets/Resources/Models`)
-- Die Modelle entstehen per Skript: `blender -b -P tools/blender/build_models.py -- Assets/Resources/Models vorschau.png`
-- Hof-Gebäude und Bedienoberfläche folgen in den nächsten Schritten
+**Grafik und Sound (Stil 7, Bloons-TD6-Look)**
+- Eigener Shader `MuhDefense/Toon` mit Cel-Shading und Umrisslinien
+- Alle Figuren, Türme und Hof-Gebäude als Blender-Modelle (`Assets/Resources/Models`), erzeugt per Skript:
+  `blender -b -P tools/blender/build_models.py -- Assets/Resources/Models vorschau.png`
+- Symbole aus den Modellen: `blender -b -P tools/blender/render_icons.py -- Assets/Resources/Models Assets/Resources/Icons`
+- Bedienoberfläche mit Comic-Schrift „Luckiest Guy“ (Apache-2.0-Lizenz, siehe `Assets/Resources/Fonts`)
+- Partikel-Effekte, per Code erzeugte Geräusche und Musik
 
 Zeiten und Kosten sind für schnelles Testen kurz gehalten.
 
-Noch **nicht** enthalten: Helden, weitere Türme, Diamanten und Shop, Talentbaum für Sterne, Sound.
+Noch **nicht** enthalten: weitere Helden (Oma Gertrud, Berta), weitere Türme aus dem Konzept, Diamanten und Shop, Talentbaum für Sterne.
 
 ## Starten
 
