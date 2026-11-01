@@ -18,11 +18,11 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern
 
 **Levels (Tower Defense, wie in Bloons TD6)**
-- Weltkarte mit 5 Levels im Heimattal (Level 1 als Tutorial)
+- Weltkarte mit 2 Gebieten: 5 Levels im Heimattal (Level 1 als Tutorial) und 5 Levels im Maisfeld-Labyrinth (ab 12 Sternen, Maisstauden blockieren Bauplätze)
 - 7 Türme: Mistgabel-Bauer, Heuballen-Katapult, Eismilch-Sprüher, Bienenstock, Windmühle, Wetterhahn, Hofladen
 - Upgrade-System wie in Bloons TD6: je 3 Pfade mit 5 Stufen (105 Upgrades), Fähigkeiten auf Stufe 5, Zielmodus
 - 3 Helden (Stufe 1–10, je 2 Fähigkeiten): **Bauer Heinz** (Schrotflinte), **Oma Gertrud** (Kekse, macht Türme schneller), **Berta** (Laseraugen, schützt Kühe)
-- 7 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Boss Oberbrocken Gorg
+- 9 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Teiler (zerfällt in zwei), Bosse Oberbrocken Gorg und Ernte-Roboter (wirft Flitzer ab)
 - Tempo 1x/2x, Pause-Menü, Sterne-Wertung nach geretteten Kühen
 
 **Verbindung:** Levels bringen Mais, Milch und Sterne. Werkstätten schalten Türme frei und bestimmen die höchste Upgrade-Stufe im Level.

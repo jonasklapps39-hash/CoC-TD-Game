@@ -484,6 +484,15 @@ namespace MuhDefense
             if (PictureDialog("Neuer Turm!", tower.Name, text, UiKit.TowerIcon(tower), "Super!")) level.DismissGift();
         }
 
+        bool IsFirstOfRegion()
+        {
+            foreach (var d in Levels.All)
+            {
+                if (d.Region == level.Def.Region) return d == level.Def;
+            }
+            return false;
+        }
+
         void DrawIntro()
         {
             Rect box = UiKit.DrawOverlay(blockers, 700f, 470f);
@@ -495,7 +504,9 @@ namespace MuhDefense
                   "Die Aliens haben Bertas Milch probiert – und jetzt wollen sie ALLE Kühe!\n\n" +
                   "Baue Türme neben den Weg, damit die Aliens die Weide nicht erreichen. " +
                   "Schnappt sich ein Alien eine Kuh, besiege es, bevor es zurück zum Ufo kommt."
-                : "Die Aliens kommen wieder – diesmal stärker und auf einem neuen Weg. Beschütze die Kühe!";
+                : level.Def.Story.Length > 0 ? level.Def.Story
+                : level.Def.Id == Levels.All[0].Id || !IsFirstOfRegion() ? Levels.Regions[0].Story
+                : Levels.Regions[level.Def.Region].Story;
             GUILayout.BeginHorizontal();
             var cow = UiKit.Icon("Kuh");
             if (cow != null) GUILayout.Label(cow, GUILayout.Width(130f), GUILayout.Height(130f));

@@ -10,6 +10,7 @@ namespace MuhDefense
         Camera cam;
         readonly List<Rect> blockers = new List<Rect>();
         Vector2 shopScroll;
+        int mapRegion;
         Vector2 mapScroll;
         Vector2 gemScroll;
 
@@ -179,7 +180,15 @@ namespace MuhDefense
             GUILayout.FlexibleSpace();
             if (farm.Mode == FarmMode.Normal)
             {
-                if (UiKit.IconBtn("Weltkarte", UiKit.Icon("Ufo"), UiKit.BigButton, GUILayout.Height(66f))) farm.MapOpen = true;
+                if (UiKit.IconBtn("Weltkarte", UiKit.Icon("Ufo"), UiKit.BigButton, GUILayout.Height(66f)))
+                {
+                    farm.MapOpen = true;
+                    mapRegion = 0;
+                    for (int reg = 0; reg < Levels.Regions.Length; reg++)
+                    {
+                        if (GameFlow.IsRegionUnlocked(reg)) mapRegion = reg;
+                    }
+                }
             }
             GUILayout.EndArea();
         }
@@ -575,28 +584,53 @@ namespace MuhDefense
 
         void DrawWorldMap()
         {
-            Rect box = UiKit.DrawOverlay(blockers, 720f, 560f);
+            Rect box = UiKit.DrawOverlay(blockers, 760f, 580f);
             GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
             GUILayout.BeginHorizontal();
-            UiKit.Heading("Weltkarte – Heimattal", UiKit.Title, GUILayout.Height(40f));
+            UiKit.Heading("Weltkarte – " + Levels.Regions[mapRegion].Name, UiKit.Title, GUILayout.Height(40f));
             GUILayout.FlexibleSpace();
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.MapOpen = false;
             GUILayout.EndHorizontal();
-            GUILayout.Space(10f);
+            GUILayout.Space(6f);
+
+            // Reiter für die Gebiete
+            GUILayout.BeginHorizontal();
+            for (int r = 0; r < Levels.Regions.Length; r++)
+            {
+                var region = Levels.Regions[r];
+                bool open = GameFlow.IsRegionUnlocked(r);
+                string label = open ? region.Name : $"{region.Name} ({region.UnlockStars} Sterne)";
+                if (UiKit.IconBtn(label, UiKit.Icon(region.Icon), r == mapRegion ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(48f)))
+                {
+                    mapRegion = r;
+                    mapScroll = Vector2.zero;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(6f);
+
+            bool regionOpen = GameFlow.IsRegionUnlocked(mapRegion);
+            if (!regionOpen)
+            {
+                GUILayout.Label($"Gesperrt – sammle insgesamt {Levels.Regions[mapRegion].UnlockStars} Sterne, um dieses Gebiet zu betreten " +
+                                $"(du hast {State.TotalStars}).", UiKit.Label);
+            }
 
             mapScroll = GUILayout.BeginScrollView(mapScroll);
             for (int i = 0; i < Levels.All.Length; i++)
             {
                 var def = Levels.All[i];
+                if (def.Region != mapRegion) continue;
+                var region = Levels.Regions[def.Region];
                 bool unlocked = GameFlow.IsUnlocked(i);
                 GUILayout.BeginHorizontal(UiKit.Card, GUILayout.Height(96f));
-                var levelIcon = UiKit.Icon(unlocked ? (i == Levels.All.Length - 1 ? "Boss" : "KuhUfo") : "Schleicher");
+                var levelIcon = UiKit.Icon(unlocked ? (def.BossLevel ? region.BossIcon : region.Icon) : "Schleicher");
                 if (levelIcon != null) GUILayout.Label(levelIcon, GUILayout.Width(72f), GUILayout.Height(72f));
                 GUILayout.BeginVertical();
                 UiKit.Heading(def.Name, UiKit.Title, GUILayout.Height(30f));
                 GUILayout.Label(unlocked
                     ? $"Belohnung bei 3 Sternen: {def.RewardCorn} Mais, {def.RewardMilk} Milch"
-                    : "Gesperrt – schaffe zuerst das vorherige Level.", UiKit.Small);
+                    : regionOpen ? "Gesperrt – schaffe zuerst das vorherige Level." : "Gesperrt – zu wenige Sterne.", UiKit.Small);
                 GUILayout.EndVertical();
                 Rect stars = GUILayoutUtility.GetRect(130f, 60f, GUILayout.Width(130f));
                 UiKit.DrawStars(stars, State.BestStars(def.Id), 36f);

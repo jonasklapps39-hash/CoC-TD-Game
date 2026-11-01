@@ -768,6 +768,79 @@ def build_shop_office():
     soft_box((0, -0.34, 1.12), (0.5, 0.04, 0.16), (0.95, 0.88, 0.6), round_=0.3)
 
 
+def build_splitter():
+    """Teiler: glibberiges Alien mit Naht in der Mitte – zerfällt beim Besiegen in zwei Grünlinge."""
+    body = (0.95, 0.55, 0.18)
+    dark = (0.55, 0.25, 0.08)
+    ball((0, 0, 0.48), (0.78, 0.66, 0.84), body, subsurf=2)
+    # Naht, an der es sich teilt
+    soft_box((0, -0.3, 0.5), (0.04, 0.06, 0.72), dark, round_=0.4)
+    soft_box((0, 0.3, 0.5), (0.04, 0.06, 0.72), dark, round_=0.4)
+    for side in (-1, 1):
+        x = 0.18 * side
+        eye((x, -0.28, 0.66), 0.17, GLOW_RED, glow=True, lid=body, lid_tilt=math.radians(-24 * side), lid_cover=0.55)
+        ball((x, -0.3, 0.42), (0.16, 0.05, 0.06), BLACK)
+        tube((x, -0.33, 0.44), 0.014, 0.04, TEETH, rot=(0, math.radians(180), 0), r2=0.002, segs=6)
+        tube((x * 1.1, 0.02, 0.98), 0.018, 0.24, dark, rot=(0, math.radians(30 * side), 0))
+        ball((x * 1.6, 0.02, 1.1), (0.08, 0.08, 0.08), GLOW_RED)
+        ball((0.4 * side, -0.05, 0.42), (0.12, 0.12, 0.28), body, rot=(0, math.radians(30 * side), 0))
+        ball((0.16 * side, -0.04, 0.06), (0.18, 0.24, 0.1), dark)
+    # Glibber-Tropfen
+    for (x, z) in ((-0.3, 0.75), (0.28, 0.25), (0.05, 0.92)):
+        ball((x, -0.26, z), (0.07, 0.05, 0.09), (1.0, 0.75, 0.4))
+
+
+def build_harvester_boss():
+    """Ernte-Roboter: Alien im Mähdrescher-Kampfroboter. Wirft Flitzer ab, wenn er Schaden nimmt."""
+    red = (0.75, 0.14, 0.12)
+    for side in (-1, 1):
+        soft_box((0.32 * side, 0.05, 0.16), (0.2, 0.9, 0.3), (0.14, 0.14, 0.16), round_=0.45)
+        for i in range(4):
+            tube((0.32 * side, -0.3 + i * 0.2, 0.16), 0.1, 0.22, DARK_METAL, rot=(0, math.radians(90), 0), segs=12)
+    soft_box((0, 0.08, 0.55), (0.62, 0.72, 0.5), red, round_=0.25)
+    soft_box((0, 0.1, 0.84), (0.5, 0.5, 0.14), DARK_METAL, round_=0.3)
+    # Schneidwerk vorne (Haspel mit Zinken)
+    soft_box((0, -0.42, 0.32), (0.95, 0.22, 0.14), GOLD, round_=0.3)
+    tube((0, -0.48, 0.48), 0.13, 0.9, METAL, rot=(0, math.radians(90), 0), segs=14)
+    for i in range(6):
+        a = i * math.pi / 3
+        for x in (-0.32, 0.0, 0.32):
+            tube((x, -0.48 + math.cos(a) * 0.16, 0.48 + math.sin(a) * 0.16), 0.012, 0.14, DARK_METAL,
+                 rot=(a + math.pi / 2, 0, 0), segs=6)
+    for side in (-1, 1):
+        tube((0.42 * side, 0.0, 0.7), 0.06, 0.36, DARK_METAL, rot=(math.radians(-60), math.radians(20 * side), 0))
+        soft_box((0.48 * side, -0.2, 0.55), (0.14, 0.16, 0.14), red, round_=0.4)
+        for f in (-1, 1):
+            tube((0.48 * side + 0.04 * f, -0.3, 0.5), 0.02, 0.14, METAL, rot=(math.radians(80), 0, 0), r2=0.005, segs=6)
+    tube((-0.2, 0.36, 1.05), 0.05, 0.46, DARK_METAL)
+    ball((-0.2, 0.36, 1.3), (0.12, 0.12, 0.06), (0.25, 0.25, 0.25))
+    # Alien-Pilot mit fiesem Blick
+    green = (0.35, 0.72, 0.22)
+    ball((0, 0.08, 1.05), (0.34, 0.32, 0.34), green, subsurf=2)
+    eye((-0.07, -0.06, 1.08), 0.11, GLOW_RED, glow=True, lid=green, lid_tilt=math.radians(28), lid_cover=0.55)
+    eye((0.07, -0.06, 1.08), 0.11, GLOW_RED, glow=True, lid=green, lid_tilt=math.radians(-28), lid_cover=0.55)
+    ball((0, -0.08, 0.98), (0.12, 0.04, 0.04), BLACK)
+    ring((0, 0.08, 0.92), 0.22, 0.03, GOLD)
+    for side in (-1, 1):
+        ball((0.2 * side, -0.29, 0.66), (0.12, 0.05, 0.1), (1.0, 0.95, 0.6))
+
+
+def build_corn_stalk():
+    """Maisstaude: Wände im Maisfeld-Labyrinth."""
+    stalk = (0.42, 0.68, 0.2)
+    leaf = (0.32, 0.6, 0.16)
+    for i, (dx, dy, h) in enumerate(((0.0, 0.0, 1.5), (0.2, 0.15, 1.3), (-0.18, 0.12, 1.4), (0.1, -0.2, 1.25))):
+        tube((dx, dy, h / 2), 0.035, h, stalk, segs=8)
+        for k in range(3):
+            a = math.radians(i * 70 + k * 120)
+            z = 0.35 + k * 0.32
+            ball((dx + math.cos(a) * 0.14, dy + math.sin(a) * 0.14, z), (0.36, 0.08, 0.06), leaf,
+                 rot=(0, math.radians(-30), a))
+        ball((dx + 0.05, dy - 0.04, h * 0.62), (0.08, 0.08, 0.24), (1.0, 0.82, 0.2))
+        ball((dx + 0.07, dy - 0.05, h * 0.58), (0.06, 0.1, 0.22), leaf, rot=(0, math.radians(15), 0))
+        tube((dx, dy, h + 0.08), 0.03, 0.16, STRAW, r2=0.004, segs=6)
+
+
 # Name, Bau-Funktion, höchstens Dreiecke
 MODELS = [
     ("Kuh", build_cow, 6000),
@@ -806,7 +879,15 @@ MODELS = [
     ("Maiskolben", build_corn, 2000),
     ("Milchflasche", build_milk, 2000),
     ("Baum", build_tree, 2500),
+    ("Teiler", build_splitter, 5000),
+    ("ErnteRoboter", build_harvester_boss, 8000),
+    ("Maisstaude", build_corn_stalk, 2500),
 ]
+
+# Optional nur einzelne Modelle bauen: ONLY=Name1,Name2
+only = [n for n in os.environ.get("ONLY", "").split(",") if n]
+if only:
+    MODELS = [m for m in MODELS if m[0] in only]
 
 for name, builder, max_tris in MODELS:
     reset()

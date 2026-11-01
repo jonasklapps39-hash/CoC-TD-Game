@@ -362,6 +362,9 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Talentbaum „Bauernwissen“:** 12 Talente in 3 Spalten (Wirtschaft, Türme, Held und Herde), bezahlt mit Sternen
 - [x] **Diamanten und Shop:** Diamanten für neue Sterne und erstes Schaffen eines Levels; ausgeben für „Sofort fertig“, zusätzliche Knechte, Rohstoffpakete und Kuh-Skins
 - [x] **Helden Oma Gertrud und Berta** + Gebäude **Heldenhütte** (Held wählen, jede Stufe lässt den Helden höher starten); Gertrud ab 12 Sternen oder für 100 Diamanten, Berta ab 20 Sternen oder für 150 Diamanten
+- [x] **Neues Gebiet „Maisfeld-Labyrinth“** (ab 12 Sternen): 5 Levels, Maisstauden als Labyrinth-Wände (dort kann man nicht bauen), Weltkarte mit Reitern für die Gebiete
+  - Neues Alien **Teiler**: zerfällt beim Besiegen in zwei Grünlinge
+  - Neuer Boss **Ernte-Roboter**: Alien im Mähdrescher-Kampfroboter, wirft bei jedem verlorenen Viertel Leben vier Flitzer ab
 
 ### Upgrade-System
 

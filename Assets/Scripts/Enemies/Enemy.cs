@@ -14,10 +14,10 @@ namespace MuhDefense
         public float Hp { get; private set; }
         public Cow Carried { get; private set; }
         public bool Alive => Hp > 0f;
-        public bool IsBoss => Type.Kind == EnemyKind.Boss;
+        public bool IsBoss => Type.IsBoss;
         public bool IsArmored => Type.Armor > 0f;
         /// <summary>Große Aliens (Brocken, Boss) lassen sich nur von starker Kälte einfrieren.</summary>
-        public bool IsBig => Type.Kind == EnemyKind.Brocken || IsBoss;
+        public bool IsBig => Type.Big || IsBoss;
         public bool IsFrozen => freezeTimer > 0f;
         public bool IsCamo => Type.Camo;
         public bool IsFlying => Type.Flying;
@@ -60,6 +60,10 @@ namespace MuhDefense
         public float BonusReward { get; private set; }
         /// <summary>Kurzes Zusammenzucken nach einem Treffer (0..1).</summary>
         float hitPunch;
+        /// <summary>Lebens-Faktor der Welle (für abgeworfene und abgespaltene Aliens).</summary>
+        public float HpMultiplier { get; private set; }
+        /// <summary>Wie viele Viertel des Lebens schon verloren sind (Ernte-Roboter wirft dann Flitzer ab).</summary>
+        int dropsDone;
 
         public void Init(LevelManager level, EnemyType type, float hpMultiplier, Vector3[] path)
         {
@@ -67,6 +71,7 @@ namespace MuhDefense
             // Ufos fliegen in gerader Linie vom Eingang zur Weide
             this.path = type.Flying ? new[] { path[0], path[path.Length - 1] } : path;
             Type = type;
+            HpMultiplier = hpMultiplier;
             MaxHp = type.Hp * hpMultiplier;
             Hp = MaxHp;
             name = type.Name;
@@ -74,6 +79,20 @@ namespace MuhDefense
             targetIndex = 1;
             healTimer = type.HealInterval;
             BuildModel();
+        }
+
+        /// <summary>Startet ein neues Alien an der Stelle eines anderen (Teiler zerfällt, Roboter wirft ab). Es läuft weiter zur Weide.</summary>
+        public void InitFrom(LevelManager level, EnemyType type, float hpMultiplier, Vector3[] fullPath, Enemy source, Vector3 offset)
+        {
+            Init(level, type, hpMultiplier, fullPath);
+            if (type.Flying || source.IsFlying) return;
+            transform.position = source.transform.position + offset;
+            // Auf dem Rückweg (mit Kuh) läuft das Alien zum Punkt dahinter; zur Weide ist das der Punkt davor.
+            targetIndex = source.returning ? Mathf.Min(path.Length - 1, source.targetIndex + 1) : source.targetIndex;
+            targetIndex = Mathf.Clamp(targetIndex, 1, path.Length - 1);
+            travelled = source.returning ? 0f : source.travelled;
+            if (source.waitingForCow) waitingForCow = true;
+            transform.rotation = source.transform.rotation;
         }
 
         void Update()
@@ -252,6 +271,7 @@ namespace MuhDefense
             Hp -= dealt;
             if (dealt >= 1f) hitPunch = 1f;
             if (Hp <= 0f) Die();
+            else if (Type.DropCount > 0) CheckDrops();
             return dealt;
         }
 
@@ -331,8 +351,19 @@ namespace MuhDefense
             }
         }
 
+        void CheckDrops()
+        {
+            int quarters = Mathf.FloorToInt((1f - Hp / MaxHp) * 4f);
+            while (dropsDone < Mathf.Min(quarters, 3))
+            {
+                dropsDone++;
+                level.SpawnFrom(this, Type.DropKind, Type.DropCount);
+            }
+        }
+
         void Die()
         {
+            if (Type.SplitCount > 0) level.SpawnFrom(this, Type.SplitInto, Type.SplitCount);
             if (Carried != null)
             {
                 Carried.Drop(transform.position);

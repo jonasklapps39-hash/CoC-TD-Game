@@ -12,6 +12,8 @@ namespace MuhDefense
         Schleicher,
         Ufo,
         Sanitaeter,
+        Teiler,
+        ErnteRoboter,
     }
 
     /// <summary>Werte einer Alien-Art (siehe Spielkonzept, Kapitel 10).</summary>
@@ -41,6 +43,16 @@ namespace MuhDefense
         public float HealPercent;
         public float HealRadius;
         public float HealInterval;
+        /// <summary>Boss: halb so lang eingefroren, lässt sich nicht zurückstoßen.</summary>
+        public bool IsBoss;
+        /// <summary>Groß: nur starke Kälte friert es ein.</summary>
+        public bool Big;
+        /// <summary>Zerfällt beim Besiegen in <see cref="SplitCount"/> Aliens dieser Art.</summary>
+        public EnemyKind SplitInto;
+        public int SplitCount;
+        /// <summary>Wirft jedes Mal Aliens ab, wenn es ein Viertel seines Lebens verliert.</summary>
+        public EnemyKind DropKind;
+        public int DropCount;
 
         public static readonly Dictionary<EnemyKind, EnemyType> All = new Dictionary<EnemyKind, EnemyType>
         {
@@ -64,7 +76,7 @@ namespace MuhDefense
                 EnemyKind.Brocken, new EnemyType
                 {
                     Kind = EnemyKind.Brocken, Name = "Brocken", ModelName = "Brocken",
-                    Hp = 90f, Speed = 0.9f, Armor = 3f, Reward = 16, Scale = 1.35f,
+                    Hp = 90f, Speed = 0.9f, Armor = 3f, Reward = 16, Scale = 1.35f, Big = true,
                     Color = new Color(0.40f, 0.50f, 0.35f),
                 }
             },
@@ -72,7 +84,7 @@ namespace MuhDefense
                 EnemyKind.Boss, new EnemyType
                 {
                     Kind = EnemyKind.Boss, Name = "Oberbrocken Gorg", ModelName = "Boss",
-                    Hp = 900f, Speed = 0.6f, Armor = 5f, Reward = 150, Scale = 2.1f,
+                    Hp = 900f, Speed = 0.6f, Armor = 5f, Reward = 150, Scale = 2.1f, IsBoss = true, Big = true,
                     Color = new Color(0.85f, 0.25f, 0.25f),
                 }
             },
@@ -105,6 +117,28 @@ namespace MuhDefense
                     Hp = 50f, Speed = 1.2f, Armor = 1f, Reward = 12, Scale = 1f,
                     HealPercent = 0.12f, HealRadius = 1.6f, HealInterval = 2f,
                     Color = new Color(0.9f, 0.95f, 0.95f),
+                }
+            },
+            {
+                EnemyKind.Teiler, new EnemyType
+                {
+                    Kind = EnemyKind.Teiler, Name = "Teiler", ModelName = "Teiler",
+                    Description = "Glibberig! Wenn du ihn besiegst, zerfällt er in zwei Grünlinge. Halte also noch etwas Feuerkraft " +
+                                  "hinter der Stelle bereit, an der er platzt – Flächenschaden (Heuballen) hilft sehr.",
+                    Hp = 70f, Speed = 1.2f, Armor = 0f, Reward = 10, Scale = 1.15f,
+                    SplitInto = EnemyKind.Gruenling, SplitCount = 2,
+                    Color = new Color(0.95f, 0.55f, 0.18f),
+                }
+            },
+            {
+                EnemyKind.ErnteRoboter, new EnemyType
+                {
+                    Kind = EnemyKind.ErnteRoboter, Name = "Ernte-Roboter", ModelName = "ErnteRoboter",
+                    Description = "Der Boss des Maisfelds: ein Alien im Mähdrescher-Kampfroboter. Schwer gepanzert – und jedes Mal, wenn er " +
+                                  "ein Viertel seines Lebens verliert, springen vier Flitzer heraus. Panzerbrechende Türme und Eis sind Gold wert.",
+                    Hp = 1400f, Speed = 0.5f, Armor = 7f, Reward = 220, Scale = 2.2f, IsBoss = true, Big = true,
+                    DropKind = EnemyKind.Flitzer, DropCount = 4,
+                    Color = new Color(0.75f, 0.14f, 0.12f),
                 }
             },
         };

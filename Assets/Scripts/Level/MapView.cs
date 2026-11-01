@@ -14,6 +14,11 @@ namespace MuhDefense
         static readonly Color PastureColor = new Color(0.56f, 0.82f, 0.40f);
         static readonly Color BuildableColor = new Color(0.62f, 0.93f, 0.48f);
         static readonly Color Wood = new Color(0.55f, 0.36f, 0.20f);
+        static readonly Color FieldA = new Color(0.62f, 0.70f, 0.24f);
+        static readonly Color FieldB = new Color(0.58f, 0.66f, 0.22f);
+        static readonly Color Soil = new Color(0.45f, 0.31f, 0.17f);
+
+        bool IsMaisfeld => def.Theme == MapTheme.Maisfeld;
 
         LevelDefinition def;
         readonly HashSet<Vector2Int> pathCells = new HashSet<Vector2Int>();
@@ -27,7 +32,8 @@ namespace MuhDefense
             ComputePathCells();
 
             Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(def.Width / 2f, -0.45f, def.Height / 2f),
-                new Vector3(def.Width + 12f, 0.5f, def.Height + 12f), new Color(0.30f, 0.55f, 0.18f), "Untergrund", outline: false);
+                new Vector3(def.Width + 12f, 0.5f, def.Height + 12f),
+                IsMaisfeld ? new Color(0.5f, 0.56f, 0.18f) : new Color(0.30f, 0.55f, 0.18f), "Untergrund", outline: false);
             BuildTrees();
 
             tiles = new Renderer[def.Width, def.Height];
@@ -40,6 +46,8 @@ namespace MuhDefense
                     Color color;
                     if (pathCells.Contains(cell)) color = PathColor;
                     else if (def.Pasture.Contains(cell)) color = PastureColor;
+                    else if (def.IsCorn(cell)) color = Soil;
+                    else if (IsMaisfeld) color = (x + y) % 2 == 0 ? FieldA : FieldB;
                     else color = (x + y) % 2 == 0 ? GrassA : GrassB;
 
                     var tile = CreateTile(cell, color);
@@ -54,6 +62,7 @@ namespace MuhDefense
                 if (!InBounds(cell)) CreateTile(cell, PathColor);
             }
 
+            BuildCornWalls();
             BuildFence();
             BuildUfo();
         }
@@ -158,11 +167,34 @@ namespace MuhDefense
             }
         }
 
-        /// <summary>Ein paar Bäume rund um das Spielfeld.</summary>
+        /// <summary>Maisstauden auf den Labyrinth-Feldern (dort kann man nicht bauen).</summary>
+        void BuildCornWalls()
+        {
+            var rng = new System.Random(7);
+            for (int x = 0; x < def.Width; x++)
+            {
+                for (int y = 0; y < def.Height; y++)
+                {
+                    var cell = new Vector2Int(x, y);
+                    if (!def.IsCorn(cell) || pathCells.Contains(cell) || def.Pasture.Contains(cell)) continue;
+                    var stalk = new GameObject("Maisstaude").transform;
+                    stalk.SetParent(transform, false);
+                    stalk.localPosition = new Vector3(x + 0.5f, -0.02f, y + 0.5f);
+                    stalk.localRotation = Quaternion.Euler(0f, rng.Next(0, 4) * 90f + (float)rng.NextDouble() * 20f, 0f);
+                    if (ModelLibrary.Spawn("Maisstaude", stalk, 1.05f + (float)rng.NextDouble() * 0.2f) == null)
+                    {
+                        Visuals.Prim(PrimitiveType.Cylinder, stalk, new Vector3(0f, 0.5f, 0f), new Vector3(0.2f, 0.5f, 0.2f), new Color(0.42f, 0.68f, 0.2f), "Stängel");
+                        Visuals.Prim(PrimitiveType.Capsule, stalk, new Vector3(0.1f, 0.6f, 0f), new Vector3(0.12f, 0.2f, 0.12f), new Color(1f, 0.82f, 0.2f), "Kolben");
+                    }
+                }
+            }
+        }
+
+        /// <summary>Ein paar Bäume (im Maisfeld: Maisstauden) rund um das Spielfeld.</summary>
         void BuildTrees()
         {
             var rng = new System.Random(def.Id != null ? def.Id.GetHashCode() : 1);
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < (IsMaisfeld ? 40 : 18); i++)
             {
                 float x, z;
                 do
@@ -174,7 +206,8 @@ namespace MuhDefense
                 tree.SetParent(transform, false);
                 tree.localPosition = new Vector3(x, -0.2f, z);
                 tree.localRotation = Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f);
-                ModelLibrary.Spawn("Baum", tree, 1.8f + (float)rng.NextDouble() * 0.8f);
+                if (IsMaisfeld && i % 5 != 0) ModelLibrary.Spawn("Maisstaude", tree, 1.2f + (float)rng.NextDouble() * 0.4f);
+                else ModelLibrary.Spawn("Baum", tree, 1.8f + (float)rng.NextDouble() * 0.8f);
             }
         }
 

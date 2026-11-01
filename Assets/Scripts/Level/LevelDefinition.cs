@@ -50,6 +50,25 @@ namespace MuhDefense
         }
     }
 
+    public enum MapTheme
+    {
+        Heimattal,
+        Maisfeld,
+    }
+
+    /// <summary>Ein Gebiet auf der Weltkarte (Heimattal, Maisfeld-Labyrinth …).</summary>
+    public class Region
+    {
+        public string Name;
+        public MapTheme Theme;
+        /// <summary>So viele Sterne braucht man insgesamt, um das Gebiet zu betreten.</summary>
+        public int UnlockStars;
+        public string Story;
+        /// <summary>Symbol auf der Weltkarte.</summary>
+        public string Icon;
+        public string BossIcon;
+    }
+
     /// <summary>
     /// Alle Daten eines Levels. Später als ScriptableObject im Editor bearbeitbar;
     /// für den Prototyp reicht eine Definition im Code.
@@ -76,6 +95,25 @@ namespace MuhDefense
         public int RewardMilk;
         /// <summary>Türme, die man in diesem Level geschenkt bekommt (nur im Tutorial-Level).</summary>
         public TowerGift[] TowerGifts = new TowerGift[0];
+        /// <summary>Index in <see cref="Levels.Regions"/>.</summary>
+        public int Region;
+        /// <summary>Felder mit Maisstauden: dort kann man nicht bauen (Labyrinth-Wände).</summary>
+        public RectInt[] Corn = new RectInt[0];
+        /// <summary>Text im Start-Fenster (leer = Standardtext).</summary>
+        public string Story = "";
+        /// <summary>Letztes Level des Gebiets (Boss-Symbol auf der Weltkarte).</summary>
+        public bool BossLevel;
+
+        public MapTheme Theme => Levels.Regions[Region].Theme;
+
+        public bool IsCorn(Vector2Int c)
+        {
+            foreach (var r in Corn)
+            {
+                if (r.Contains(c)) return true;
+            }
+            return false;
+        }
     }
 
     public static class Levels
@@ -86,6 +124,22 @@ namespace MuhDefense
         const EnemyKind S = EnemyKind.Schleicher;
         const EnemyKind U = EnemyKind.Ufo;
         const EnemyKind M = EnemyKind.Sanitaeter;
+        const EnemyKind T = EnemyKind.Teiler;
+
+        public static readonly Region[] Regions =
+        {
+            new Region
+            {
+                Name = "Heimattal", Theme = MapTheme.Heimattal, UnlockStars = 0, Icon = "KuhUfo", BossIcon = "Boss",
+                Story = "Die Aliens kommen wieder – diesmal stärker und auf einem neuen Weg. Beschütze die Kühe!",
+            },
+            new Region
+            {
+                Name = "Maisfeld-Labyrinth", Theme = MapTheme.Maisfeld, UnlockStars = 12, Icon = "Teiler", BossIcon = "ErnteRoboter",
+                Story = "Gorg ist geschlagen, doch die Aliens haben sich im riesigen Maisfeld von Nachbar Kalle verschanzt. " +
+                        "Zwischen den hohen Stauden kannst du nicht bauen – nutze die Lücken klug!",
+            },
+        };
 
         /// <summary>Fügt einzelnen Wellen (1 = erste Welle) zusätzliche Alien-Gruppen hinzu.</summary>
         static WaveDefinition[] With(WaveDefinition[] waves, params (int wave, SpawnGroup group)[] extras)
@@ -101,7 +155,11 @@ namespace MuhDefense
             return waves;
         }
 
-        public static readonly LevelDefinition[] All = { Level1(), Level2(), Level3(), Level4(), Level5() };
+        public static readonly LevelDefinition[] All =
+        {
+            Level1(), Level2(), Level3(), Level4(), Level5(),
+            Mais1(), Mais2(), Mais3(), Mais4(), Mais5(),
+        };
 
         static LevelDefinition Level1() => new LevelDefinition
         {
@@ -233,10 +291,176 @@ namespace MuhDefense
             HpMultiplier = 2.7f,
             RewardCorn = 1200,
             RewardMilk = 1200,
+            BossLevel = true,
+        };
+
+        // ---------------------------------------------------------------- Gebiet 2: Maisfeld-Labyrinth
+
+        static LevelDefinition Mais1() => new LevelDefinition
+        {
+            Id = "maisfeld-1",
+            Name = "Maisfeld 1 – Kalles Acker",
+            Region = 1,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 7), new Vector2Int(5, 7), new Vector2Int(5, 1), new Vector2Int(10, 1),
+                new Vector2Int(10, 5), new Vector2Int(13, 5),
+            },
+            Corn = new[] { new RectInt(1, 1, 3, 4), new RectInt(7, 3, 2, 5), new RectInt(11, 7, 4, 2) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 500,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(T, 3, 2f, 3f)),
+                (4, new SpawnGroup(T, 5, 1.5f, 2f)),
+                (5, new SpawnGroup(S, 6, 1f, 3f)),
+                (6, new SpawnGroup(U, 5, 1.4f, 4f)),
+                (7, new SpawnGroup(T, 8, 1.2f, 3f)),
+                (9, new SpawnGroup(M, 4, 2f, 5f)),
+                (10, new SpawnGroup(T, 10, 1f, 4f)),
+                (11, new SpawnGroup(S, 10, 0.7f, 3f))),
+            HpMultiplier = 3.0f,
+            RewardCorn = 1400,
+            RewardMilk = 1400,
+        };
+
+        static LevelDefinition Mais2() => new LevelDefinition
+        {
+            Id = "maisfeld-2",
+            Name = "Maisfeld 2 – Die Vogelscheuche",
+            Region = 1,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 2), new Vector2Int(3, 2), new Vector2Int(3, 7), new Vector2Int(7, 7),
+                new Vector2Int(7, 2), new Vector2Int(11, 2), new Vector2Int(11, 7), new Vector2Int(12, 7),
+                new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(5, 1, 1, 5), new RectInt(9, 3, 1, 4), new RectInt(0, 4, 2, 4) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 520,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(T, 4, 1.8f, 2f)),
+                (3, new SpawnGroup(U, 4, 1.5f, 3f)),
+                (5, new SpawnGroup(T, 6, 1.2f, 4f)),
+                (6, new SpawnGroup(M, 3, 2f, 3f)),
+                (8, new SpawnGroup(U, 8, 1f, 3f)),
+                (9, new SpawnGroup(T, 10, 1f, 6f)),
+                (11, new SpawnGroup(U, 10, 0.8f, 2f)),
+                (12, new SpawnGroup(T, 12, 0.8f, 4f))),
+            HpMultiplier = 3.3f,
+            RewardCorn = 1600,
+            RewardMilk = 1600,
+        };
+
+        static LevelDefinition Mais3() => new LevelDefinition
+        {
+            Id = "maisfeld-3",
+            Name = "Maisfeld 3 – Der Irrgarten",
+            Region = 1,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 1), new Vector2Int(2, 1), new Vector2Int(2, 7), new Vector2Int(4, 7),
+                new Vector2Int(4, 1), new Vector2Int(6, 1), new Vector2Int(6, 7), new Vector2Int(8, 7),
+                new Vector2Int(8, 1), new Vector2Int(10, 1), new Vector2Int(10, 7), new Vector2Int(12, 7),
+                new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[]
+            {
+                new RectInt(3, 3, 1, 3), new RectInt(5, 3, 1, 3), new RectInt(7, 3, 1, 3),
+                new RectInt(9, 3, 1, 3), new RectInt(11, 2, 1, 4),
+            },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 550,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (3, new SpawnGroup(T, 5, 1.5f, 3f)),
+                (4, new SpawnGroup(S, 8, 0.8f, 2f)),
+                (5, new SpawnGroup(M, 3, 2f, 4f)),
+                (6, new SpawnGroup(T, 8, 1.2f, 3f)),
+                (8, new SpawnGroup(S, 12, 0.6f, 3f)),
+                (9, new SpawnGroup(M, 5, 1.6f, 4f)),
+                (10, new SpawnGroup(T, 12, 0.9f, 2f)),
+                (12, new SpawnGroup(M, 6, 1.4f, 6f))),
+            HpMultiplier = 3.6f,
+            RewardCorn = 1800,
+            RewardMilk = 1800,
+        };
+
+        static LevelDefinition Mais4() => new LevelDefinition
+        {
+            Id = "maisfeld-4",
+            Name = "Maisfeld 4 – Die alte Scheune",
+            Region = 1,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 4), new Vector2Int(2, 4), new Vector2Int(2, 7), new Vector2Int(6, 7),
+                new Vector2Int(6, 4), new Vector2Int(9, 4), new Vector2Int(9, 1), new Vector2Int(12, 1),
+                new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(0, 0, 5, 2), new RectInt(3, 5, 2, 1), new RectInt(7, 6, 5, 2), new RectInt(10, 2, 1, 2) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 600,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(),
+                (2, new SpawnGroup(T, 6, 1.4f, 2f)),
+                (4, new SpawnGroup(U, 6, 1.2f, 3f)),
+                (5, new SpawnGroup(T, 8, 1f, 3f)),
+                (6, new SpawnGroup(S, 10, 0.7f, 4f)),
+                (7, new SpawnGroup(M, 4, 2f, 3f)),
+                (8, new SpawnGroup(T, 12, 0.8f, 3f)),
+                (10, new SpawnGroup(U, 12, 0.7f, 2f)),
+                (11, new SpawnGroup(T, 14, 0.7f, 5f)),
+                (12, new SpawnGroup(M, 6, 1.4f, 4f))),
+            HpMultiplier = 4.0f,
+            RewardCorn = 2100,
+            RewardMilk = 2100,
+        };
+
+        static LevelDefinition Mais5() => new LevelDefinition
+        {
+            Id = "maisfeld-5",
+            Name = "Maisfeld 5 – Der Ernte-Roboter",
+            Region = 1,
+            Width = 16,
+            Height = 9,
+            Waypoints = new[]
+            {
+                new Vector2Int(-1, 6), new Vector2Int(4, 6), new Vector2Int(4, 2), new Vector2Int(8, 2),
+                new Vector2Int(8, 6), new Vector2Int(11, 6), new Vector2Int(11, 2), new Vector2Int(12, 2),
+                new Vector2Int(12, 4), new Vector2Int(13, 4),
+            },
+            Corn = new[] { new RectInt(0, 1, 3, 4), new RectInt(5, 3, 2, 3), new RectInt(9, 0, 4, 2), new RectInt(9, 7, 4, 2) },
+            Pasture = new RectInt(13, 3, 3, 3),
+            StartMoney = 650,
+            CowCount = 10,
+            Waves = With(ExtendedWaves(finalBosses: 1, boss: EnemyKind.ErnteRoboter),
+                (3, new SpawnGroup(T, 6, 1.2f, 3f)),
+                (4, new SpawnGroup(U, 6, 1.2f, 4f)),
+                (5, new SpawnGroup(M, 4, 2f, 3f)),
+                (6, new SpawnGroup(T, 10, 0.9f, 2f)),
+                (7, new SpawnGroup(S, 12, 0.6f, 2f)),
+                (8, new SpawnGroup(U, 10, 0.9f, 4f)),
+                (9, new SpawnGroup(EnemyKind.Boss, 1, 0f, 10f)),
+                (10, new SpawnGroup(T, 16, 0.6f, 2f)),
+                (11, new SpawnGroup(M, 6, 1.4f, 6f)),
+                (12, new SpawnGroup(T, 12, 0.8f, 8f))),
+            HpMultiplier = 4.4f,
+            RewardCorn = 2500,
+            RewardMilk = 2500,
+            BossLevel = true,
         };
 
         /// <summary>12 Wellen: die Standard-Wellen ohne Boss-Welle, dann zwei harte Wellen und das Finale.</summary>
-        static WaveDefinition[] ExtendedWaves(int finalBosses = 1)
+        static WaveDefinition[] ExtendedWaves(int finalBosses = 1, EnemyKind boss = EnemyKind.Boss)
         {
             var standard = StandardWaves();
             var waves = new WaveDefinition[12];
@@ -247,7 +471,7 @@ namespace MuhDefense
                 new SpawnGroup(G, 25, 0.4f),
                 new SpawnGroup(F, 25, 0.3f, 4f),
                 new SpawnGroup(B, 12, 1.5f, 6f),
-                new SpawnGroup(EnemyKind.Boss, finalBosses, 6f, 12f));
+                new SpawnGroup(boss, finalBosses, 6f, 12f));
             return waves;
         }
 

@@ -298,6 +298,22 @@ namespace MuhDefense
             }
         }
 
+        /// <summary>Neue Aliens an der Stelle eines anderen (Teiler zerfällt, Ernte-Roboter wirft Flitzer ab).</summary>
+        public void SpawnFrom(Enemy source, EnemyKind kind, int count)
+        {
+            var type = EnemyType.All[kind];
+            for (int i = 0; i < count; i++)
+            {
+                var enemy = new GameObject("Alien").AddComponent<Enemy>();
+                enemy.transform.SetParent(transform, false);
+                float a = (i + 0.5f) / count * Mathf.PI * 2f;
+                var offset = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 0.25f;
+                enemy.InitFrom(this, type, source.HpMultiplier, pathWorld, source, offset);
+                Enemies.Add(enemy);
+            }
+            Effects.Burst(transform, source.AimPoint, source.Type.Color, 10, 2.5f);
+        }
+
         void WaveCleared()
         {
             var wave = Def.Waves[WavesStarted - 1];
@@ -490,6 +506,7 @@ namespace MuhDefense
             return map.InBounds(cell)
                 && !map.IsPath(cell)
                 && !Def.Pasture.Contains(cell)
+                && !Def.IsCorn(cell)
                 && !Towers.Exists(t => t.Cell == cell)
                 && (Hero == null || Hero.Cell != cell);
         }

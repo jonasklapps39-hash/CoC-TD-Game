@@ -63,11 +63,17 @@ namespace MuhDefense
             return loadout;
         }
 
-        /// <summary>Ein Level ist freigeschaltet, wenn das vorherige mit mindestens 1 Stern geschafft wurde.</summary>
+        /// <summary>
+        /// Ein Level ist freigeschaltet, wenn das vorherige mit mindestens 1 Stern geschafft wurde
+        /// und man genug Sterne für sein Gebiet hat.
+        /// </summary>
         public static bool IsUnlocked(int levelIndex)
         {
+            if (!IsRegionUnlocked(Levels.All[levelIndex].Region)) return false;
             return levelIndex == 0 || Farm.BestStars(Levels.All[levelIndex - 1].Id) > 0;
         }
+
+        public static bool IsRegionUnlocked(int region) => Farm.TotalStars >= Levels.Regions[region].UnlockStars;
 
         public static LevelReward CompleteLevel(LevelDefinition def, int stars)
         {
