@@ -23,6 +23,60 @@ namespace MuhDefense
         bool draggingGhost;
         bool moveByDrag;
 
+        // Kamera: zoomen (Finger spreizen, Mausrad, +/−) und verschieben (freie Wiese ziehen)
+        const float CameraAngle = 52f;
+        Vector3 camCenter = new Vector3(FarmState.Width / 2f, 0f, FarmState.Height / 2f);
+        float camSize = -1f;
+        bool panning;
+        bool pressOnGround;
+        Vector3 panGrab;
+        bool pinching;
+        float pinchStartDistance;
+        float pinchStartSize;
+
+        float MaxCamSize => UiKit.FitSize(cam, FarmState.Width, FarmState.Height, CameraAngle);
+        float MinCamSize => 3.5f;
+
+        void ApplyCamera()
+        {
+            if (camSize < 0f) camSize = MaxCamSize * 0.62f;
+            camSize = Mathf.Clamp(camSize, MinCamSize, MaxCamSize);
+            camCenter.x = Mathf.Clamp(camCenter.x, 0f, FarmState.Width);
+            camCenter.z = Mathf.Clamp(camCenter.z, -1f, FarmState.Height);
+            UiKit.SetCameraView(cam, camCenter, camSize, CameraAngle);
+        }
+
+        void Zoom(float factor)
+        {
+            camSize *= factor;
+            ApplyCamera();
+        }
+
+        /// <summary>Zwei Finger: zoomen (nur mit dem alten Input-System verfügbar, sonst Mausrad und +/− Knöpfe).</summary>
+        void UpdatePinch()
+        {
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.touchCount >= 2)
+            {
+                float d = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
+                if (!pinching)
+                {
+                    pinching = true;
+                    panning = false;
+                    pinchStartDistance = Mathf.Max(1f, d);
+                    pinchStartSize = camSize;
+                }
+                else
+                {
+                    camSize = pinchStartSize * pinchStartDistance / Mathf.Max(1f, d);
+                    ApplyCamera();
+                }
+                return;
+            }
+#endif
+            pinching = false;
+        }
+
         /// <summary>
         /// Gebäude festhalten und ziehen verschiebt es (Loslassen auf freiem Platz bestätigt, sonst springt es zurück).
         /// Beim Bauen und Verschieben folgt die Vorschau dem Finger.
@@ -32,8 +86,16 @@ namespace MuhDefense
             var e = Event.current;
             bool blocked = farm.AnyWindowOpen || UiKit.IsOverUi(rawMouse, blockers);
 
+            if (e.type == EventType.ScrollWheel && !blocked)
+            {
+                Zoom(e.delta.y > 0f ? 1.1f : 1f / 1.1f);
+                e.Use();
+                return;
+            }
+
             if (e.type == EventType.MouseDown && e.button == 0 && !blocked && UiKit.ScreenToGround(rawMouse, cam, out var down))
             {
+                pressRaw = rawMouse;
                 if (farm.Mode != FarmMode.Normal)
                 {
                     draggingGhost = true;
@@ -41,7 +103,23 @@ namespace MuhDefense
                 else
                 {
                     pressedBuilding = State.BuildingAt(new Vector2Int(Mathf.FloorToInt(down.x), Mathf.FloorToInt(down.z)));
-                    pressRaw = rawMouse;
+                    pressOnGround = pressedBuilding == null;
+                    panGrab = down;
+                }
+            }
+            else if (e.type == EventType.MouseDrag && pinching)
+            {
+                e.Use();
+            }
+            else if (e.type == EventType.MouseDrag && pressOnGround && farm.Mode == FarmMode.Normal)
+            {
+                // Freie Wiese ziehen: Hof verschieben (der Punkt unter dem Finger bleibt unter dem Finger)
+                if (!panning && (rawMouse - pressRaw).magnitude > DragThreshold * UiKit.Scale) panning = true;
+                if (panning && UiKit.ScreenToGround(rawMouse, cam, out var now))
+                {
+                    camCenter += panGrab - now;
+                    ApplyCamera();
+                    e.Use();
                 }
             }
             else if (e.type == EventType.MouseDrag)
@@ -70,6 +148,8 @@ namespace MuhDefense
                 draggingGhost = false;
                 moveByDrag = false;
                 pressedBuilding = null;
+                pressOnGround = false;
+                panning = false;
             }
         }
 
@@ -82,7 +162,9 @@ namespace MuhDefense
         void Update()
         {
             if (cam == null) cam = Camera.main;
-            if (cam != null) UiKit.FitCamera(cam, FarmState.Width, FarmState.Height, 52f);
+            if (cam == null) return;
+            UpdatePinch();
+            ApplyCamera();
         }
 
         void OnGUI()
@@ -97,6 +179,7 @@ namespace MuhDefense
             DrawWorldOverlays();
             DrawTopBar();
             DrawSideBar();
+            DrawZoomButtons();
             if (farm.ShopOpen) DrawShop();
             if (farm.MapOpen) DrawWorldMap();
             if (farm.TalentsOpen) DrawTalents();
@@ -142,6 +225,19 @@ namespace MuhDefense
                 UiKit.PillLabel(gemRect, UiKit.Icon("Diamant"), State.Gems.ToString());
                 if (GUI.Button(gemRect, GUIContent.none, GUIStyle.none)) farm.GemShopOpen = true;
             }
+        }
+
+        /// <summary>Knöpfe zum Zoomen unten links (funktionieren überall, auch ohne zwei Finger).</summary>
+        void DrawZoomButtons()
+        {
+            if (farm.AnyWindowOpen) return;
+            float y = UiKit.RefHeight - 70f;
+            var plus = new Rect(16f, y, 56f, 56f);
+            var minus = new Rect(80f, y, 56f, 56f);
+            blockers.Add(plus);
+            blockers.Add(minus);
+            if (UiKit.BtnRect(plus, "+", UiKit.Button, null)) Zoom(1f / 1.25f);
+            if (UiKit.BtnRect(minus, "-", UiKit.Button, null)) Zoom(1.25f);
         }
 
         void DrawSideBar()

@@ -12,8 +12,8 @@ namespace MuhDefense
     /// </summary>
     public class FarmState
     {
-        public const int Width = 22;
-        public const int Height = 12;
+        public const int Width = 30;
+        public const int Height = 18;
         const int FarmhouseBaseCapacity = 500;
         public const int WelcomeGems = 30;
         public const int GemsPerNewStar = 5;
@@ -67,6 +67,16 @@ namespace MuhDefense
                 Data.Gems += WelcomeGems;
                 Data.Version = 2;
             }
+            if (Data.Version < 3)
+            {
+                // Der Hof ist größer geworden (22×12 → 30×18): alte Gebäude in die Mitte rücken
+                foreach (var b in Data.Buildings)
+                {
+                    b.X += 4;
+                    b.Y += 3;
+                }
+                Data.Version = 3;
+            }
             if (Data.OwnedSkins == null || Data.OwnedSkins.Count == 0) Data.OwnedSkins = new List<string> { "standard" };
             if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
             if (Data.Talents == null) Data.Talents = new List<string>();
@@ -94,12 +104,12 @@ namespace MuhDefense
 
         static SaveData CreateNewFarm()
         {
-            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 2 };
-            AddStartBuilding(data, FarmBuildingType.Bauernhaus, 9, 5);
-            AddStartBuilding(data, FarmBuildingType.Maisfeld, 4, 8);
-            AddStartBuilding(data, FarmBuildingType.Kuhstall, 15, 8);
-            AddStartBuilding(data, FarmBuildingType.Knechthuette, 4, 2);
-            AddStartBuilding(data, FarmBuildingType.Schmiede, 15, 2);
+            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 3 };
+            AddStartBuilding(data, FarmBuildingType.Bauernhaus, 13, 8);
+            AddStartBuilding(data, FarmBuildingType.Maisfeld, 8, 11);
+            AddStartBuilding(data, FarmBuildingType.Kuhstall, 19, 11);
+            AddStartBuilding(data, FarmBuildingType.Knechthuette, 8, 5);
+            AddStartBuilding(data, FarmBuildingType.Schmiede, 19, 5);
             return data;
         }
 

@@ -365,6 +365,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Neues Gebiet „Maisfeld-Labyrinth“** (ab 12 Sternen): 5 Levels, Maisstauden als Labyrinth-Wände (dort kann man nicht bauen), Weltkarte mit Reitern für die Gebiete
   - Neues Alien **Teiler**: zerfällt beim Besiegen in zwei Grünlinge
   - Neuer Boss **Ernte-Roboter**: Alien im Mähdrescher-Kampfroboter, wirft bei jedem verlorenen Viertel Leben vier Flitzer ab
+- [x] **Kamera auf dem Hof:** zoomen (zwei Finger, Mausrad oder +/− Knöpfe) und verschieben (freie Wiese ziehen); Hof größer (30 × 18 Felder), alte Spielstände werden in die Mitte gerückt
 
 ### Upgrade-System
 

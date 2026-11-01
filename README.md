@@ -14,6 +14,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 **Hof (Base, wie in Clash of Clans)**
 - Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 4 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen, Hofladen-Kontor)
 - Heldenhütte (Held wählen), Talentbaum „Bauernwissen“ (Sterne gegen dauerhafte Boni), Diamanten-Shop
+- Hof mit 30 × 18 Feldern: zoomen (zwei Finger, Mausrad, +/−) und verschieben (Wiese ziehen)
 - Mais und Milch werden in Echtzeit produziert, auch während eines Levels oder wenn das Spiel geschlossen ist
 - Bauen und Verbessern mit Rohstoffen und Bauzeit, Knechte, Verschieben, automatisches Speichern
 

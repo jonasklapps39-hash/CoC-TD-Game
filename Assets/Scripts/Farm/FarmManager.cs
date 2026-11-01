@@ -285,22 +285,62 @@ namespace MuhDefense
             Views[b.Id] = view;
         }
 
+        /// <summary>Schachbrett-Wiese als ein einziges Mesh (viel schneller als ein Objekt pro Feld).</summary>
+        void BuildMeadow(int w, int h)
+        {
+            var grassA = new Color(0.45f, 0.72f, 0.32f);
+            var grassB = new Color(0.42f, 0.68f, 0.30f);
+            var vertices = new List<Vector3>(w * h * 4);
+            var colors = new List<Color>(w * h * 4);
+            var normals = new List<Vector3>(w * h * 4);
+            var triangles = new List<int>(w * h * 6);
+            for (int x = 0; x < w; x++)
+            {
+                for (int y = 0; y < h; y++)
+                {
+                    int i = vertices.Count;
+                    vertices.Add(new Vector3(x, 0f, y));
+                    vertices.Add(new Vector3(x, 0f, y + 1));
+                    vertices.Add(new Vector3(x + 1, 0f, y + 1));
+                    vertices.Add(new Vector3(x + 1, 0f, y));
+                    var c = (x + y) % 2 == 0 ? grassA : grassB;
+                    for (int k = 0; k < 4; k++)
+                    {
+                        colors.Add(c);
+                        normals.Add(Vector3.up);
+                    }
+                    triangles.Add(i);
+                    triangles.Add(i + 1);
+                    triangles.Add(i + 2);
+                    triangles.Add(i);
+                    triangles.Add(i + 2);
+                    triangles.Add(i + 3);
+                }
+            }
+            var mesh = new Mesh { name = "Wiese" };
+            mesh.SetVertices(vertices);
+            mesh.SetColors(colors);
+            mesh.SetNormals(normals);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+
+            var go = new GameObject("Wiese");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = new Vector3(0f, 0f, 0f);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var mr = go.AddComponent<MeshRenderer>();
+            var mat = new Material(Visuals.VertexColorMaterial);
+            mat.SetFloat("_OutlineWidth", 0f);
+            mr.sharedMaterial = mat;
+        }
+
         void BuildGround()
         {
             int w = FarmState.Width, h = FarmState.Height;
             Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(w / 2f, -0.45f, h / 2f), new Vector3(w + 14f, 0.5f, h + 14f),
                 new Color(0.30f, 0.55f, 0.18f), "Untergrund", outline: false);
 
-            var grassA = new Color(0.45f, 0.72f, 0.32f);
-            var grassB = new Color(0.42f, 0.68f, 0.30f);
-            for (int x = 0; x < w; x++)
-            {
-                for (int y = 0; y < h; y++)
-                {
-                    Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(x + 0.5f, -0.1f, y + 0.5f), new Vector3(1f, 0.2f, 1f),
-                        (x + y) % 2 == 0 ? grassA : grassB, "Wiese", outline: false);
-                }
-            }
+            BuildMeadow(w, h);
 
             // Zaun rund um den Hof
             var wood = new Color(0.55f, 0.36f, 0.20f);

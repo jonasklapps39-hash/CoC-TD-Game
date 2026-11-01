@@ -55,20 +55,31 @@ namespace MuhDefense
         /// <param name="angle">Neigung der Kamera in Grad (90 = senkrecht von oben).</param>
         public static void FitCamera(Camera cam, float width, float height, float angle = 55f)
         {
+            SetCameraView(cam, new Vector3(width / 2f, 0f, height / 2f), -1f, angle);
+            cam.orthographicSize = FitSize(cam, width, height, angle);
+        }
+
+        /// <summary>Kamera neben Seitenleiste und Kopfzeile, schaut auf <paramref name="center"/> (für Zoomen und Verschieben).</summary>
+        /// <param name="orthoSize">Zoom (halbe sichtbare Höhe); kleiner 0 = unverändert.</param>
+        public static void SetCameraView(Camera cam, Vector3 center, float orthoSize, float angle)
+        {
             cam.transform.rotation = Quaternion.Euler(angle, 0f, 0f);
             float s = Scale;
             float sideFraction = Mathf.Clamp01(SideBarWidth * s / Screen.width);
             float topFraction = Mathf.Clamp01(TopBarHeight * s / Screen.height);
             cam.rect = new Rect(0f, 0f, 1f - sideFraction, 1f - topFraction);
             if (cam.pixelHeight > 0) cam.aspect = cam.pixelWidth / (float)cam.pixelHeight;
-
-            var center = new Vector3(width / 2f, 0f, height / 2f);
             cam.transform.position = center - cam.transform.forward * 30f;
+            if (orthoSize > 0f) cam.orthographicSize = orthoSize;
+        }
 
+        /// <summary>Zoom, bei dem ein Feld der Größe width × height ganz sichtbar ist.</summary>
+        public static float FitSize(Camera cam, float width, float height, float angle)
+        {
             float rad = angle * Mathf.Deg2Rad;
             float neededHeight = height * Mathf.Sin(rad) + 1.8f;
             float neededWidth = width + 1f;
-            cam.orthographicSize = Mathf.Max(neededHeight / 2f, neededWidth / (2f * cam.aspect));
+            return Mathf.Max(neededHeight / 2f, neededWidth / (2f * Mathf.Max(0.1f, cam.aspect)));
         }
 
         /// <summary>Ist das aktuelle Ereignis ein Klick in die Spielwelt (nicht auf ein Bedienelement), liefert es den Punkt auf dem Boden.</summary>
