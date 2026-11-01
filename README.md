@@ -13,7 +13,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 
 **Hof (Base, wie in Clash of Clans)**
 - Gebäude: Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthütte und 4 Werkstätten (Schmiede, Zimmerei, Tüftlerschuppen, Hofladen-Kontor)
-- Heldenhütte (Held wählen), Talentbaum „Bauernwissen“ (Sterne gegen dauerhafte Boni), Diamanten-Shop
+- Heldenhütte (Held wählen), Bauernschule mit Talentbaum „Bauernwissen“ (Sterne gegen dauerhafte Boni, 5 Reihen), Diamanten-Shop
 - Tägliche Aufgaben und 15 Erfolge mit Belohnungen
 - Helden in der Heldenhütte trainieren (Milch) und Skins kaufen (Diamanten)
 - Kurzes Hof-Tutorial für neue Spieler

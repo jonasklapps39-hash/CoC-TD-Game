@@ -548,6 +548,19 @@ namespace MuhDefense
             }
         }
 
+        public int SchoolLevel
+        {
+            get
+            {
+                int best = 0;
+                foreach (var b in Data.Buildings)
+                {
+                    if (b.Type == FarmBuildingType.Bauernschule.Id) best = Mathf.Max(best, b.Level);
+                }
+                return best;
+            }
+        }
+
         public int HeroHutLevel
         {
             get
@@ -586,7 +599,9 @@ namespace MuhDefense
         public string WhyCannotBuyTalent(Talent t)
         {
             if (HasTalent(t.Id)) return "Gelernt";
-            if (t.Requires != null && !HasTalent(t.Requires)) return "Erst das Talent davor lernen";
+            int row = MuhDefense.Talents.RowOf(t);
+            if (SchoolLevel < row + 1) return SchoolLevel == 0 ? "Bauernschule bauen" : $"Bauernschule Stufe {row + 1}";
+            if (t.Requires != null && !HasTalent(t.Requires)) return "Erst das Talent davor";
             if (AvailableStars < t.Cost) return "Zu wenig Sterne";
             return null;
         }

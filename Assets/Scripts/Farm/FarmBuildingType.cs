@@ -21,6 +21,7 @@ namespace MuhDefense
         Tueftlerschuppen,
         HofladenKontor,
         Heldenhuette,
+        Bauernschule,
     }
 
     /// <summary>Ein Turm, den eine Werkstatt ab einer bestimmten Stufe freischaltet.</summary>
@@ -238,9 +239,22 @@ namespace MuhDefense
             MaxCount = new[] { 0, 1, 1, 1, 1 },
         };
 
+        public static readonly FarmBuildingType Bauernschule = new FarmBuildingType
+        {
+            Kind = FarmBuildingKind.Bauernschule,
+            Name = "Bauernschule",
+            Description = "Hier lernst du Bauernwissen: Sterne gegen dauerhafte Boni. Jede Stufe schaltet eine neue Talent-Reihe frei.",
+            MaxLevel = 5,
+            CostResource = Resource.Mais,
+            Costs = new[] { 300, 800, 1800, 3500, 6000 },
+            BuildSeconds = new[] { 20, 60, 180, 300, 480 },
+            MaxCount = new[] { 1, 1, 1, 1, 1 },
+        };
+
         public static readonly FarmBuildingType[] All =
         {
             Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthuette, Schmiede, Zimmerei, Tueftlerschuppen, HofladenKontor, Heldenhuette,
+            Bauernschule,
         };
 
         public static FarmBuildingType Get(string id)

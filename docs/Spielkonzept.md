@@ -379,6 +379,8 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Android-App automatisch bauen:** GitHub Actions (game-ci) baut die APK in der Cloud, Download unter *Actions → Artifacts* (Einrichtung: `docs/Android-Build.md`)
 - [x] **Feinschliff:** Türme federn beim Schießen, Kühe wackeln beim Laufen, nicken beim Grasen und zappeln beim Entführen, Aliens ploppen beim Erscheinen auf, Bosse kündigen sich mit Warnung, Knall und Bildschirmwackeln an und explodieren groß
 - [x] **Neuer Boden:** gezeichnete Rasen-Textur mit Halmen und Flecken (nur noch leichtes Mäh-Schachbrett), Weg aus Erde mit Kieseln, Blumen und Grasbüschel rund um Hof und Spielfeld
+- [x] **Bauernschule:** Bauernwissen ist jetzt ein eigenes Gebäude (Mais, 5 Stufen). Jede Stufe schaltet eine Talent-Reihe frei, neu ist eine 5. Reihe (Goldene Ernte, Präzision, Heldenruhm). Neues Talent-Fenster im Stil von Spezial-Upgrades (Symbole, Sterne-Abzeichen, Verbindungslinien)
+- [x] **Vorschau vor dem Verbessern:** Jedes Gebäude zeigt, was die nächste Stufe bringt (Produktion, Lager, Turm-Stufen, Talent-Reihe …); neues Helden-Fenster mit Trainings-Kästchen und „Nächste Stufe“
 
 ### Upgrade-System
 

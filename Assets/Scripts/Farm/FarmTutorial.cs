@@ -49,7 +49,7 @@ namespace MuhDefense
             new Step
             {
                 Title = "Gut gemacht!",
-                Text = "Noch ein paar Tipps: Sterne tauschst du bei „Bauernwissen“ gegen Boni, Diamanten gibt es im Shop auszugeben, " +
+                Text = "Noch ein paar Tipps: Baue eine Bauernschule – dort tauschst du Sterne gegen Boni. Diamanten gibt es im Shop auszugeben, " +
                        "und unter „Aufgaben“ warten jeden Tag neue Belohnungen. Viel Spaß!",
             },
         };

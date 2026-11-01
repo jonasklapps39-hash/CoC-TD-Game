@@ -174,6 +174,7 @@ namespace MuhDefense
             if (farm == null || cam == null) return;
 
             Vector2 rawMouse = UiKit.BeginGui();
+            EnsureStyles();
             // Vor dem Zeichnen: "blockers" enthält noch die Bedienelemente des letzten Durchlaufs
             HandleDrag(rawMouse);
             blockers.Clear();
@@ -288,7 +289,14 @@ namespace MuhDefense
                 GUILayout.Space(10f);
                 if (UiKit.Btn("Bauen", UiKit.YellowButton, GUILayout.Height(56f))) farm.ShopOpen = true;
                 GUILayout.Space(4f);
-                if (UiKit.Btn($"Bauernwissen ({State.AvailableStars} Sterne)", UiKit.BlueCard, GUILayout.Height(48f))) farm.TalentsOpen = true;
+                if (State.SchoolLevel > 0)
+                {
+                    if (UiKit.IconBtn($"Bauernwissen ({State.AvailableStars} frei)", UiKit.Icon("Bauernschule"), UiKit.BlueCard, GUILayout.Height(48f))) farm.TalentsOpen = true;
+                }
+                else
+                {
+                    GUILayout.Label("Bau eine Bauernschule, um Sterne gegen Bauernwissen zu tauschen.", UiKit.Small);
+                }
                 GUILayout.Space(4f);
                 GUILayout.BeginHorizontal();
                 if (UiKit.IconBtn("Shop", UiKit.Icon("Diamant"), UiKit.Button, GUILayout.Height(48f))) farm.GemShopOpen = true;
@@ -366,11 +374,19 @@ namespace MuhDefense
             }
             else if (b.Level < type.MaxLevel)
             {
+                string preview = NextLevelPreview(type, b.Level + 1);
+                if (preview.Length > 0)
+                {
+                    GUILayout.BeginVertical(UiKit.BlueCard);
+                    GUILayout.Label($"Stufe {b.Level + 1} bringt:", headStyle ?? UiKit.Small);
+                    GUILayout.Label(preview, smallStyle ?? UiKit.Small);
+                    GUILayout.EndVertical();
+                }
                 string reason = State.WhyCannotUpgrade(b);
                 int cost = type.CostForLevel(b.Level + 1);
                 GUI.enabled = reason == null;
                 string label = $"Verbessern auf Stufe {b.Level + 1}\n{cost} {FarmBuildingType.ResourceName(type.CostResource)} · {UiKit.FormatTime(type.SecondsForLevel(b.Level + 1))}";
-                if (UiKit.Btn(label, UiKit.ActiveButton, GUILayout.Height(60f))) farm.UpgradeSelected();
+                if (UiKit.Btn(label, upgradeStyle, GUILayout.Height(60f))) farm.UpgradeSelected();
                 GUI.enabled = true;
                 if (reason != null) GUILayout.Label(reason, UiKit.Small);
             }
@@ -387,12 +403,65 @@ namespace MuhDefense
                 GUI.enabled = true;
             }
 
+            if (type == FarmBuildingType.Bauernschule && b.Level > 0)
+            {
+                if (UiKit.IconBtn($"Bauernwissen ({State.AvailableStars} Sterne frei)", UiKit.Icon("Bauernschule"), UiKit.YellowButton, GUILayout.Height(52f))) farm.TalentsOpen = true;
+            }
             if (type == FarmBuildingType.Heldenhuette && b.Level > 0)
             {
                 if (UiKit.IconBtn("Helden und Training", UiKit.Icon(State.SelectedHero.ModelName), UiKit.YellowButton, GUILayout.Height(52f))) farm.HeroesOpen = true;
             }
             if (UiKit.Btn("Verschieben", UiKit.Button, GUILayout.Height(40f))) farm.BeginMoving();
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.Select(null);
+        }
+
+        /// <summary>Was die nächste Stufe eines Gebäudes bringt (vor dem Verbessern sichtbar).</summary>
+        string NextLevelPreview(FarmBuildingType type, int next)
+        {
+            int cur = next - 1;
+            var lines = new List<string>();
+            if (type == FarmBuildingType.Bauernhaus)
+            {
+                lines.Add($"Lager im Bauernhaus: {FarmState.FarmhouseCapacity(cur)} → {FarmState.FarmhouseCapacity(next)}");
+                lines.Add("Mehr und höhere Gebäude erlaubt");
+                foreach (var t in FarmBuildingType.All)
+                {
+                    if (t != FarmBuildingType.Bauernhaus && t.UnlockFarmhouseLevel == next) lines.Add($"Neu: {t.Name}");
+                }
+            }
+            if (type.IsProducer)
+            {
+                string res = FarmBuildingType.ResourceName(type.ProducedResource);
+                lines.Add($"Produktion: {type.RatePerMinute[cur - 1]:0} → {type.RatePerMinute[next - 1]:0} {res}/min");
+                lines.Add($"Speicher: {type.ProducerCapacity[cur - 1]} → {type.ProducerCapacity[next - 1]}");
+            }
+            if (type.IsStorage)
+            {
+                lines.Add($"Lager: {type.StorageCapacity[cur - 1]} → {type.StorageCapacity[next - 1]} {FarmBuildingType.ResourceName(type.StoredResource)}");
+            }
+            foreach (var unlock in type.Unlocks)
+            {
+                int a = FarmState.TowerLevelForWorkshop(cur, unlock.FromLevel);
+                int b2 = FarmState.TowerLevelForWorkshop(next, unlock.FromLevel);
+                if (a == 0 && b2 > 0) lines.Add($"Neuer Turm: {unlock.Tower.Name} (bis Stufe {b2})");
+                else if (b2 > a) lines.Add($"{unlock.Tower.ShortName}: Upgrades bis Stufe {a} → {b2}");
+            }
+            if (type == FarmBuildingType.Heldenhuette)
+            {
+                lines.Add($"Held startet im Level auf Stufe {cur} → {next}");
+                lines.Add($"Helden-Training bis Stufe {next}");
+            }
+            if (type == FarmBuildingType.Bauernschule)
+            {
+                var names = new List<string>();
+                for (int c = 0; c < Talents.ColumnNames.Length; c++)
+                {
+                    var t = Talents.At(c, next - 1);
+                    if (t != null) names.Add(t.Name);
+                }
+                lines.Add($"Neue Talent-Reihe {next}: {string.Join(", ", names)}");
+            }
+            return string.Join("\n", lines);
         }
 
         string BuildingStats(BuildingData b)
@@ -414,6 +483,10 @@ namespace MuhDefense
             if (type == FarmBuildingType.Heldenhuette)
             {
                 lines.Add($"Held startet im Level auf Stufe {b.Level}. Gewählt: {State.SelectedHero.Name}");
+            }
+            if (type == FarmBuildingType.Bauernschule)
+            {
+                lines.Add($"Talent-Reihen 1–{b.Level} freigeschaltet, {State.AvailableStars} Sterne frei");
             }
             if (type.IsStorage)
             {
@@ -467,130 +540,150 @@ namespace MuhDefense
             GUILayout.EndArea();
         }
 
-        /// <summary>Heldenhütte: Helden wählen und freischalten (mit Sternen oder Diamanten).</summary>
+        /// <summary>Heldenhütte: Helden wählen, freischalten, trainieren und einkleiden.</summary>
         void DrawHeroes()
         {
-            Rect box = UiKit.DrawOverlay(blockers, 940f, 680f);
-            GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
-            GUILayout.BeginHorizontal();
-            UiKit.Heading("Helden", UiKit.Title, GUILayout.Height(40f));
-            GUILayout.FlexibleSpace();
+            EnsureStyles();
+            Rect box = UiKit.DrawOverlay(blockers, 1010f, 680f);
+            float x0 = box.x + 20f, y0 = box.y + 14f, w = box.width - 40f;
+            UiKit.Title.alignment = TextAnchor.MiddleLeft;
+            UiKit.OutlinedText(new Rect(x0, y0, 400f, 40f), "Heldenhütte", UiKit.Title, Color.white);
             var gem = UiKit.Icon("Diamant");
-            if (gem != null) GUILayout.Label(gem, GUILayout.Width(40f), GUILayout.Height(40f));
-            UiKit.Heading(State.Gems.ToString(), UiKit.Title, GUILayout.Width(90f), GUILayout.Height(40f));
-            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.HeroesOpen = false;
-            GUILayout.EndHorizontal();
-            GUILayout.Label($"Der gewählte Held kommt mit ins Level. Er startet dort auf Stufe {Mathf.Max(1, State.HeroHutLevel)} (Stufe der Heldenhütte).", UiKit.Small);
-            GUILayout.Space(6f);
+            var milk = UiKit.Icon("Milchflasche");
+            var pill = new Rect(x0 + w - 470f, y0 + 2f, 150f, 36f);
+            UiKit.PillLabel(pill, gem, State.Gems.ToString());
+            UiKit.PillLabel(new Rect(pill.xMax + 10f, pill.y, 150f, 36f), milk, ((int)State.Amount(Resource.Milch)).ToString());
+            if (UiKit.BtnRect(new Rect(x0 + w - 150f, y0, 150f, 40f), "Schließen", UiKit.Button, null)) farm.HeroesOpen = false;
+            GUI.Label(new Rect(x0, y0 + 42f, w, 22f),
+                $"Der gewählte Held kommt mit ins Level und startet dort auf Stufe {Mathf.Max(1, State.HeroHutLevel)}. Training gilt dauerhaft.", smallStyle);
 
-            GUILayout.BeginHorizontal();
-            foreach (var h in HeroType.All)
+            float gap = 14f;
+            float cw = (w - gap * 2f) / 3f;
+            float top = y0 + 70f;
+            float ch = box.yMax - 16f - top;
+            for (int i = 0; i < HeroType.All.Length; i++)
             {
-                bool unlocked = State.IsHeroUnlocked(h);
-                bool selected = State.SelectedHero == h;
-                GUILayout.BeginVertical(selected ? UiKit.ActiveButton : UiKit.Card, GUILayout.Width((box.width - 64f) / 3f));
-                UiKit.Heading(h.Name, UiKit.Title, GUILayout.Height(30f));
-                GUILayout.Label(h.Role, UiKit.Small);
-                var icon = UiKit.Icon(h.ModelName);
-                if (icon != null)
-                {
-                    Rect ir = GUILayoutUtility.GetRect(10f, 120f, GUILayout.Height(120f));
-                    var skin = State.SelectedHeroSkin(h);
-                    if (!unlocked) GUI.color = new Color(0.35f, 0.35f, 0.4f);
-                    else if (skin != null) GUI.color = skin.Tint;
-                    GUI.DrawTexture(ir, icon, ScaleMode.ScaleToFit);
-                    GUI.color = Color.white;
-                }
-                GUILayout.Label(h.Description, UiKit.Small, GUILayout.Height(54f));
-                GUILayout.Label($"Fähigkeiten: {h.Ability1Name} (ab Stufe {Hero.Ability1Level}), {h.Ability2Name} (ab Stufe {Hero.Ability2Level})", UiKit.Small, GUILayout.Height(40f));
-                DrawHeroTraining(h, unlocked, gem);
-                GUILayout.FlexibleSpace();
-                if (selected)
-                {
-                    UiKit.Heading("Gewählt", UiKit.Title, GUILayout.Height(40f));
-                }
-                else if (unlocked)
-                {
-                    if (UiKit.Btn("Wählen", UiKit.YellowButton, GUILayout.Height(44f)))
-                    {
-                        State.SelectHero(h);
-                        State.Save();
-                        GameAudio.Play(SoundId.Click);
-                    }
-                }
-                else
-                {
-                    GUILayout.Label($"Frei ab {h.UnlockStars} Sternen (du hast {State.TotalStars}) – oder sofort:", UiKit.Small);
-                    GUI.enabled = State.Gems >= h.UnlockGems;
-                    if (UiKit.IconBtn(h.UnlockGems.ToString(), gem, UiKit.ActiveButton, GUILayout.Height(44f)) && State.UnlockHeroWithGems(h))
-                    {
-                        State.SelectHero(h);
-                        State.Save();
-                        GameAudio.Play(SoundId.LevelUp);
-                    }
-                    GUI.enabled = true;
-                }
-                GUILayout.EndVertical();
+                DrawHeroCard(HeroType.All[i], new Rect(x0 + i * (cw + gap), top, cw, ch), gem, milk);
             }
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
         }
 
-        /// <summary>Training (Milch) und Aussehen (Diamanten) eines Helden.</summary>
-        void DrawHeroTraining(HeroType h, bool unlocked, Texture2D gem)
+        void DrawHeroCard(HeroType h, Rect r, Texture2D gem, Texture2D milk)
         {
+            bool unlocked = State.IsHeroUnlocked(h);
+            bool selected = State.SelectedHero == h;
+            GUI.Box(r, GUIContent.none, selected ? UiKit.ActiveButton : UiKit.Card);
+            float x = r.x + 10f, w = r.width - 20f, y = r.y + 6f;
+
+            UiKit.OutlinedText(new Rect(x, y, w, 26f), h.Name, nameStyle, Color.white);
+            GUI.Label(new Rect(x, y + 24f, w, 18f), h.Role, headStyle);
+            y += 44f;
+
+            // Bild (mit gewähltem Aussehen)
+            var icon = UiKit.Icon(h.ModelName);
+            if (icon != null)
+            {
+                var skin = State.SelectedHeroSkin(h);
+                GUI.color = !unlocked ? new Color(0.3f, 0.3f, 0.35f) : skin != null ? skin.Tint : Color.white;
+                GUI.DrawTexture(new Rect(x, y, w, 96f), icon, ScaleMode.ScaleToFit);
+                GUI.color = Color.white;
+            }
+            y += 98f;
+            GUI.Label(new Rect(x, y, w, 46f), h.Description, tinyStyle);
+            y += 46f;
+            GUI.Label(new Rect(x, y, w, 30f), $"Ab Stufe {Hero.Ability1Level}: {h.Ability1Name}\nAb Stufe {Hero.Ability2Level}: {h.Ability2Name}", tinyStyle);
+            y += 34f;
+
+            // Training: 5 Kästchen, aktuelle Wirkung und was die nächste Stufe bringt
             int training = State.HeroTrainingLevel(h);
-            GUILayout.Label($"Training {training}/{HeroTraining.MaxLevel}" + (training > 0 ? ": " + HeroTraining.Describe(training) : ""), UiKit.Small, GUILayout.Height(34f));
+            UiKit.OutlinedText(new Rect(x, y, 90f, 20f), "Training", nameStyle, Color.white, 1.2f);
+            for (int k = 0; k < HeroTraining.MaxLevel; k++)
+            {
+                var pip = new Rect(x + 92f + k * 22f, y + 3f, 18f, 14f);
+                UiKit.DrawRect(pip, new Color(0.15f, 0.08f, 0.03f, 0.9f));
+                if (k < training) UiKit.DrawRect(new Rect(pip.x + 2f, pip.y + 2f, pip.width - 4f, pip.height - 4f), UiKit.Gold);
+            }
+            y += 22f;
+            string now = training > 0 ? "Jetzt: " + HeroTraining.Describe(training) : "Noch nicht trainiert.";
+            string next = training < HeroTraining.MaxLevel ? "Nächste Stufe: " + HeroTraining.Describe(training + 1) : "Voll trainiert!";
+            GUI.Label(new Rect(x, y, w, 30f), now, tinyStyle);
+            y += 30f;
+            GUI.Label(new Rect(x, y, w, 30f), next, tinyStyle);
+            y += 32f;
             string why = State.WhyCannotTrain(h);
             GUI.enabled = why == null;
-            string label = training >= HeroTraining.MaxLevel ? "Voll trainiert"
-                : why ?? $"Trainieren: {HeroTraining.CostFor(training + 1)} Milch";
-            if (UiKit.IconBtn(label, UiKit.Icon("Milchflasche"), UiKit.Button, GUILayout.Height(38f)) && State.TrainHero(h))
+            string label = training >= HeroTraining.MaxLevel ? "Voll trainiert" : why ?? $"Trainieren: {HeroTraining.CostFor(training + 1)}";
+            if (UiKit.BtnRect(new Rect(x, y, w, 34f), label, UiKit.YellowButton, why == null ? milk : null) && State.TrainHero(h))
             {
                 State.Save();
                 GameAudio.Play(SoundId.LevelUp);
             }
             GUI.enabled = true;
+            y += 40f;
 
-            if (!unlocked) return;
-            string skinList = "";
-            foreach (var s in HeroSkin.All)
+            // Aussehen: eine Zeile je Skin
+            if (unlocked)
             {
-                if (s.Hero == h.Kind) skinList += (skinList.Length > 0 ? ", " : "") + s.Name;
-            }
-            GUILayout.Label("Aussehen: " + skinList, UiKit.Small);
-            GUILayout.BeginHorizontal();
-            var current = State.SelectedHeroSkin(h);
-            if (UiKit.Btn("Normal", current == null ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(34f)))
-            {
-                State.SelectHeroSkin(h, null);
-                State.Save();
-            }
-            foreach (var s in HeroSkin.All)
-            {
-                if (s.Hero != h.Kind) continue;
-                bool owned = State.OwnsHeroSkin(s);
-                if (owned)
+                var current = State.SelectedHeroSkin(h);
+                if (UiKit.BtnRect(new Rect(x, y, w, 26f), current == null ? "Normal (gewählt)" : "Normal", current == null ? UiKit.ActiveButton : UiKit.Button, null))
                 {
-                    if (UiKit.Btn(s.Name, current == s ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(34f)))
-                    {
-                        State.SelectHeroSkin(h, s);
-                        State.Save();
-                    }
+                    State.SelectHeroSkin(h, null);
+                    State.Save();
                 }
-                else
+                y += 29f;
+                foreach (var s in HeroSkin.All)
                 {
-                    GUI.enabled = State.Gems >= s.Gems;
-                    if (UiKit.IconBtn($"{s.Gems}", gem, UiKit.BlueCard, GUILayout.Height(34f)) && State.BuyHeroSkin(s))
+                    if (s.Hero != h.Kind) continue;
+                    var row = new Rect(x, y, w, 26f);
+                    if (State.OwnsHeroSkin(s))
                     {
-                        State.SelectHeroSkin(h, s);
-                        State.Save();
-                        GameAudio.Play(SoundId.Coin);
+                        if (UiKit.BtnRect(row, current == s ? $"{s.Name} (gewählt)" : s.Name, current == s ? UiKit.ActiveButton : UiKit.Button, null))
+                        {
+                            State.SelectHeroSkin(h, s);
+                            State.Save();
+                        }
                     }
-                    GUI.enabled = true;
+                    else
+                    {
+                        GUI.enabled = State.Gems >= s.Gems;
+                        if (UiKit.BtnRect(row, $"{s.Name}: {s.Gems}", UiKit.BlueCard, gem) && State.BuyHeroSkin(s))
+                        {
+                            State.SelectHeroSkin(h, s);
+                            State.Save();
+                            GameAudio.Play(SoundId.Coin);
+                        }
+                        GUI.enabled = true;
+                    }
+                    y += 29f;
                 }
             }
-            GUILayout.EndHorizontal();
+
+            // Unten: wählen oder freischalten
+            var bottom = new Rect(x, r.yMax - 48f, w, 40f);
+            if (selected)
+            {
+                UiKit.OutlinedText(bottom, "Gewählt", UiKit.Title, new Color(1f, 1f, 0.7f));
+            }
+            else if (unlocked)
+            {
+                if (UiKit.BtnRect(bottom, "Wählen", UiKit.YellowButton, null))
+                {
+                    State.SelectHero(h);
+                    State.Save();
+                    GameAudio.Play(SoundId.Click);
+                }
+            }
+            else
+            {
+                GUI.Label(new Rect(x, bottom.y - 34f, w, 32f), $"Frei ab {h.UnlockStars} Sternen (du hast {State.TotalStars}) – oder sofort:", tinyStyle);
+                GUI.enabled = State.Gems >= h.UnlockGems;
+                if (UiKit.BtnRect(bottom, h.UnlockGems.ToString(), UiKit.ActiveButton, gem) && State.UnlockHeroWithGems(h))
+                {
+                    State.SelectHero(h);
+                    State.Save();
+                    GameAudio.Play(SoundId.LevelUp);
+                }
+                GUI.enabled = true;
+            }
         }
 
         /// <summary>Tägliche Aufgaben und Erfolge.</summary>
@@ -795,63 +888,125 @@ namespace MuhDefense
         }
 
         /// <summary>Talentbaum „Bauernwissen“: drei Spalten, Talente bauen aufeinander auf.</summary>
-        void DrawTalents()
-        {
-            Rect box = UiKit.DrawOverlay(blockers, 900f, 620f);
-            GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
-            GUILayout.BeginHorizontal();
-            UiKit.Heading("Bauernwissen", UiKit.Title, GUILayout.Height(40f));
-            GUILayout.FlexibleSpace();
-            Rect starRect = GUILayoutUtility.GetRect(150f, 40f, GUILayout.Width(150f));
-            GUI.color = new Color(1f, 0.82f, 0.1f);
-            GUI.DrawTexture(new Rect(starRect.x, starRect.y + 2f, 36f, 36f), UiKit.Star);
-            GUI.color = Color.white;
-            UiKit.Title.alignment = TextAnchor.MiddleLeft;
-            UiKit.OutlinedText(new Rect(starRect.x + 42f, starRect.y, 108f, 40f), $"{State.AvailableStars} frei", UiKit.Title, Color.white);
-            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.TalentsOpen = false;
-            GUILayout.EndHorizontal();
-            GUILayout.Label("Sterne aus den Levels gegen dauerhafte Boni tauschen. Jedes Talent gilt in allen Levels.", UiKit.Small);
-            GUILayout.Space(6f);
+        // Eigene Schriftstile für die schickeren Fenster (kleiner, damit alles reinpasst)
+        GUIStyle headStyle, smallStyle, tinyStyle, nameStyle, upgradeStyle;
 
-            GUILayout.BeginHorizontal();
-            for (int c = 0; c < Talents.ColumnNames.Length; c++)
-            {
-                GUILayout.BeginVertical(UiKit.Card, GUILayout.Width((box.width - 64f) / 3f));
-                UiKit.Heading(Talents.ColumnNames[c], UiKit.Title, GUILayout.Height(32f));
-                foreach (var t in Talents.All)
-                {
-                    if (t.Column != c) continue;
-                    DrawTalentCard(t);
-                }
-                GUILayout.EndVertical();
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
+        void EnsureStyles()
+        {
+            if (nameStyle != null) return;
+            nameStyle = new GUIStyle(UiKit.ButtonText) { fontSize = 16, alignment = TextAnchor.MiddleLeft, wordWrap = false, clipping = TextClipping.Clip };
+            headStyle = new GUIStyle(UiKit.Small) { fontSize = 14, fontStyle = FontStyle.Bold };
+            smallStyle = new GUIStyle(UiKit.Small) { fontSize = 13 };
+            tinyStyle = new GUIStyle(UiKit.Small) { fontSize = 12, alignment = TextAnchor.UpperLeft };
+            upgradeStyle = new GUIStyle(UiKit.ActiveButton) { fontSize = 15 };
         }
 
-        void DrawTalentCard(Talent t)
+        static readonly Color[] ColumnColors =
+        {
+            new Color(1f, 0.78f, 0.25f), new Color(0.95f, 0.45f, 0.3f), new Color(0.45f, 0.8f, 1f),
+        };
+
+        /// <summary>Talentbaum der Bauernschule: drei Spalten, fünf Reihen, Verbindungslinien wie Spezial-Upgrades.</summary>
+        void DrawTalents()
+        {
+            EnsureStyles();
+            Rect box = UiKit.DrawOverlay(blockers, 1010f, 670f);
+            float x0 = box.x + 20f, y0 = box.y + 14f, w = box.width - 40f;
+
+            // Kopfzeile
+            UiKit.Title.alignment = TextAnchor.MiddleLeft;
+            UiKit.OutlinedText(new Rect(x0, y0, 520f, 40f), "Bauernschule – Bauernwissen", UiKit.Title, Color.white);
+            var starPill = new Rect(x0 + w - 330f, y0 + 2f, 170f, 36f);
+            GUI.Box(starPill, GUIContent.none, UiKit.Pill);
+            GUI.color = new Color(1f, 0.82f, 0.1f);
+            GUI.DrawTexture(new Rect(starPill.x + 8f, starPill.y + 4f, 28f, 28f), UiKit.Star);
+            GUI.color = Color.white;
+            UiKit.OutlinedText(new Rect(starPill.x + 40f, starPill.y, 126f, 36f), $"{State.AvailableStars} frei", nameStyle, Color.white);
+            if (UiKit.BtnRect(new Rect(x0 + w - 150f, y0, 150f, 40f), "Schließen", UiKit.Button, null)) farm.TalentsOpen = false;
+            GUI.Label(new Rect(x0, y0 + 42f, w, 22f),
+                $"Bauernschule Stufe {State.SchoolLevel}: Reihe 1–{Mathf.Max(0, State.SchoolLevel)} freigeschaltet. Verbessere die Schule für weitere Reihen. Jedes Talent gilt in allen Levels.",
+                smallStyle);
+
+            float colGap = 14f;
+            float colW = (w - colGap * 2f) / 3f;
+            float top = y0 + 70f;
+            const float cardH = 90f, gap = 14f;
+            for (int c = 0; c < Talents.ColumnNames.Length; c++)
+            {
+                float cx = x0 + c * (colW + colGap);
+                // Spaltenkopf mit Farbbalken
+                var head = new Rect(cx, top, colW, 34f);
+                GUI.Box(head, GUIContent.none, UiKit.Card);
+                UiKit.DrawRect(new Rect(head.x + 6f, head.yMax - 6f, head.width - 12f, 3f), ColumnColors[c]);
+                UiKit.OutlinedText(new Rect(head.x + 10f, head.y, head.width - 20f, 30f), Talents.ColumnNames[c], nameStyle, ColumnColors[c]);
+
+                for (int row = 0; row < Talents.Rows; row++)
+                {
+                    var t = Talents.At(c, row);
+                    if (t == null) continue;
+                    float cy = top + 42f + row * (cardH + gap);
+                    var card = new Rect(cx, cy, colW, cardH);
+                    if (row > 0)
+                    {
+                        // Verbindungslinie zum Talent darüber
+                        bool prevOwned = State.HasTalent(Talents.At(c, row - 1).Id);
+                        UiKit.DrawRect(new Rect(cx + 40f, cy - gap, 6f, gap), prevOwned ? ColumnColors[c] : new Color(0.2f, 0.12f, 0.06f, 0.8f));
+                    }
+                    DrawTalentNode(t, card, ColumnColors[c]);
+                }
+            }
+        }
+
+        void DrawTalentNode(Talent t, Rect r, Color accent)
         {
             bool owned = State.HasTalent(t.Id);
             string reason = State.WhyCannotBuyTalent(t);
-            GUILayout.BeginVertical(owned ? UiKit.ActiveButton : UiKit.Panel);
-            UiKit.Heading($"{t.Name}  ({t.Cost} Stern{(t.Cost == 1 ? "" : "e")})", UiKit.Title, GUILayout.Height(28f));
-            GUILayout.Label(t.Description, UiKit.Small, GUILayout.Height(40f));
+            bool available = !owned && reason == null;
+            bool locked = !owned && reason != null && reason != "Zu wenig Sterne";
+
+            GUI.Box(r, GUIContent.none, owned ? UiKit.ActiveButton : available ? UiKit.BlueCard : UiKit.Card);
+            if (locked) UiKit.DrawRect(r, new Color(0f, 0f, 0f, 0.28f));
+
+            // Symbol im runden Rahmen
+            var badge = new Rect(r.x + 8f, r.y + 8f, 66f, 66f);
+            GUI.Box(badge, GUIContent.none, UiKit.Pill);
+            var icon = UiKit.Icon(Talents.IconFor(t));
+            if (icon != null)
+            {
+                if (locked) GUI.color = new Color(0.45f, 0.45f, 0.5f);
+                GUI.DrawTexture(new Rect(badge.x + 6f, badge.y + 6f, 54f, 54f), icon, ScaleMode.ScaleToFit);
+                GUI.color = Color.white;
+            }
+            // Sterne-Kosten als kleines Abzeichen unten am Symbol
+            var cost = new Rect(badge.x + 12f, badge.yMax - 12f, 42f, 20f);
+            UiKit.DrawRect(cost, new Color(0.15f, 0.08f, 0.03f, 0.9f));
+            GUI.color = new Color(1f, 0.82f, 0.1f);
+            GUI.DrawTexture(new Rect(cost.x + 2f, cost.y + 2f, 16f, 16f), UiKit.Star);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(cost.x + 19f, cost.y, 22f, 20f), t.Cost.ToString(), headStyle);
+
+            float tx = r.x + 84f, tw = r.width - 92f;
+            UiKit.OutlinedText(new Rect(tx, r.y + 4f, tw, 24f), t.Name, nameStyle, locked ? new Color(0.75f, 0.75f, 0.75f) : Color.white, 1.4f);
+            GUI.Label(new Rect(tx, r.y + 27f, tw, 36f), t.Description, tinyStyle);
+
+            var action = new Rect(tx, r.yMax - 26f, tw, 22f);
             if (owned)
             {
-                GUILayout.Label("Gelernt", UiKit.Small);
+                UiKit.OutlinedText(action, "Gelernt", nameStyle, new Color(1f, 1f, 0.7f), 1.2f);
             }
-            else
+            else if (available)
             {
-                GUI.enabled = reason == null;
-                if (UiKit.Btn(reason ?? "Lernen", UiKit.YellowButton, GUILayout.Height(34f)) && State.BuyTalent(t))
+                if (UiKit.BtnRect(new Rect(action.x, action.y - 2f, Mathf.Min(120f, tw), 26f), "Lernen", UiKit.YellowButton, null) && State.BuyTalent(t))
                 {
                     State.Save();
                     GameAudio.Play(SoundId.LevelUp);
+                    farm.AddFloatingText(new Vector3(FarmState.Width / 2f, 1f, FarmState.Height / 2f), $"{t.Name} gelernt!", UiKit.Gold);
                 }
-                GUI.enabled = true;
             }
-            GUILayout.EndVertical();
-            GUILayout.Space(4f);
+            else
+            {
+                GUI.Label(action, reason, headStyle);
+            }
         }
 
         void DrawWorldMap()

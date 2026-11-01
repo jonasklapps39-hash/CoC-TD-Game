@@ -1082,6 +1082,33 @@ def build_crystal():
         tube((x, y, h / 2), r, h, c, rot=(math.radians(tilt * 0.5), math.radians(tilt), 0), r2=0.01, segs=6)
 
 
+def build_school():
+    """Bauernschule: kleines Schulhaus mit Glockenturm, Tafel und einem großen Buch (Bauernwissen)."""
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    cream = (0.95, 0.88, 0.7)
+    soft_box((0, 0.2, 0.5), (1.4, 1.0, 0.8), cream, round_=0.12)
+    roof((0, 0.2, 0.9), 1.4, 1.0, (0.2, 0.55, 0.3), 0.12)
+    # Glockenturm
+    soft_box((0, 0.2, 1.42), (0.34, 0.34, 0.34), cream, round_=0.15)
+    tube((0, 0.2, 1.72), 0.26, 0.32, (0.2, 0.55, 0.3), r2=0.02, segs=4)
+    tube((0, 0.03, 1.4), 0.07, 0.1, GOLD, r2=0.04, segs=12)
+    # Tür und Fenster
+    soft_box((0, -0.31, 0.42), (0.36, 0.05, 0.56), DARK_WOOD, round_=0.3)
+    for x in (-0.45, 0.45):
+        soft_box((x, -0.31, 0.6), (0.24, 0.05, 0.24), (0.55, 0.8, 0.95), round_=0.2)
+        soft_box((x, -0.33, 0.6), (0.26, 0.03, 0.03), WHITE, round_=0.3)
+    # Tafel mit Kreide-Strichen vor dem Haus
+    for x in (-0.82, -0.48):
+        tube((x, -0.6, 0.35), 0.025, 0.6, DARK_WOOD, segs=6)
+    soft_box((-0.65, -0.62, 0.52), (0.46, 0.04, 0.32), (0.15, 0.3, 0.2), round_=0.15)
+    soft_box((-0.65, -0.65, 0.56), (0.28, 0.01, 0.02), WHITE, round_=0.3)
+    soft_box((-0.65, -0.65, 0.5), (0.2, 0.01, 0.02), WHITE, round_=0.3)
+    # Großes Buch mit Stern
+    soft_box((0.65, -0.6, 0.2), (0.5, 0.36, 0.1), (0.7, 0.18, 0.15), round_=0.2)
+    soft_box((0.65, -0.6, 0.26), (0.46, 0.32, 0.04), (0.98, 0.95, 0.85), round_=0.2)
+    ball((0.65, -0.6, 0.3), (0.14, 0.14, 0.04), GOLD)
+
+
 # Name, Bau-Funktion, höchstens Dreiecke
 MODELS = [
     ("Kuh", build_cow, 6000),
@@ -1136,6 +1163,7 @@ MODELS = [
     ("SchildAlien", build_shield_alien, 5500),
     ("AlienKaiser", build_emperor, 9000),
     ("Kristall", build_crystal, 1500),
+    ("Bauernschule", build_school, 6000),
 ]
 
 # Optional nur einzelne Modelle bauen: ONLY=Name1,Name2
