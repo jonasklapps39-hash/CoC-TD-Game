@@ -10,6 +10,8 @@ namespace MuhDefense
         Challenge,
         /// <summary>Endlos: Wellen ohne Ende, Rekord pro Karte.</summary>
         Endless,
+        /// <summary>Alien-Überfall auf den eigenen Hof.</summary>
+        Raid,
     }
 
     /// <summary>Sonderregeln der täglichen Herausforderung.</summary>

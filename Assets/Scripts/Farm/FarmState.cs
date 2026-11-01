@@ -241,6 +241,7 @@ namespace MuhDefense
                 b.LastTick = Math.Max(b.LastTick, now);
             }
             TickObstacles(now);
+            TickRaid(now);
             return finished;
         }
 

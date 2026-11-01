@@ -211,6 +211,7 @@ namespace MuhDefense
             DrawTopBar();
             DrawSideBar();
             DrawZoomButtons();
+            DrawRaidAlarm();
             DrawTutorial();
             if (farm.ShopOpen) DrawShop();
             if (farm.MapOpen) DrawWorldMap();
@@ -272,6 +273,30 @@ namespace MuhDefense
                 UiKit.DrawBar(new Rect(lvlRect.x + 10f, lvlRect.y + 23f, lvlRect.width - 20f, 8f), State.FarmXpProgress, new Color(0.6f, 0.95f, 0.4f));
                 string xp = State.FarmLevel >= FarmState.MaxFarmLevel ? "max" : $"{State.Data.FarmXp}/{FarmState.XpToNext(State.FarmLevel)} EP";
                 GUI.Label(new Rect(lvlRect.x + 96f, lvlRect.y + 1f, 90f, 22f), xp, tinyStyle);
+            }
+        }
+
+        /// <summary>Alien-Alarm: Banner oben in der Mitte mit Restzeit und „Verteidigen!“.</summary>
+        void DrawRaidAlarm()
+        {
+            if (!State.RaidActive || farm.AnyWindowOpen) return;
+            float vw = UiKit.VirtualWidth - UiKit.SideBarWidth;
+            var r = new Rect(vw / 2f - 260f, UiKit.TopBarHeight + 8f, 520f, 64f);
+            blockers.Add(r);
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 6f);
+            UiKit.DrawRect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), new Color(1f, 0.25f, 0.15f, 0.5f + 0.4f * pulse));
+            GUI.Box(r, GUIContent.none, UiKit.Dialog);
+            var ufoIcon = UiKit.Icon("Ufo");
+            if (ufoIcon != null) GUI.DrawTexture(new Rect(r.x + 8f, r.y + 6f, 52f, 52f), ufoIcon, ScaleMode.ScaleToFit);
+            UiKit.OutlinedText(new Rect(r.x + 66f, r.y + 4f, 280f, 28f), "Alien-Alarm auf dem Hof!", nameStyle, new Color(1f, 0.55f, 0.4f));
+            GUI.Label(new Rect(r.x + 66f, r.y + 32f, 290f, 28f),
+                $"Noch {UiKit.FormatTime(State.RaidSecondsLeft)}, sonst klauen sie 10 % deiner Vorräte.", tinyStyle);
+            if (UiKit.BtnRect(new Rect(r.xMax - 158f, r.y + 10f, 148f, 44f), "Verteidigen!", UiKit.RedButton, null))
+            {
+                // Die Stunde beginnt beim Verteidigen neu, damit der Alarm nicht mitten im Kampf abläuft
+                State.Data.NextRaid = FarmState.Now - 1;
+                State.Save();
+                GameFlow.StartMode(Raids.Build(State), LevelMode.Raid);
             }
         }
 

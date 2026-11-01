@@ -55,6 +55,8 @@ namespace MuhDefense
         Heimattal,
         Maisfeld,
         Absturzstelle,
+        /// <summary>Überfall auf den eigenen Hof: Hindernisse sind Hof-Gebäude.</summary>
+        Hof,
     }
 
     /// <summary>Ein Gebiet auf der Weltkarte (Heimattal, Maisfeld-Labyrinth …).</summary>
@@ -105,7 +107,10 @@ namespace MuhDefense
         /// <summary>Letztes Level des Gebiets (Boss-Symbol auf der Weltkarte).</summary>
         public bool BossLevel;
 
-        public MapTheme Theme => Levels.Regions[Region].Theme;
+        /// <summary>Thema unabhängig vom Gebiet (z. B. Überfall auf den Hof).</summary>
+        public MapTheme? ThemeOverride;
+
+        public MapTheme Theme => ThemeOverride ?? Levels.Regions[Region].Theme;
 
         public bool IsCorn(Vector2Int c)
         {

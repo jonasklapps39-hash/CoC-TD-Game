@@ -391,7 +391,9 @@ namespace MuhDefense
             GameFlow.Farm.Count(Counter.LevelsWon);
             if (CowsLost == 0) GameFlow.Farm.Count(Counter.PerfectWins);
             if (Difficulty == Difficulty.Schwer) GameFlow.Farm.Count(Counter.HardWins);
-            Reward = Mode == LevelMode.Challenge ? GameFlow.CompleteChallenge(Def, Stars) : GameFlow.CompleteLevel(Def, Stars, Difficulty);
+            Reward = Mode == LevelMode.Challenge ? GameFlow.CompleteChallenge(Def, Stars)
+                : Mode == LevelMode.Raid ? GameFlow.CompleteRaid(true, Stars)
+                : GameFlow.CompleteLevel(Def, Stars, Difficulty);
             CancelPlacing();
             Select(null);
         }
@@ -403,6 +405,7 @@ namespace MuhDefense
             Stars = 0;
             // Endlos: das Ende ist das Ziel – Belohnung für die geschafften Wellen
             if (IsEndless) Reward = GameFlow.CompleteEndless(Def, Mathf.Max(0, WavesStarted - 1));
+            if (Mode == LevelMode.Raid) Reward = GameFlow.CompleteRaid(false, 0);
             StopAllCoroutines();
             CancelPlacing();
             Select(null);

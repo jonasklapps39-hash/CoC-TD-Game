@@ -116,6 +116,7 @@ namespace MuhDefense
                 if (Mode != FarmMode.Normal && ghost != null) MoveGhost(ghostCell);
             }
             AnimateClearing();
+            UpdateRaidUfo();
 
             for (int i = FloatingTexts.Count - 1; i >= 0; i--)
             {
@@ -208,6 +209,40 @@ namespace MuhDefense
                 var e = view.transform.localEulerAngles;
                 view.transform.localRotation = Quaternion.Euler(wobble, e.y, 0f);
             }
+        }
+
+        Transform raidUfo;
+
+        /// <summary>Während eines Alien-Alarms schwebt ein Ufo mit Traktorstrahl über dem Kuhstall.</summary>
+        void UpdateRaidUfo()
+        {
+            bool active = Farm.RaidActive;
+            if (active && raidUfo == null)
+            {
+                raidUfo = new GameObject("Überfall-Ufo").transform;
+                raidUfo.SetParent(transform, false);
+                if (ModelLibrary.Spawn("Ufo", raidUfo, 2.6f, ModelLibrary.Fit.Footprint) == null)
+                {
+                    Visuals.Prim(PrimitiveType.Sphere, raidUfo, Vector3.zero, new Vector3(2.4f, 0.4f, 2.4f), new Color(0.6f, 0.65f, 0.7f), "Untertasse");
+                }
+                var beam = Visuals.Prim(PrimitiveType.Cylinder, raidUfo, new Vector3(0f, -1.6f, 0f), new Vector3(1.2f, 1.6f, 1.2f), new Color(0.6f, 1f, 0.5f), "Strahl", outline: false);
+                beam.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                GameAudio.Play(SoundId.WaveStart);
+            }
+            else if (!active && raidUfo != null)
+            {
+                Destroy(raidUfo.gameObject);
+                raidUfo = null;
+            }
+            if (raidUfo == null) return;
+            // über dem ersten Kuhstall, sonst über der Mitte
+            Vector3 target = new Vector3(FarmState.Width / 2f, 0f, FarmState.Height / 2f);
+            foreach (var b in Farm.Data.Buildings)
+            {
+                if (b.Type == FarmBuildingType.Kuhstall.Id) { target = new Vector3(b.X + 1f, 0f, b.Y + 1f); break; }
+            }
+            raidUfo.position = target + new Vector3(Mathf.Sin(Time.time * 0.8f) * 0.4f, 3.2f + Mathf.Sin(Time.time * 2f) * 0.15f, 0f);
+            raidUfo.Rotate(0f, 60f * Time.deltaTime, 0f);
         }
 
         public Vector3 ObstacleTop(ObstacleData o) => new Vector3(o.X + 0.5f, 0.8f, o.Y + 0.5f);

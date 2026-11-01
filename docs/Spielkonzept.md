@@ -398,6 +398,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Wie eine echte App:** Startbildschirm (Weide mit Kühen, Ufo mit Traktorstrahl, Helden, wackelndes Logo), Ladebildschirm mit Tipps, Einstellungen (Musik/Geräusche an/aus und Lautstärke, Grafik Niedrig/Mittel/Hoch, Spielstand zurücksetzen mit doppelter Abfrage, Infos), App-Icon (Kuh im Ufo-Strahl, `Assets/AppIcon`, gerendert mit `tools/blender/render_app_icon.py`), Knopf „Hauptmenü“ auf dem Hof
 - [x] **Tägliche Herausforderung:** jeden Tag eine freigeschaltete Karte mit 2 Sonderregeln (z. B. nur Explosiv-Türme, kein Held, schnellere oder zähere Aliens, wenig Startgeld, Upgrades nur bis Stufe 3, nur 4 Kühe, alle Aliens getarnt), 25 Diamanten beim ersten Sieg des Tages; oben auf der Weltkarte
 - [x] **Endlos-Modus:** pro geschaffter Karte (Knopf „Endlos“ auf der Weltkarte); nach den Wellen des Levels kommen immer härtere Zufallswellen, alle 5 Wellen ein Boss; Rekord pro Karte, 40 Mais/Milch pro Welle, Diamanten für neue Rekorde; zwei neue Erfolge
+- [x] **Alien-Überfall auf den Hof:** ab Heimattal 3 alle 4–6 Stunden Alarm (Ufo mit Traktorstrahl über dem Kuhstall, Banner mit Restzeit). Verteidigen = kurze Runde mit 6 Wellen auf einer Hof-Karte (Hindernisse sind Hof-Gebäude), Stärke wächst mit den Sternen. Gewonnen: Mais, Milch, Diamanten, Erfahrung. Verloren oder 1 Stunde ignoriert: die Aliens nehmen 10 % der Vorräte mit. Neuer Erfolg „Hofwache“
 
 ### Upgrade-System
 

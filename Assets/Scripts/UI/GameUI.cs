@@ -566,7 +566,14 @@ namespace MuhDefense
         /// <summary>Start-Fenster für Herausforderung und Endlos (statt Geschichte und Sterne).</summary>
         void DrawModeIntro()
         {
-            if (level.Mode == LevelMode.Challenge)
+            if (level.Mode == LevelMode.Raid)
+            {
+                GUILayout.Label(level.Def.Story, UiKit.Label);
+                GUILayout.Space(8f);
+                GUILayout.Label($"6 Wellen. Gewinnst du, gibt es {Raids.RewardAmount(GameFlow.Farm)} Mais, {Raids.RewardAmount(GameFlow.Farm)} Milch und Diamanten.", UiKit.Title);
+                GUILayout.Label("Verlierst du, nehmen die Aliens 10 % deiner Vorräte mit.", UiKit.Small);
+            }
+            else if (level.Mode == LevelMode.Challenge)
             {
                 GUILayout.Label($"Karte: {level.Def.Name}", UiKit.Label);
                 GUILayout.Space(6f);
@@ -633,6 +640,7 @@ namespace MuhDefense
                 UiKit.DrawStars(starsRect, level.Stars, 86f);
                 GUILayout.Label(level.Mode == LevelMode.Challenge
                     ? $"Herausforderung geschafft! Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}"
+                    : level.Mode == LevelMode.Raid ? "Überfall abgewehrt – dein Hof ist sicher!"
                     : $"Kühe gerettet: {level.CowsRemaining}/{level.TotalCows}   •   Bestes Ergebnis auf {DifficultyRules.Name(level.Difficulty)}: {level.BestStars} Sterne", UiKit.Center);
 
                 var reward = level.Reward;
@@ -669,8 +677,10 @@ namespace MuhDefense
             }
             else
             {
-                GUILayout.Label("Die Aliens haben alle Kühe entführt. Versuch es mit einer anderen Turm-Aufstellung " +
-                                "oder verbessere deine Werkstätten auf dem Hof!", UiKit.Label);
+                GUILayout.Label(level.Mode == LevelMode.Raid
+                    ? "Die Aliens haben den Hof geplündert und 10 % deiner Vorräte mitgenommen. Beim nächsten Überfall klappt's!"
+                    : "Die Aliens haben alle Kühe entführt. Versuch es mit einer anderen Turm-Aufstellung " +
+                      "oder verbessere deine Werkstätten auf dem Hof!", UiKit.Label);
             }
 
             GUILayout.FlexibleSpace();

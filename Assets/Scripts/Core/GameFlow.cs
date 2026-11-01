@@ -97,6 +97,30 @@ namespace MuhDefense
             return new LevelReward { Stars = stars, Corn = corn, Milk = milk, Gems = gems };
         }
 
+        /// <summary>Überfall auf den Hof vorbei: gewonnen = Belohnung, verloren = die Aliens nehmen Vorräte mit.</summary>
+        public static LevelReward CompleteRaid(bool won, int stars)
+        {
+            Farm.Tick();
+            var reward = new LevelReward { Stars = stars };
+            if (won)
+            {
+                int amount = Raids.RewardAmount(Farm);
+                reward.Corn = (int)Farm.Add(Resource.Mais, amount);
+                reward.Milk = (int)Farm.Add(Resource.Milch, amount);
+                reward.Gems = 3 + stars * 2;
+                Farm.AddGems(reward.Gems);
+                Farm.AddXp(30 + 10 * stars, new Vector3(FarmState.Width / 2f, 2.5f, FarmState.Height / 2f));
+                Farm.Count(Counter.RaidsWon);
+            }
+            else
+            {
+                Farm.StealSupplies("Überfall verloren");
+            }
+            Farm.ScheduleNextRaid(FarmState.Now);
+            Farm.Save();
+            return reward;
+        }
+
         /// <summary>Endlos vorbei: Mais und Milch je geschaffter Welle, Diamanten für einen neuen Rekord.</summary>
         public static LevelReward CompleteEndless(LevelDefinition def, int waves)
         {

@@ -26,6 +26,8 @@ namespace MuhDefense
         bool IsMaisfeld => def.Theme == MapTheme.Maisfeld;
         bool IsCrash => def.Theme == MapTheme.Absturzstelle;
         string ObstacleModel => IsCrash ? "Kristall" : "Maisstaude";
+        bool IsHof => def.Theme == MapTheme.Hof;
+        static readonly string[] HofModels = { "Kuhstall", "Maissilo", "Milchtank", "Knechthuette", "Schmiede", "Maisfeld" };
 
         LevelDefinition def;
         readonly HashSet<Vector2Int> pathCells = new HashSet<Vector2Int>();
@@ -56,12 +58,12 @@ namespace MuhDefense
                     Color color;
                     if (pathCells.Contains(cell)) color = PathColor;
                     else if (def.Pasture.Contains(cell)) color = PastureColor;
-                    else if (def.IsCorn(cell)) color = IsCrash ? CraterSoil : Soil;
+                    else if (def.IsCorn(cell) && !IsHof) color = IsCrash ? CraterSoil : Soil;
                     else if (IsCrash) color = (x + y) % 2 == 0 ? CraterA : CraterB;
                     else if (IsMaisfeld) color = (x + y) % 2 == 0 ? FieldA : FieldB;
                     else color = (x + y) % 2 == 0 ? GrassA : GrassB;
 
-                    var kind = pathCells.Contains(cell) || def.IsCorn(cell) ? GroundTextures.Kind.Dirt
+                    var kind = pathCells.Contains(cell) || (def.IsCorn(cell) && !IsHof) ? GroundTextures.Kind.Dirt
                         : IsMaisfeld && !def.Pasture.Contains(cell) ? GroundTextures.Kind.Field : GroundTextures.Kind.Grass;
                     var tile = CreateTile(cell, color);
                     tile.sharedMaterial = GroundTextures.Material(kind, color);
@@ -199,6 +201,19 @@ namespace MuhDefense
         void BuildCornWalls()
         {
             var rng = new System.Random(7);
+            if (IsHof)
+            {
+                // Überfall auf den Hof: auf jeder gesperrten Fläche steht ein Hof-Gebäude
+                for (int i = 0; i < def.Corn.Length; i++)
+                {
+                    var r = def.Corn[i];
+                    var holder = new GameObject("Hof-Gebäude").transform;
+                    holder.SetParent(transform, false);
+                    holder.localPosition = new Vector3(r.x + r.width / 2f, 0f, r.y + r.height / 2f);
+                    ModelLibrary.Spawn(HofModels[i % HofModels.Length], holder, Mathf.Min(r.width, r.height) * 0.95f, ModelLibrary.Fit.Footprint, 180f);
+                }
+                return;
+            }
             for (int x = 0; x < def.Width; x++)
             {
                 for (int y = 0; y < def.Height; y++)

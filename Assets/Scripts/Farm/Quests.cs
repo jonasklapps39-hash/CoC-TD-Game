@@ -17,6 +17,7 @@ namespace MuhDefense
         public const string FarmBuilds = "farm_builds";
         public const string ObstaclesCleared = "obstacles";
         public const string Challenges = "challenges";
+        public const string RaidsWon = "raids";
     }
 
     public enum RewardKind
@@ -89,6 +90,7 @@ namespace MuhDefense
             new AchievementDef { Id = "a_farmlevel", Name = "Meisterbauer", Description = "Erreiche Bauernstufe 10.", Value = f => f.FarmLevel, Target = 10, Gems = 40, Icon = "Bauernhaus" },
             new AchievementDef { Id = "a_challenges", Name = "Herausforderer", Description = "Schaffe 7 tägliche Herausforderungen.", Counter = Counter.Challenges, Target = 7, Gems = 40, Icon = "Diamant" },
             new AchievementDef { Id = "a_endless", Name = "Ausdauer", Description = "Schaffe im Endlos-Modus Welle 30.", Value = f => MaxEndless(f), Target = 30, Gems = 50, Icon = "Boss" },
+            new AchievementDef { Id = "a_raids", Name = "Hofwache", Description = "Wehre 10 Überfälle auf deinen Hof ab.", Counter = Counter.RaidsWon, Target = 10, Gems = 40, Icon = "Ufo" },
             new AchievementDef { Id = "a_farmhouse", Name = "Großbauer", Description = "Verbessere das Bauernhaus auf Stufe 5.", Value = f => f.FarmhouseLevel, Target = 5, Gems = 30, Icon = "Bauernhaus" },
         };
 

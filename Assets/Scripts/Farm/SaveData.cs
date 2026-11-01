@@ -48,6 +48,8 @@ namespace MuhDefense
         /// <summary>Tag, an dem die tägliche Herausforderung zuletzt geschafft wurde.</summary>
         public int ChallengeDay = -1;
         public List<EndlessRecord> EndlessRecords = new List<EndlessRecord>();
+        /// <summary>Zeitpunkt des nächsten Alien-Überfalls auf den Hof (0 = noch nicht geplant).</summary>
+        public double NextRaid;
     }
 
     [Serializable]
