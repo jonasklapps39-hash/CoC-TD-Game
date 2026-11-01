@@ -552,12 +552,12 @@ namespace MuhDefense
             {
                 lines.Add($"Lager: {type.StorageCapacity[cur - 1]} → {type.StorageCapacity[next - 1]} {FarmBuildingType.ResourceName(type.StoredResource)}");
             }
-            foreach (var unlock in type.Unlocks)
+            foreach (var g in UnlockGroups(type))
             {
-                int a = FarmState.TowerLevelForWorkshop(cur, unlock.FromLevel);
-                int b2 = FarmState.TowerLevelForWorkshop(next, unlock.FromLevel);
-                if (a == 0 && b2 > 0) lines.Add($"Neuer Turm: {unlock.Tower.Name} (bis Stufe {b2})");
-                else if (b2 > a) lines.Add($"{unlock.Tower.ShortName}: Upgrades bis Stufe {a} → {b2}");
+                int a = FarmState.TowerLevelForWorkshop(cur, g.from);
+                int b2 = FarmState.TowerLevelForWorkshop(next, g.from);
+                if (a == 0 && b2 > 0) lines.Add($"Neu: {g.names} (bis Stufe {b2})");
+                else if (b2 > a) lines.Add($"{g.names}: Stufe {a} → {b2}");
             }
             if (type == FarmBuildingType.Heldenhuette)
             {
@@ -605,14 +605,35 @@ namespace MuhDefense
             {
                 lines.Add($"Lagert: {type.StorageCapacity[b.Level - 1]} {FarmBuildingType.ResourceName(type.StoredResource)}");
             }
-            foreach (var unlock in type.Unlocks)
+            if (type.IsWorkshop) lines.Add("Turm-Upgrades im Level:");
+            foreach (var g in UnlockGroups(type))
             {
-                int tier = FarmState.TowerLevelForWorkshop(b.Level, unlock.FromLevel);
-                lines.Add(tier > 0
-                    ? $"{unlock.Tower.Name}: Upgrades im Level bis Stufe {tier}"
-                    : $"{unlock.Tower.Name}: ab Werkstatt-Stufe {unlock.FromLevel}");
+                int tier = FarmState.TowerLevelForWorkshop(b.Level, g.from);
+                lines.Add(tier > 0 ? $"{g.names}: bis Stufe {tier}" : $"{g.names}: ab Werkstatt-Stufe {g.from}");
             }
             return string.Join("\n", lines);
+        }
+
+        /// <summary>Türme einer Werkstatt, zusammengefasst nach der Stufe, ab der sie frei werden (gleiche Upgrade-Grenze).</summary>
+        static List<(int from, string names)> UnlockGroups(FarmBuildingType type)
+        {
+            var groups = new List<(int from, string names)>();
+            var froms = new List<int>();
+            foreach (var u in type.Unlocks)
+            {
+                if (!froms.Contains(u.FromLevel)) froms.Add(u.FromLevel);
+            }
+            froms.Sort();
+            foreach (int f in froms)
+            {
+                var names = new List<string>();
+                foreach (var u in type.Unlocks)
+                {
+                    if (u.FromLevel == f) names.Add(u.Tower.ShortName);
+                }
+                groups.Add((f, string.Join(", ", names)));
+            }
+            return groups;
         }
 
         // ---------------------------------------------------------------- Fenster

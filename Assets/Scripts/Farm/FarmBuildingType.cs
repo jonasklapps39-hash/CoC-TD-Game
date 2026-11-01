@@ -164,7 +164,7 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Schmiede,
             Name = "Schmiede",
-            Description = "Werkstatt für Basis-Türme: Mistgabel-Bauer und Eier-Huhn, ab Stufe 2 Bienenstock und Hofhund-Hütte. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Basis-Türme. Jede Stufe erlaubt höhere Turm-Upgrades im Level.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
             Costs = new[] { 200, 500, 1200, 2500, 4500 },
@@ -181,7 +181,7 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Zimmerei,
             Name = "Zimmerei",
-            Description = "Werkstatt für Explosiv-Türme: Heuballen-Katapult und Popcorn-Kanone, ab Stufe 2 Kürbis-Mörser und Mähdrescher. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Explosiv-Türme. Jede Stufe erlaubt höhere Turm-Upgrades im Level.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
             Costs = new[] { 400, 1000, 2000, 3500, 5000 },
@@ -198,7 +198,7 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.Tueftlerschuppen,
             Name = "Tüftlerschuppen",
-            Description = "Werkstatt für Technik-Türme: Eismilch-Sprüher, ab Stufe 2 Windmühle, Traktor-Tesla und Güllefass. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Technik-Türme. Jede Stufe erlaubt höhere Turm-Upgrades im Level.",
             MaxLevel = 5,
             CostResource = Resource.Milch,
             Costs = new[] { 600, 1200, 2200, 3500, 5000 },
@@ -215,7 +215,7 @@ namespace MuhDefense
         {
             Kind = FarmBuildingKind.HofladenKontor,
             Name = "Hofladen-Kontor",
-            Description = "Werkstatt für Unterstützungs-Türme: Wetterhahn und Vogelscheuche, ab Stufe 2 der Hofladen. Jede Stufe erlaubt im Level höhere Upgrades.",
+            Description = "Werkstatt für Unterstützungs-Türme. Jede Stufe erlaubt höhere Turm-Upgrades im Level.",
             MaxLevel = 5,
             CostResource = Resource.Mais,
             Costs = new[] { 600, 1200, 2400, 4000, 6000 },
