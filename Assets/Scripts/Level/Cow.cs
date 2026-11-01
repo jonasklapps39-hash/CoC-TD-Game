@@ -92,7 +92,16 @@ namespace MuhDefense
 
         void BuildModel()
         {
-            if (ModelLibrary.Spawn("Kuh", transform, 0.62f) != null) return;
+            var model = ModelLibrary.Spawn("Kuh", transform, 0.62f);
+            if (model != null)
+            {
+                var skin = CowSkin.Get(GameFlow.Farm.Data.CowSkin);
+                if (skin.Tint != Color.white)
+                {
+                    foreach (var r in model.GetComponentsInChildren<Renderer>()) r.sharedMaterial = Visuals.TintedVertexMaterial(skin.Tint);
+                }
+                return;
+            }
 
             // Ersatz aus Grundkörpern, falls das Modell fehlt
             var white = new Color(0.97f, 0.97f, 0.95f);

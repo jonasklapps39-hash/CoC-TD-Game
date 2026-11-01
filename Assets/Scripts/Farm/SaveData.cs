@@ -17,6 +17,12 @@ namespace MuhDefense
         public List<string> SeenEnemies = new List<string>();
         /// <summary>Gekaufte Talente aus dem Talentbaum „Bauernwissen“.</summary>
         public List<string> Talents = new List<string>();
+        /// <summary>Premium-Währung (im Prototyp nur im Spiel verdient).</summary>
+        public int Gems;
+        /// <summary>Mit Diamanten angeheuerte zusätzliche Knechte.</summary>
+        public int ExtraBuilders;
+        public string CowSkin = "standard";
+        public List<string> OwnedSkins = new List<string> { "standard" };
     }
 
     [Serializable]

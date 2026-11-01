@@ -472,6 +472,20 @@ def build_coin():
     soft_box((0, -0.08, 0.5), (0.08, 0.02, 0.36), (0.75, 0.55, 0.12), round_=0.3)
 
 
+def build_gem():
+    """Diamant (nur für Symbole): kantig geschliffener Edelstein in Türkis."""
+    def facet(o, color):
+        finish(o, color, 0)
+        for poly in o.data.polygons:
+            poly.use_smooth = False
+    bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.42, radius2=0.3, depth=0.22, location=(0, 0, 0.62))
+    facet(bpy.context.object, (0.45, 0.95, 1.0))
+    bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.01, radius2=0.42, depth=0.42, location=(0, 0, 0.3))
+    facet(bpy.context.object, (0.22, 0.72, 0.95))
+    bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.3, depth=0.04, location=(0, 0, 0.74))
+    facet(bpy.context.object, (0.8, 1.0, 1.0))
+
+
 def build_corn():
     """Maiskolben (nur für Symbole)."""
     ball((0, 0, 0.55), (0.32, 0.32, 0.8), (1.0, 0.82, 0.2), subsurf=2)
@@ -707,6 +721,7 @@ MODELS = [
     ("Tueftlerschuppen", build_tinker_shed, 6000),
     ("HofladenKontor", build_shop_office, 6000),
     ("Muenze", build_coin, 2000),
+    ("Diamant", build_gem, 1500),
     ("Maiskolben", build_corn, 2000),
     ("Milchflasche", build_milk, 2000),
     ("Baum", build_tree, 2500),

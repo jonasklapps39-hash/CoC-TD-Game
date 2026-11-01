@@ -25,14 +25,23 @@ namespace MuhDefense
         public bool ShopOpen;
         public bool MapOpen;
         public bool TalentsOpen;
+        public bool GemShopOpen;
         /// <summary>Irgendein Fenster (Bauen, Weltkarte, Talente, Shop …) ist offen.</summary>
-        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen;
+        public bool AnyWindowOpen => ShopOpen || MapOpen || TalentsOpen || GemShopOpen;
 
         public void CloseWindows()
         {
             ShopOpen = false;
             MapOpen = false;
             TalentsOpen = false;
+            GemShopOpen = false;
+        }
+
+        public void InstantFinishSelected()
+        {
+            if (Selected == null || !Farm.InstantFinish(Selected)) return;
+            GameAudio.Play(SoundId.Coin);
+            Farm.Save();
         }
 
         public readonly Dictionary<int, FarmBuildingView> Views = new Dictionary<int, FarmBuildingView>();

@@ -68,6 +68,21 @@ namespace MuhDefense
             return mat;
         }
 
+        static readonly Dictionary<Color, Material> tintedVertexMaterials = new Dictionary<Color, Material>();
+
+        /// <summary>Vertexfarben-Material, zusätzlich mit einer Farbe eingefärbt (z. B. Kuh-Skins).</summary>
+        public static Material TintedVertexMaterial(Color tint)
+        {
+            if (tint == Color.white) return VertexColorMaterial;
+            if (!tintedVertexMaterials.TryGetValue(tint, out var mat) || mat == null)
+            {
+                mat = new Material(VertexColorMaterial);
+                mat.SetColor("_Color", tint);
+                tintedVertexMaterials[tint] = mat;
+            }
+            return mat;
+        }
+
         /// <summary>Material für die Blender-Modelle: Farbe kommt aus den Vertexfarben.</summary>
         public static Material VertexColorMaterial
         {

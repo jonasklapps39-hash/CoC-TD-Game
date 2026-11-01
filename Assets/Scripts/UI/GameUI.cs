@@ -537,6 +537,12 @@ namespace MuhDefense
                     UiKit.Heading($"+{reward.Corn}", UiKit.Title, GUILayout.Width(110f), GUILayout.Height(44f));
                     if (milk != null) GUILayout.Label(milk, GUILayout.Width(44f), GUILayout.Height(44f));
                     UiKit.Heading($"+{reward.Milk}", UiKit.Title, GUILayout.Width(110f), GUILayout.Height(44f));
+                    if (reward.Gems > 0)
+                    {
+                        var gem = UiKit.Icon("Diamant");
+                        if (gem != null) GUILayout.Label(gem, GUILayout.Width(44f), GUILayout.Height(44f));
+                        UiKit.Heading($"+{reward.Gems}", UiKit.Title, GUILayout.Width(90f), GUILayout.Height(44f));
+                    }
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
                     if (reward.CornLost > 0 || reward.MilkLost > 0) GUILayout.Label("Lager voll – baue Silos und Tanks!", UiKit.Center);

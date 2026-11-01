@@ -15,6 +15,12 @@ namespace MuhDefense
         public const int Width = 22;
         public const int Height = 12;
         const int FarmhouseBaseCapacity = 500;
+        public const int WelcomeGems = 30;
+        public const int GemsPerNewStar = 5;
+        public const int GemsFirstClear = 10;
+        public const int ResourcePackGems = 20;
+        public const int ResourcePackAmount = 600;
+        public const int MaxExtraBuilders = 2;
         const int FarmhouseCapacityPerLevel = 250;
 
         static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -48,8 +54,23 @@ namespace MuhDefense
             {
                 state.Data = CreateNewFarm();
             }
+            state.Migrate();
             state.Tick();
             return state;
+        }
+
+        /// <summary>Ältere Spielstände auf den aktuellen Stand bringen.</summary>
+        void Migrate()
+        {
+            if (Data.Version < 2)
+            {
+                Data.Gems += WelcomeGems;
+                Data.Version = 2;
+            }
+            if (Data.OwnedSkins == null || Data.OwnedSkins.Count == 0) Data.OwnedSkins = new List<string> { "standard" };
+            if (string.IsNullOrEmpty(Data.CowSkin)) Data.CowSkin = "standard";
+            if (Data.Talents == null) Data.Talents = new List<string>();
+            if (Data.SeenEnemies == null) Data.SeenEnemies = new List<string>();
         }
 
         public void Save()
@@ -71,7 +92,7 @@ namespace MuhDefense
 
         static SaveData CreateNewFarm()
         {
-            var data = new SaveData { Corn = 300, Milk = 300 };
+            var data = new SaveData { Corn = 300, Milk = 300, Gems = WelcomeGems, Version = 2 };
             AddStartBuilding(data, FarmBuildingType.Bauernhaus, 9, 5);
             AddStartBuilding(data, FarmBuildingType.Maisfeld, 4, 8);
             AddStartBuilding(data, FarmBuildingType.Kuhstall, 15, 8);
@@ -209,7 +230,7 @@ namespace MuhDefense
                 {
                     if (b.Type == FarmBuildingType.Knechthuette.Id && b.Level > 0) n++;
                 }
-                return n;
+                return n + Data.ExtraBuilders;
             }
         }
 
@@ -390,6 +411,60 @@ namespace MuhDefense
                 foreach (var p in Data.Levels) n += p.BestStars;
                 return n;
             }
+        }
+
+        // ---------------------------------------------------------------- Diamanten
+
+        public int Gems => Data.Gems;
+
+        public void AddGems(int amount) => Data.Gems += Mathf.Max(0, amount);
+
+        bool SpendGems(int amount)
+        {
+            if (Data.Gems < amount) return false;
+            Data.Gems -= amount;
+            return true;
+        }
+
+        /// <summary>Diamanten, um einen Bau sofort fertigzustellen (1 Diamant pro angefangene 20 Sekunden).</summary>
+        public int InstantFinishCost(BuildingData b) => b.IsUpgrading ? Mathf.Max(1, Mathf.CeilToInt((float)(RemainingSeconds(b) / 20.0))) : 0;
+
+        public bool InstantFinish(BuildingData b)
+        {
+            if (!b.IsUpgrading || !SpendGems(InstantFinishCost(b))) return false;
+            b.UpgradeEnd = Now;
+            return true;
+        }
+
+        public int ExtraBuilderCost => 80 * (Data.ExtraBuilders + 1);
+
+        public bool BuyExtraBuilder()
+        {
+            if (Data.ExtraBuilders >= MaxExtraBuilders || !SpendGems(ExtraBuilderCost)) return false;
+            Data.ExtraBuilders++;
+            return true;
+        }
+
+        /// <returns>Tatsächlich hinzugefügte Menge (0, wenn zu wenig Diamanten oder Lager voll).</returns>
+        public double BuyResourcePack(Resource r)
+        {
+            if (Capacity(r) - Amount(r) < 1 || !SpendGems(ResourcePackGems)) return 0;
+            return Add(r, ResourcePackAmount);
+        }
+
+        public bool OwnsSkin(string id) => Data.OwnedSkins.Contains(id);
+
+        public bool BuySkin(CowSkin skin)
+        {
+            if (OwnsSkin(skin.Id) || !SpendGems(skin.Cost)) return false;
+            Data.OwnedSkins.Add(skin.Id);
+            Data.CowSkin = skin.Id;
+            return true;
+        }
+
+        public void SelectSkin(CowSkin skin)
+        {
+            if (OwnsSkin(skin.Id)) Data.CowSkin = skin.Id;
         }
 
         // ---------------------------------------------------------------- Talentbaum

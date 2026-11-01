@@ -11,6 +11,7 @@ namespace MuhDefense
         readonly List<Rect> blockers = new List<Rect>();
         Vector2 shopScroll;
         Vector2 mapScroll;
+        Vector2 gemScroll;
 
         FarmState State => farm.Farm;
 
@@ -98,6 +99,7 @@ namespace MuhDefense
             if (farm.ShopOpen) DrawShop();
             if (farm.MapOpen) DrawWorldMap();
             if (farm.TalentsOpen) DrawTalents();
+            if (farm.GemShopOpen) DrawGemShop();
 
             if (UiKit.EscapePressed())
             {
@@ -132,6 +134,12 @@ namespace MuhDefense
             UiKit.Title.alignment = TextAnchor.MiddleLeft;
             UiKit.OutlinedText(new Rect(starRect.x + 42f, starRect.y, 66f, 36f), State.TotalStars.ToString(), UiKit.Title, Color.white);
             UiKit.PillLabel(new Rect(642f, 10f, 140f, 36f), UiKit.Icon("MistgabelBauer"), $"{State.BuildersFree}/{State.BuildersTotal}");
+            var gemRect = new Rect(800f, 10f, 150f, 36f);
+            if (gemRect.xMax < vw - 10f)
+            {
+                UiKit.PillLabel(gemRect, UiKit.Icon("Diamant"), State.Gems.ToString());
+                if (GUI.Button(gemRect, GUIContent.none, GUIStyle.none)) farm.GemShopOpen = true;
+            }
         }
 
         void DrawSideBar()
@@ -158,6 +166,8 @@ namespace MuhDefense
                 if (UiKit.Btn("Bauen", UiKit.YellowButton, GUILayout.Height(56f))) farm.ShopOpen = true;
                 GUILayout.Space(4f);
                 if (UiKit.Btn($"Bauernwissen ({State.AvailableStars} Sterne)", UiKit.BlueCard, GUILayout.Height(48f))) farm.TalentsOpen = true;
+                GUILayout.Space(4f);
+                if (UiKit.IconBtn("Shop", UiKit.Icon("Diamant"), UiKit.Button, GUILayout.Height(48f))) farm.GemShopOpen = true;
                 GUILayout.Space(6f);
                 GUILayout.BeginHorizontal();
                 if (UiKit.Btn(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
@@ -211,6 +221,10 @@ namespace MuhDefense
                 GUILayout.Label($"{(b.Level == 0 ? "Wird gebaut" : $"Wird auf Stufe {b.Level + 1} verbessert")}: noch {UiKit.FormatTime(State.RemainingSeconds(b))}", UiKit.Small);
                 Rect bar = GUILayoutUtility.GetRect(10f, 14f);
                 UiKit.DrawBar(bar, State.UpgradeProgress(b), new Color(0.4f, 0.8f, 0.3f));
+                int gems = State.InstantFinishCost(b);
+                GUI.enabled = State.Gems >= gems;
+                if (UiKit.IconBtn($"Sofort fertig: {gems}", UiKit.Icon("Diamant"), UiKit.BlueCard, GUILayout.Height(46f))) farm.InstantFinishSelected();
+                GUI.enabled = true;
             }
             else if (b.Level < type.MaxLevel)
             {
@@ -303,6 +317,123 @@ namespace MuhDefense
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4f);
             }
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        /// <summary>Shop: Diamanten ausgeben (Knechte, Rohstoffe, Kuh-Skins), Echtgeld-Pakete als Vorschau.</summary>
+        void DrawGemShop()
+        {
+            Rect box = UiKit.DrawOverlay(blockers, 860f, 620f);
+            GUILayout.BeginArea(new Rect(box.x + 20f, box.y + 16f, box.width - 40f, box.height - 32f));
+            GUILayout.BeginHorizontal();
+            UiKit.Heading("Shop", UiKit.Title, GUILayout.Height(40f));
+            GUILayout.FlexibleSpace();
+            var gem = UiKit.Icon("Diamant");
+            if (gem != null) GUILayout.Label(gem, GUILayout.Width(40f), GUILayout.Height(40f));
+            UiKit.Heading(State.Gems.ToString(), UiKit.Title, GUILayout.Width(90f), GUILayout.Height(40f));
+            if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.GemShopOpen = false;
+            GUILayout.EndHorizontal();
+            GUILayout.Label($"Diamanten gibt es für jeden neuen Stern ({FarmState.GemsPerNewStar}) und beim ersten Schaffen eines Levels ({FarmState.GemsFirstClear}).", UiKit.Small);
+
+            gemScroll = GUILayout.BeginScrollView(gemScroll);
+            GUILayout.BeginHorizontal();
+            // Knecht
+            GUILayout.BeginVertical(UiKit.Card, GUILayout.Width(250f));
+            UiKit.Heading("Zusätzlicher Knecht", UiKit.Title, GUILayout.Height(30f));
+            var worker = UiKit.Icon("MistgabelBauer");
+            if (worker != null) GUILayout.Label(worker, GUILayout.Height(80f));
+            GUILayout.Label($"Ein Knecht mehr zum Bauen. Angeheuert: {State.Data.ExtraBuilders}/{FarmState.MaxExtraBuilders}", UiKit.Small);
+            GUI.enabled = State.Data.ExtraBuilders < FarmState.MaxExtraBuilders && State.Gems >= State.ExtraBuilderCost;
+            if (UiKit.IconBtn(State.Data.ExtraBuilders < FarmState.MaxExtraBuilders ? State.ExtraBuilderCost.ToString() : "Maximum", gem, UiKit.ActiveButton, GUILayout.Height(44f))
+                && State.BuyExtraBuilder())
+            {
+                State.Save();
+                GameAudio.Play(SoundId.LevelUp);
+            }
+            GUI.enabled = true;
+            GUILayout.EndVertical();
+
+            // Rohstoffe
+            foreach (var res in new[] { Resource.Mais, Resource.Milch })
+            {
+                GUILayout.BeginVertical(UiKit.Card, GUILayout.Width(250f));
+                UiKit.Heading($"{FarmState.ResourcePackAmount} {FarmBuildingType.ResourceName(res)}", UiKit.Title, GUILayout.Height(30f));
+                var icon = UiKit.Icon(res == Resource.Mais ? "Maiskolben" : "Milchflasche");
+                if (icon != null) GUILayout.Label(icon, GUILayout.Height(80f));
+                GUILayout.Label("Sofort ins Lager (so viel hineinpasst).", UiKit.Small);
+                GUI.enabled = State.Gems >= FarmState.ResourcePackGems;
+                if (UiKit.IconBtn(FarmState.ResourcePackGems.ToString(), gem, UiKit.ActiveButton, GUILayout.Height(44f)))
+                {
+                    double added = State.BuyResourcePack(res);
+                    if (added > 0)
+                    {
+                        State.Save();
+                        GameAudio.Play(SoundId.Coin);
+                    }
+                }
+                GUI.enabled = true;
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(8f);
+            UiKit.Heading("Kuh-Skins", UiKit.Title, GUILayout.Height(32f));
+            GUILayout.BeginHorizontal();
+            var cowIcon = UiKit.Icon("Kuh");
+            foreach (var skin in CowSkin.All)
+            {
+                bool owned = State.OwnsSkin(skin.Id);
+                bool active = State.Data.CowSkin == skin.Id;
+                GUILayout.BeginVertical(active ? UiKit.ActiveButton : UiKit.Card, GUILayout.Width(190f));
+                UiKit.Heading(skin.Name, UiKit.Title, GUILayout.Height(28f));
+                if (cowIcon != null)
+                {
+                    Rect ir = GUILayoutUtility.GetRect(10f, 80f, GUILayout.Height(80f));
+                    GUI.color = skin.Tint;
+                    GUI.DrawTexture(ir, cowIcon, ScaleMode.ScaleToFit);
+                    GUI.color = Color.white;
+                }
+                if (active)
+                {
+                    GUILayout.Label("Aktiv", UiKit.Small);
+                }
+                else if (owned)
+                {
+                    if (UiKit.Btn("Auswählen", UiKit.YellowButton, GUILayout.Height(40f)))
+                    {
+                        State.SelectSkin(skin);
+                        State.Save();
+                    }
+                }
+                else
+                {
+                    GUI.enabled = State.Gems >= skin.Cost;
+                    if (UiKit.IconBtn(skin.Cost.ToString(), gem, UiKit.ActiveButton, GUILayout.Height(40f)) && State.BuySkin(skin))
+                    {
+                        State.Save();
+                        GameAudio.Play(SoundId.Moo);
+                    }
+                    GUI.enabled = true;
+                }
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(8f);
+            UiKit.Heading("Diamanten kaufen", UiKit.Title, GUILayout.Height(32f));
+            GUILayout.BeginHorizontal();
+            foreach (var (amount, price) in new[] { (100, "1,99 €"), (550, "9,99 €"), (1200, "19,99 €") })
+            {
+                GUILayout.BeginVertical(UiKit.Card, GUILayout.Width(190f));
+                UiKit.Heading($"{amount} Diamanten", UiKit.Title, GUILayout.Height(28f));
+                GUI.enabled = false;
+                UiKit.Btn(price, UiKit.Button, GUILayout.Height(40f));
+                GUI.enabled = true;
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Echtgeld-Käufe kommen erst mit dem Start im Play Store.", UiKit.Small);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
         }

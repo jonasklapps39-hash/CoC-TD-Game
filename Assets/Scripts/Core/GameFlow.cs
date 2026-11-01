@@ -12,6 +12,8 @@ namespace MuhDefense
         /// <summary>Menge, die nicht ins Lager gepasst hat.</summary>
         public int CornLost;
         public int MilkLost;
+        /// <summary>Diamanten für neue Sterne und das erste Schaffen.</summary>
+        public int Gems;
     }
 
     /// <summary>
@@ -71,6 +73,9 @@ namespace MuhDefense
             int milk = Mathf.RoundToInt(def.RewardMilk * stars / 3f);
             int cornAdded = (int)Farm.Add(Resource.Mais, corn);
             int milkAdded = (int)Farm.Add(Resource.Milch, milk);
+            int previousBest = Farm.BestStars(def.Id);
+            int gems = Mathf.Max(0, stars - previousBest) * FarmState.GemsPerNewStar + (previousBest == 0 ? FarmState.GemsFirstClear : 0);
+            Farm.AddGems(gems);
             Farm.RecordStars(def.Id, stars);
             Farm.Save();
             return new LevelReward
@@ -80,6 +85,7 @@ namespace MuhDefense
                 Milk = milkAdded,
                 CornLost = corn - cornAdded,
                 MilkLost = milk - milkAdded,
+                Gems = gems,
             };
         }
 
