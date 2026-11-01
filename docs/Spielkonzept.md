@@ -378,6 +378,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Hof-Tutorial:** 6 kurze Schritte beim ersten Start (umsehen, bauen, erstes Level, einsammeln, Werkstatt verbessern, Tipps), gehen von selbst weiter, jederzeit überspringbar
 - [x] **Android-App automatisch bauen:** GitHub Actions (game-ci) baut die APK in der Cloud, Download unter *Actions → Artifacts* (Einrichtung: `docs/Android-Build.md`)
 - [x] **Feinschliff:** Türme federn beim Schießen, Kühe wackeln beim Laufen, nicken beim Grasen und zappeln beim Entführen, Aliens ploppen beim Erscheinen auf, Bosse kündigen sich mit Warnung, Knall und Bildschirmwackeln an und explodieren groß
+- [x] **Neuer Boden:** gezeichnete Rasen-Textur mit Halmen und Flecken (nur noch leichtes Mäh-Schachbrett), Weg aus Erde mit Kieseln, Blumen und Grasbüschel rund um Hof und Spielfeld
 
 ### Upgrade-System
 

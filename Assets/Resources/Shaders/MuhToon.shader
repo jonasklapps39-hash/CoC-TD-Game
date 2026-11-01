@@ -5,6 +5,7 @@ Shader "MuhDefense/Toon"
     Properties
     {
         _Color ("Farbe", Color) = (1, 1, 1, 1)
+        _MainTex ("Textur (optional, z. B. Rasen)", 2D) = "white" {}
         _UseVertexColor ("Vertexfarben nutzen", Float) = 0
         _ShadowColor ("Schattenfarbe", Color) = (0.58, 0.52, 0.68, 1)
         _ShadowThreshold ("Schattengrenze", Range(-1, 1)) = 0.05
@@ -33,6 +34,8 @@ Shader "MuhDefense/Toon"
             #include "AutoLight.cginc"
 
             fixed4 _Color;
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
             float _UseVertexColor;
             fixed4 _ShadowColor;
             float _ShadowThreshold;
@@ -45,6 +48,7 @@ Shader "MuhDefense/Toon"
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
                 float4 color : COLOR;
+                float2 uv : TEXCOORD0;
             };
 
             struct v2f
@@ -54,6 +58,7 @@ Shader "MuhDefense/Toon"
                 float3 worldPos : TEXCOORD1;
                 float4 color : COLOR;
                 SHADOW_COORDS(2)
+                float2 uv : TEXCOORD3;
             };
 
             v2f vert(appdata v)
@@ -67,6 +72,7 @@ Shader "MuhDefense/Toon"
                 c.rgb = GammaToLinearSpace(c.rgb);
                 #endif
                 o.color = lerp(float4(1, 1, 1, 1), c, _UseVertexColor);
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 TRANSFER_SHADOW(o)
                 return o;
             }
@@ -79,7 +85,7 @@ Shader "MuhDefense/Toon"
                 float shadow = SHADOW_ATTENUATION(i);
                 // Zwei Farbstufen mit weicher Kante statt realistischem Verlauf
                 float lit = smoothstep(_ShadowThreshold - _ShadowSoftness, _ShadowThreshold + _ShadowSoftness, ndl) * shadow;
-                fixed3 albedo = _Color.rgb * i.color.rgb;
+                fixed3 albedo = _Color.rgb * i.color.rgb * tex2D(_MainTex, i.uv).rgb;
                 fixed3 col = albedo * lerp(_ShadowColor.rgb, _LightColor0.rgb, lit);
                 col += albedo * ShadeSH9(float4(n, 1)) * _AmbientStrength;
                 float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);

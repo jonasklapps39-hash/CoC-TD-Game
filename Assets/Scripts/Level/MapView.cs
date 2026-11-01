@@ -6,21 +6,22 @@ namespace MuhDefense
     /// <summary>Baut das Spielfeld (Raster, Weg, Weide, Ufo am Eingang) und kennt, welche Felder Weg sind.</summary>
     public class MapView : MonoBehaviour
     {
-        static readonly Color GrassA = new Color(0.40f, 0.72f, 0.22f);
-        static readonly Color GrassB = new Color(0.37f, 0.68f, 0.20f);
-        static readonly Color PathColor = new Color(0.42f, 0.29f, 0.18f);
+        // Rasen: nur noch ein leichtes Mäh-Schachbrett, die Textur bringt Halme und Flecken
+        static readonly Color GrassA = new Color(0.45f, 0.78f, 0.25f);
+        static readonly Color GrassB = new Color(0.42f, 0.75f, 0.235f);
+        static readonly Color PathColor = new Color(0.5f, 0.35f, 0.21f);
         static readonly Color StoneA = new Color(0.86f, 0.52f, 0.32f);
         static readonly Color StoneB = new Color(0.93f, 0.64f, 0.4f);
-        static readonly Color PastureColor = new Color(0.56f, 0.82f, 0.40f);
-        static readonly Color BuildableColor = new Color(0.62f, 0.93f, 0.48f);
+        static readonly Color PastureColor = new Color(0.6f, 0.88f, 0.42f);
+        static readonly Color BuildableColor = new Color(0.68f, 1f, 0.5f);
         static readonly Color Wood = new Color(0.55f, 0.36f, 0.20f);
-        static readonly Color FieldA = new Color(0.62f, 0.70f, 0.24f);
-        static readonly Color FieldB = new Color(0.58f, 0.66f, 0.22f);
-        static readonly Color Soil = new Color(0.45f, 0.31f, 0.17f);
+        static readonly Color FieldA = new Color(0.67f, 0.76f, 0.26f);
+        static readonly Color FieldB = new Color(0.645f, 0.735f, 0.25f);
+        static readonly Color Soil = new Color(0.5f, 0.35f, 0.19f);
 
-        static readonly Color CraterA = new Color(0.48f, 0.5f, 0.42f);
-        static readonly Color CraterB = new Color(0.45f, 0.47f, 0.39f);
-        static readonly Color CraterSoil = new Color(0.32f, 0.28f, 0.36f);
+        static readonly Color CraterA = new Color(0.52f, 0.55f, 0.45f);
+        static readonly Color CraterB = new Color(0.5f, 0.53f, 0.435f);
+        static readonly Color CraterSoil = new Color(0.36f, 0.31f, 0.4f);
 
         bool IsMaisfeld => def.Theme == MapTheme.Maisfeld;
         bool IsCrash => def.Theme == MapTheme.Absturzstelle;
@@ -30,6 +31,7 @@ namespace MuhDefense
         readonly HashSet<Vector2Int> pathCells = new HashSet<Vector2Int>();
         Renderer[,] tiles;
         Color[,] tileColors;
+        GroundTextures.Kind[,] tileKinds;
         Transform ufo;
 
         public void Build(LevelDefinition definition)
@@ -37,14 +39,15 @@ namespace MuhDefense
             def = definition;
             ComputePathCells();
 
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(def.Width / 2f, -0.45f, def.Height / 2f),
-                new Vector3(def.Width + 12f, 0.5f, def.Height + 12f),
-                IsCrash ? new Color(0.36f, 0.36f, 0.34f) : IsMaisfeld ? new Color(0.5f, 0.56f, 0.18f) : new Color(0.30f, 0.55f, 0.18f),
-                "Untergrund", outline: false);
+            var ground = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(def.Width / 2f, -0.45f, def.Height / 2f),
+                new Vector3(def.Width + 12f, 0.5f, def.Height + 12f), Color.white, "Untergrund", outline: false);
+            var groundColor = IsCrash ? new Color(0.4f, 0.4f, 0.37f) : IsMaisfeld ? new Color(0.55f, 0.62f, 0.2f) : new Color(0.33f, 0.6f, 0.2f);
+            ground.GetComponent<Renderer>().sharedMaterial = GroundTextures.Material(GroundTextures.Kind.Grass, groundColor, def.Width + 12f);
             BuildTrees();
 
             tiles = new Renderer[def.Width, def.Height];
             tileColors = new Color[def.Width, def.Height];
+            tileKinds = new GroundTextures.Kind[def.Width, def.Height];
             for (int x = 0; x < def.Width; x++)
             {
                 for (int y = 0; y < def.Height; y++)
@@ -58,16 +61,32 @@ namespace MuhDefense
                     else if (IsMaisfeld) color = (x + y) % 2 == 0 ? FieldA : FieldB;
                     else color = (x + y) % 2 == 0 ? GrassA : GrassB;
 
+                    var kind = pathCells.Contains(cell) || def.IsCorn(cell) ? GroundTextures.Kind.Dirt
+                        : IsMaisfeld && !def.Pasture.Contains(cell) ? GroundTextures.Kind.Field : GroundTextures.Kind.Grass;
                     var tile = CreateTile(cell, color);
+                    tile.sharedMaterial = GroundTextures.Material(kind, color);
                     tiles[x, y] = tile;
                     tileColors[x, y] = color;
+                    tileKinds[x, y] = kind;
                 }
             }
 
             // Wegstücke außerhalb des Rasters (Eingang der Aliens)
             foreach (var cell in pathCells)
             {
-                if (!InBounds(cell)) CreateTile(cell, PathColor);
+                if (!InBounds(cell)) CreateTile(cell, PathColor).sharedMaterial = GroundTextures.Material(GroundTextures.Kind.Dirt, PathColor);
+            }
+
+            // Blumen und Grasbüschel auf freien Rasenfeldern und rund um das Spielfeld
+            if (!IsCrash)
+            {
+                GroundTextures.ScatterDecor(transform, new Rect(0f, 0f, def.Width, def.Height), 70, (def.Id ?? "").GetHashCode(), p =>
+                {
+                    var c = new Vector2Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.y));
+                    return InBounds(c) && !pathCells.Contains(c) && !def.IsCorn(c);
+                });
+                GroundTextures.ScatterDecor(transform, new Rect(-5f, -5f, def.Width + 10f, def.Height + 10f), 120, 99, p =>
+                    p.x < -0.3f || p.y < -0.3f || p.x > def.Width + 0.3f || p.y > def.Height + 0.3f);
             }
 
             BuildCornWalls();
@@ -133,7 +152,8 @@ namespace MuhDefense
                 for (int y = 0; y < def.Height; y++)
                 {
                     bool highlight = show && canBuild(new Vector2Int(x, y));
-                    tiles[x, y].sharedMaterial = Visuals.Mat(highlight ? BuildableColor : tileColors[x, y], false);
+                    tiles[x, y].sharedMaterial = GroundTextures.Material(highlight ? GroundTextures.Kind.Grass : tileKinds[x, y],
+                        highlight ? BuildableColor : tileColors[x, y]);
                 }
             }
         }

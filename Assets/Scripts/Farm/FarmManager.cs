@@ -291,9 +291,11 @@ namespace MuhDefense
         /// <summary>Schachbrett-Wiese als ein einziges Mesh (viel schneller als ein Objekt pro Feld).</summary>
         void BuildMeadow(int w, int h)
         {
-            var grassA = new Color(0.45f, 0.72f, 0.32f);
-            var grassB = new Color(0.42f, 0.68f, 0.30f);
+            // nur noch ein leichtes Mäh-Schachbrett, die Rasen-Textur bringt Halme und Flecken
+            var grassA = new Color(0.5f, 0.8f, 0.34f);
+            var grassB = new Color(0.475f, 0.77f, 0.325f);
             var vertices = new List<Vector3>(w * h * 4);
+            var uvs = new List<Vector2>(w * h * 4);
             var colors = new List<Color>(w * h * 4);
             var normals = new List<Vector3>(w * h * 4);
             var triangles = new List<int>(w * h * 6);
@@ -306,6 +308,10 @@ namespace MuhDefense
                     vertices.Add(new Vector3(x, 0f, y + 1));
                     vertices.Add(new Vector3(x + 1, 0f, y + 1));
                     vertices.Add(new Vector3(x + 1, 0f, y));
+                    uvs.Add(new Vector2(x, y));
+                    uvs.Add(new Vector2(x, y + 1));
+                    uvs.Add(new Vector2(x + 1, y + 1));
+                    uvs.Add(new Vector2(x + 1, y));
                     var c = (x + y) % 2 == 0 ? grassA : grassB;
                     for (int k = 0; k < 4; k++)
                     {
@@ -323,6 +329,7 @@ namespace MuhDefense
             var mesh = new Mesh { name = "Wiese" };
             mesh.SetVertices(vertices);
             mesh.SetColors(colors);
+            mesh.SetUVs(0, uvs);
             mesh.SetNormals(normals);
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateBounds();
@@ -334,14 +341,20 @@ namespace MuhDefense
             var mr = go.AddComponent<MeshRenderer>();
             var mat = new Material(Visuals.VertexColorMaterial);
             mat.SetFloat("_OutlineWidth", 0f);
+            mat.mainTexture = GroundTextures.Get(GroundTextures.Kind.Grass);
             mr.sharedMaterial = mat;
+
+            // Blumen und Grasbüschel rund um den Hof (innen bleibt Platz für Gebäude)
+            GroundTextures.ScatterDecor(transform, new Rect(-6f, -6f, w + 12f, h + 12f), 160, 5, p =>
+                p.x < -0.4f || p.y < -0.4f || p.x > w + 0.4f || p.y > h + 0.4f);
         }
 
         void BuildGround()
         {
             int w = FarmState.Width, h = FarmState.Height;
-            Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(w / 2f, -0.45f, h / 2f), new Vector3(w + 14f, 0.5f, h + 14f),
-                new Color(0.30f, 0.55f, 0.18f), "Untergrund", outline: false);
+            var ground = Visuals.Prim(PrimitiveType.Cube, transform, new Vector3(w / 2f, -0.45f, h / 2f), new Vector3(w + 14f, 0.5f, h + 14f),
+                Color.white, "Untergrund", outline: false);
+            ground.GetComponent<Renderer>().sharedMaterial = GroundTextures.Material(GroundTextures.Kind.Grass, new Color(0.34f, 0.62f, 0.21f), w + 14f);
 
             BuildMeadow(w, h);
 
