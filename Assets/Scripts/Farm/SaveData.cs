@@ -43,6 +43,8 @@ namespace MuhDefense
         /// <summary>Bauernstufe (Hof-Erfahrung).</summary>
         public int FarmLevel = 1;
         public int FarmXp;
+        /// <summary>Zuletzt gewählter Schwierigkeitsgrad auf der Weltkarte.</summary>
+        public int LastDifficulty;
     }
 
     [Serializable]

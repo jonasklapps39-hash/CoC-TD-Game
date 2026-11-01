@@ -41,10 +41,10 @@ namespace MuhDefense
             },
             new Step
             {
-                Title = "Werkstätten verbessern",
-                Text = "Werkstätten schalten Türme frei und erlauben höhere Upgrades im Level. " +
-                       "Tippe auf die Schmiede und verbessere sie.",
-                Done = f => SmithyImproved(f),
+                Title = "Bauernhaus verbessern",
+                Text = "Kein Gebäude darf höher sein als das Bauernhaus. Tippe aufs Bauernhaus und verbessere es – " +
+                       "danach kannst du auch die Schmiede verbessern, die neue Türme und höhere Upgrades freischaltet.",
+                Done = f => FarmhouseImproved(f) || SmithyImproved(f),
             },
             new Step
             {
@@ -53,6 +53,15 @@ namespace MuhDefense
                        "und unter „Aufgaben“ warten jeden Tag neue Belohnungen. Viel Spaß!",
             },
         };
+
+        static bool FarmhouseImproved(FarmState f)
+        {
+            foreach (var b in f.Data.Buildings)
+            {
+                if (b.TypeDef == FarmBuildingType.Bauernhaus && (b.Level >= 2 || b.IsUpgrading)) return true;
+            }
+            return false;
+        }
 
         static bool SmithyImproved(FarmState f)
         {

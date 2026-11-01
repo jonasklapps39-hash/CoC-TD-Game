@@ -74,7 +74,8 @@ namespace MuhDefense
 
         void Update()
         {
-            foreach (var b in Farm.Tick())
+            Farm.Tick();
+            foreach (var b in Farm.TakeFinished())
             {
                 if (Views.TryGetValue(b.Id, out var view))
                 {
@@ -109,6 +110,8 @@ namespace MuhDefense
             {
                 obstacleSyncTimer = 0.5f;
                 SyncObstacles();
+                // Ein nachgewachsenes Hindernis kann unter der Vorschau liegen
+                if (Mode != FarmMode.Normal && ghost != null) MoveGhost(ghostCell);
             }
             AnimateClearing();
 
@@ -222,12 +225,17 @@ namespace MuhDefense
             if (Mode == FarmMode.Normal) return;
             var cell = new Vector2Int(Mathf.FloorToInt(world.x), Mathf.FloorToInt(world.z));
             int size = Mode == FarmMode.Placing ? PlacingType.Size : Selected.TypeDef.Size;
-            int offset = (size - 1) / 2;
+            // Das Gebäude bleibt dort unter dem Finger, wo man es angefasst hat (sonst mittig)
+            var offset = dragOffset ?? new Vector2Int(size / 2, size / 2);
             var target = new Vector2Int(
-                Mathf.Clamp(cell.x - offset, 0, FarmState.Width - size),
-                Mathf.Clamp(cell.y - offset, 0, FarmState.Height - size));
+                Mathf.Clamp(cell.x - offset.x, 0, FarmState.Width - size),
+                Mathf.Clamp(cell.y - offset.y, 0, FarmState.Height - size));
             if (target != ghostCell) MoveGhost(target);
         }
+
+        Vector2Int? dragOffset;
+
+        public void SetDragOffset(Vector2Int? offset) => dragOffset = offset;
 
         public void Select(BuildingData b)
         {
@@ -292,6 +300,11 @@ namespace MuhDefense
             if (Mode == FarmMode.Placing)
             {
                 var b = Farm.Build(PlacingType, ghostCell.x, ghostCell.y);
+                if (b == null)
+                {
+                    AddFloatingText(new Vector3(ghostCell.x + 0.5f, 1f, ghostCell.y + 0.5f), "Platz belegt!", UiKit.BadColor);
+                    return;
+                }
                 if (b != null)
                 {
                     CreateView(b);

@@ -129,6 +129,8 @@ namespace MuhDefense
             for (int i = 0; i < 12; i++)
             {
                 var p = a.Home + new Vector3(Random.Range(-2.5f, 2.5f), 0f, Random.Range(-2f, 1f));
+                p.x = Mathf.Clamp(p.x, 0.3f, FarmState.Width - 0.3f);
+                p.z = Mathf.Clamp(p.z, 0.3f, FarmState.Height - 0.3f);
                 var cell = new Vector2Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z));
                 if (farm.IsAreaFree(cell.x, cell.y, 1, -1)) return p;
             }

@@ -33,7 +33,11 @@ namespace MuhDefense
         {
             get
             {
-                if (farm == null) farm = FarmState.LoadOrCreate();
+                if (farm == null)
+                {
+                    farm = FarmState.LoadOrCreate();
+                    CurrentDifficulty = (Difficulty)Mathf.Clamp(farm.Data.LastDifficulty, 0, 2);
+                }
                 return farm;
             }
         }
@@ -50,6 +54,7 @@ namespace MuhDefense
         public static void StartLevel(LevelDefinition def, Difficulty difficulty)
         {
             CurrentDifficulty = difficulty;
+            Farm.Data.LastDifficulty = (int)difficulty;
             StartLevel(def);
         }
 

@@ -37,17 +37,19 @@ namespace MuhDefense
         public static FarmState LoadOrCreate()
         {
             var state = new FarmState();
-            try
+            state.Data = TryLoad(SavePath);
+            if (!IsValid(state.Data))
             {
-                if (File.Exists(SavePath))
+                // Hauptdatei kaputt oder leer: Sicherung versuchen, kaputte Datei aufheben statt überschreiben
+                var backup = TryLoad(SavePath + ".bak");
+                if (IsValid(backup))
                 {
-                    state.Data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
+                    if (File.Exists(SavePath))
+                    {
+                        try { File.Copy(SavePath, SavePath + ".kaputt", true); } catch (Exception) { }
+                    }
+                    state.Data = backup;
                 }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning("Spielstand konnte nicht geladen werden, starte neu: " + e.Message);
-                state.Data = null;
             }
 
             if (state.Data == null || state.Data.Buildings == null || state.Data.Buildings.Count == 0)
@@ -95,6 +97,8 @@ namespace MuhDefense
                 Data.Version = 5;
             }
             if (Data.Obstacles == null) Data.Obstacles = new List<ObstacleData>();
+            // Unbekannte Gebäude (z. B. aus einer neueren Version) würden sonst überall Fehler auslösen
+            Data.Buildings.RemoveAll(b => b == null || b.TypeDef == null);
             if (Data.Version < 6)
             {
                 // Neu: Hindernisse auf dem Hof und Bauernstufe
@@ -116,11 +120,45 @@ namespace MuhDefense
             if (string.IsNullOrEmpty(Data.SelectedHero)) Data.SelectedHero = "Heinz";
         }
 
+        static SaveData TryLoad(string path)
+        {
+            try
+            {
+                if (File.Exists(path)) return JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Spielstand konnte nicht geladen werden (" + path + "): " + e.Message);
+            }
+            return null;
+        }
+
+        static bool IsValid(SaveData d) => d != null && d.Buildings != null && d.Buildings.Count > 0;
+
         public void Save()
         {
             try
             {
-                File.WriteAllText(SavePath, JsonUtility.ToJson(Data));
+                // Sicher speichern: erst in eine Zwischendatei, dann austauschen (die alte bleibt als .bak).
+                // So geht der Hof nicht verloren, wenn das Handy die App mitten im Speichern beendet.
+                string tmp = SavePath + ".tmp";
+                File.WriteAllText(tmp, JsonUtility.ToJson(Data));
+                if (!File.Exists(SavePath))
+                {
+                    File.Move(tmp, SavePath);
+                    return;
+                }
+                try
+                {
+                    File.Replace(tmp, SavePath, SavePath + ".bak");
+                }
+                catch (Exception)
+                {
+                    // Falls File.Replace auf der Plattform fehlt: von Hand austauschen
+                    File.Copy(SavePath, SavePath + ".bak", true);
+                    File.Delete(SavePath);
+                    File.Move(tmp, SavePath);
+                }
             }
             catch (Exception e)
             {
@@ -155,6 +193,16 @@ namespace MuhDefense
         // ---------------------------------------------------------------- Zeit
 
         /// <summary>Bringt alle Gebäude auf den aktuellen Zeitpunkt. Liefert die Gebäude, die gerade fertig geworden sind.</summary>
+        readonly List<BuildingData> pendingFinished = new List<BuildingData>();
+
+        /// <summary>Gebäude, die seit dem letzten Abholen fertig geworden sind (auch wenn Tick von woanders kam).</summary>
+        public List<BuildingData> TakeFinished()
+        {
+            var list = new List<BuildingData>(pendingFinished);
+            pendingFinished.Clear();
+            return list;
+        }
+
         public List<BuildingData> Tick()
         {
             var finished = new List<BuildingData>();
@@ -166,13 +214,14 @@ namespace MuhDefense
                     if (now < b.UpgradeEnd)
                     {
                         // Während des Baus ruht die Produktion.
-                        b.LastTick = now;
+                        b.LastTick = Math.Max(b.LastTick, now);
                         continue;
                     }
                     b.Level++;
                     b.LastTick = b.UpgradeEnd;
                     b.UpgradeEnd = 0;
                     finished.Add(b);
+                    pendingFinished.Add(b);
                     if (b.TypeDef != null) AddXp(XpForBuilding(b.TypeDef, b.Level), new Vector3(b.X + 1f, 2f, b.Y + 1f));
                 }
 
@@ -184,7 +233,8 @@ namespace MuhDefense
                     double boosted = Math.Max(0, Math.Min(now, b.BoostEnd) - b.LastTick);
                     b.Stored = Math.Min(ProducerCapacity(b), b.Stored + ProductionPerMinute(b) / 60.0 * (elapsed + boosted));
                 }
-                b.LastTick = now;
+                // Zeit läuft nur vorwärts (Uhr zurückstellen bringt keine doppelte Produktion)
+                b.LastTick = Math.Max(b.LastTick, now);
             }
             TickObstacles(now);
             return finished;
@@ -516,7 +566,7 @@ namespace MuhDefense
 
         public bool BoostProducer(BuildingData b)
         {
-            if (b.TypeDef == null || !b.TypeDef.IsProducer || b.Level <= 0 || IsBoosted(b) || !SpendGems(BoostGems)) return false;
+            if (b.TypeDef == null || !b.TypeDef.IsProducer || b.Level <= 0 || b.IsUpgrading || IsBoosted(b) || !SpendGems(BoostGems)) return false;
             Tick();
             b.BoostEnd = Now + BoostSeconds;
             return true;
@@ -534,7 +584,8 @@ namespace MuhDefense
         /// <returns>Tatsächlich hinzugefügte Menge (0, wenn zu wenig Diamanten oder Lager voll).</returns>
         public double BuyResourcePack(Resource r)
         {
-            if (Capacity(r) - Amount(r) < 1 || !SpendGems(ResourcePackGems)) return 0;
+            // Nur kaufen, wenn mindestens ein Viertel des Pakets ins Lager passt
+            if (Capacity(r) - Amount(r) < ResourcePackAmount * 0.25 || !SpendGems(ResourcePackGems)) return 0;
             return Add(r, ResourcePackAmount);
         }
 
@@ -744,7 +795,8 @@ namespace MuhDefense
         public void EnsureDaily()
         {
             int today = Quests.Today;
-            if (Data.DailyDay == today && Data.Daily.Count > 0) return;
+            // Nur vorwärts: Datum zurückstellen bringt keine neuen Aufgaben
+            if (Data.Daily.Count > 0 && today <= Data.DailyDay) return;
             Data.DailyDay = today;
             Data.Daily.Clear();
             foreach (var id in Quests.PickForDay(today)) Data.Daily.Add(new DailyQuestState { Id = id });
@@ -763,9 +815,18 @@ namespace MuhDefense
         {
             var def = Quests.GetDaily(q.Id);
             if (def == null || q.Claimed || q.Progress < def.Target) return false;
+            if (WhyCannotClaim(def) != null) return false;
             q.Claimed = true;
             GiveReward(def.Reward, def.Amount);
             return true;
+        }
+
+        /// <summary>Mais- oder Milch-Belohnung nur abholen, wenn sie ins Lager passt.</summary>
+        public string WhyCannotClaim(DailyQuestDef def)
+        {
+            if (def.Reward == RewardKind.Gems) return null;
+            var r = def.Reward == RewardKind.Corn ? Resource.Mais : Resource.Milch;
+            return Capacity(r) - Amount(r) < def.Amount ? "Lager zu voll" : null;
         }
 
         void GiveReward(RewardKind kind, int amount)

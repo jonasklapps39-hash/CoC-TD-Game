@@ -10,6 +10,8 @@ namespace MuhDefense
         Camera cam;
         readonly List<Rect> blockers = new List<Rect>();
         Vector2 shopScroll;
+        Vector2 sideScroll;
+        BuildingData lastSelected;
         int mapRegion;
         Vector2 mapScroll;
         Vector2 gemScroll;
@@ -58,13 +60,15 @@ namespace MuhDefense
         void UpdatePinch()
         {
 #if ENABLE_LEGACY_INPUT_MANAGER
-            if (Input.touchCount >= 2)
+            if (Input.touchCount >= 2 && !farm.AnyWindowOpen)
             {
                 float d = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
                 if (!pinching)
                 {
                     pinching = true;
                     panning = false;
+                    pressOnGround = false;
+                    pressedBuilding = null;
                     pinchStartDistance = Mathf.Max(1f, d);
                     pinchStartSize = camSize;
                 }
@@ -76,7 +80,23 @@ namespace MuhDefense
                 return;
             }
 #endif
-            pinching = false;
+            if (pinching)
+            {
+                pinching = false;
+                // Nach dem Zoomen mit einem Finger weiter verschieben, ohne Sprung
+#if ENABLE_LEGACY_INPUT_MANAGER
+                if (Input.touchCount == 1)
+                {
+                    var tp = Input.GetTouch(0).position;
+                    if (UiKit.ScreenToGround(new Vector2(tp.x, Screen.height - tp.y), cam, out var g))
+                    {
+                        panGrab = g;
+                        pressOnGround = true;
+                        panning = true;
+                    }
+                }
+#endif
+            }
         }
 
         /// <summary>
@@ -104,9 +124,15 @@ namespace MuhDefense
                 }
                 else
                 {
-                    pressedBuilding = State.BuildingAt(new Vector2Int(Mathf.FloorToInt(down.x), Mathf.FloorToInt(down.z)));
+                    var hit = State.BuildingAt(new Vector2Int(Mathf.FloorToInt(down.x), Mathf.FloorToInt(down.z)));
+                    // Verschieben per Ziehen nur, wenn das Gebäude schon ausgewählt war – sonst wird der Hof verschoben
+                    pressedBuilding = hit != null && hit == farm.Selected ? hit : null;
                     pressOnGround = pressedBuilding == null;
                     panGrab = down;
+                    if (pressedBuilding != null)
+                    {
+                        farm.SetDragOffset(new Vector2Int(Mathf.FloorToInt(down.x) - hit.X, Mathf.FloorToInt(down.z) - hit.Y));
+                    }
                 }
             }
             else if (e.type == EventType.MouseDrag && pinching)
@@ -147,6 +173,7 @@ namespace MuhDefense
                     else farm.CancelMode();
                     e.Use();
                 }
+                farm.SetDragOffset(null);
                 draggingGhost = false;
                 moveByDrag = false;
                 pressedBuilding = null;
@@ -283,6 +310,13 @@ namespace MuhDefense
             blockers.Add(r);
             GUI.Box(r, GUIContent.none, UiKit.Panel);
             GUILayout.BeginArea(new Rect(r.x + 12f, r.y + 10f, r.width - 24f, r.height - 20f));
+            // Inhalt scrollbar, damit lange Gebäude-Infos nicht unten abgeschnitten werden
+            if (Event.current.type == EventType.Layout && lastSelected != farm.Selected)
+            {
+                lastSelected = farm.Selected;
+                sideScroll = Vector2.zero;
+            }
+            sideScroll = GUILayout.BeginScrollView(sideScroll);
 
             if (farm.Mode != FarmMode.Normal)
             {
@@ -331,6 +365,7 @@ namespace MuhDefense
                 if (UiKit.Btn(GameAudio.SoundOn ? "Ton: an" : "Ton: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.SoundOn = !GameAudio.SoundOn;
                 GUILayout.EndHorizontal();
             }
+            GUILayout.EndScrollView();
 
             GUILayout.FlexibleSpace();
             if (farm.Mode == FarmMode.Normal)
@@ -385,7 +420,7 @@ namespace MuhDefense
                 GUI.enabled = true;
                 if (reason != null) GUILayout.Label(reason, UiKit.Small);
             }
-            GUILayout.FlexibleSpace();
+            GUILayout.Space(8f);
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Height(36f))) farm.DeselectObstacle();
         }
 
@@ -461,7 +496,11 @@ namespace MuhDefense
                 var resIcon = UiKit.Icon(type.ProducedResource == Resource.Mais ? "Maiskolben" : "Milchflasche");
                 if (UiKit.IconBtn($"Einsammeln {(int)b.Stored}", resIcon, UiKit.YellowButton, GUILayout.Height(46f))) farm.Collect(b);
                 GUI.enabled = true;
-                if (State.IsBoosted(b))
+                if (b.IsUpgrading)
+                {
+                    // Während des Umbaus ruht die Produktion – kein Turbo
+                }
+                else if (State.IsBoosted(b))
                 {
                     GUILayout.Label($"Ernte-Turbo aktiv: doppelte Produktion, noch {UiKit.FormatTime(b.BoostEnd - FarmState.Now)}", UiKit.Small);
                 }
@@ -789,7 +828,9 @@ namespace MuhDefense
                 {
                     var def = Quests.GetDaily(q.Id);
                     if (def == null) continue;
-                    QuestRow(def.Text, "Belohnung: " + Quests.RewardText(def.Reward, def.Amount), q.Progress, def.Target, q.Claimed,
+                    bool full = !q.Claimed && q.Progress >= def.Target && State.WhyCannotClaim(def) != null;
+                    QuestRow(def.Text, "Belohnung: " + Quests.RewardText(def.Reward, def.Amount) + (full ? "  •  Lager zu voll – erst Platz schaffen!" : ""),
+                        q.Progress, def.Target, q.Claimed,
                         def.Reward == RewardKind.Gems ? "Diamant" : def.Reward == RewardKind.Corn ? "Maiskolben" : "Milchflasche",
                         () => State.ClaimDaily(q));
                 }
@@ -1198,10 +1239,13 @@ namespace MuhDefense
                 {
                     string res = FarmBuildingType.ResourceName(b.TypeDef.ProducedResource);
                     var bubble = new Rect(p.x - 45f, p.y - 14f, 90f, 26f);
+                    // Blasen unter Kopfzeile oder Seitenleiste nicht anklickbar machen
+                    if (bubble.xMax > UiKit.VirtualWidth - UiKit.SideBarWidth || bubble.y < UiKit.TopBarHeight) continue;
                     string text = $"{(int)b.Stored} {res}";
                     bool clickable = farm.Mode == FarmMode.Normal && !farm.AnyWindowOpen;
-                    if (!clickable) GUI.Box(bubble, text, UiKit.Bubble);
-                    else if (GUI.Button(bubble, text, UiKit.Bubble)) farm.Collect(b);
+                    GUI.enabled = clickable;
+                    if (GUI.Button(bubble, text, UiKit.Bubble) && clickable) farm.Collect(b);
+                    GUI.enabled = true;
                 }
             }
 
