@@ -6,6 +6,7 @@ namespace MuhDefense
     {
         Mais,
         Milch,
+        Eier,
     }
 
     public enum FarmBuildingKind
@@ -22,6 +23,11 @@ namespace MuhDefense
         HofladenKontor,
         Heldenhuette,
         Bauernschule,
+        Huehnerstall,
+        Blumenbeet,
+        HeuDeko,
+        Gartenzwerg,
+        Brunnen,
     }
 
     /// <summary>Ein Turm, den eine Werkstatt ab einer bestimmten Stufe freischaltet.</summary>
@@ -70,6 +76,13 @@ namespace MuhDefense
         /// </summary>
         public TowerUnlock[] Unlocks = new TowerUnlock[0];
         public bool IsWorkshop => Unlocks.Length > 0;
+
+        /// <summary>Deko: kleiner Dauer-Bonus statt Produktion (Anteil, z. B. 0.03 = +3 %).</summary>
+        public float DecoBonus;
+        public bool IsDeco => DecoBonus > 0f;
+        /// <summary>Welcher Bonus: Produktion eines Rohstoffs oder (ohne) Erfahrung.</summary>
+        public Resource DecoResource;
+        public bool DecoXp;
 
         public string Id => Kind.ToString();
 
@@ -251,10 +264,48 @@ namespace MuhDefense
             MaxCount = new[] { 1, 1, 1, 1, 1 },
         };
 
+        public static readonly FarmBuildingType Huehnerstall = new FarmBuildingType
+        {
+            Kind = FarmBuildingKind.Huehnerstall,
+            Name = "Hühnerstall",
+            Description = "Die Hühner legen Eier. Eier brauchst du für Helden-Training, Deko und den Ernte-Turbo.",
+            MaxLevel = 5,
+            CostResource = Resource.Mais,
+            Costs = new[] { 400, 900, 2000, 4000, 7000 },
+            BuildSeconds = new[] { 15, 60, 180, 300, 420 },
+            MaxCount = new[] { 0, 1, 1, 2, 2 },
+            IsProducer = true,
+            ProducedResource = Resource.Eier,
+            RatePerMinute = new[] { 4f, 6f, 9f, 13f, 18f },
+            ProducerCapacity = new[] { 60, 120, 210, 330, 480 },
+        };
+
+        // Deko: klein, sofort fertig, bezahlt mit Eiern, gibt einen kleinen Dauer-Bonus
+        public static readonly FarmBuildingType Blumenbeet = Deco(FarmBuildingKind.Blumenbeet, "Blumenbeet", "+3 % Mais-Produktion. Bienen lieben es.", 25, 0.03f, Resource.Mais);
+        public static readonly FarmBuildingType HeuDeko = Deco(FarmBuildingKind.HeuDeko, "Heuballen-Stapel", "+3 % Milch-Produktion. Die Kühe fühlen sich wohl.", 25, 0.03f, Resource.Milch);
+        public static readonly FarmBuildingType Brunnen = Deco(FarmBuildingKind.Brunnen, "Brunnen", "+5 % Eier-Produktion. Frisches Wasser für die Hühner.", 35, 0.05f, Resource.Eier);
+        public static readonly FarmBuildingType Gartenzwerg = Deco(FarmBuildingKind.Gartenzwerg, "Gartenzwerg", "+4 % Erfahrung für die Bauernstufe. Er passt auf.", 40, 0.04f, Resource.Mais, xp: true);
+
+        static FarmBuildingType Deco(FarmBuildingKind kind, string name, string description, int eggs, float bonus, Resource res, bool xp = false) => new FarmBuildingType
+        {
+            Kind = kind,
+            Name = name,
+            Description = description,
+            Size = 1,
+            MaxLevel = 1,
+            CostResource = Resource.Eier,
+            Costs = new[] { eggs },
+            BuildSeconds = new[] { 1 },
+            MaxCount = new[] { 2, 3, 4, 5, 6 },
+            DecoBonus = bonus,
+            DecoResource = res,
+            DecoXp = xp,
+        };
+
         public static readonly FarmBuildingType[] All =
         {
-            Bauernhaus, Maisfeld, Kuhstall, Maissilo, Milchtank, Knechthuette, Schmiede, Zimmerei, Tueftlerschuppen, HofladenKontor, Heldenhuette,
-            Bauernschule,
+            Bauernhaus, Maisfeld, Kuhstall, Huehnerstall, Maissilo, Milchtank, Knechthuette, Schmiede, Zimmerei, Tueftlerschuppen, HofladenKontor,
+            Heldenhuette, Bauernschule, Blumenbeet, HeuDeko, Brunnen, Gartenzwerg,
         };
 
         public static FarmBuildingType Get(string id)
@@ -284,6 +335,8 @@ namespace MuhDefense
             }
         }
 
-        public static string ResourceName(Resource r) => r == Resource.Mais ? "Mais" : "Milch";
+        public static string ResourceName(Resource r) => r == Resource.Mais ? "Mais" : r == Resource.Milch ? "Milch" : "Eier";
+
+        public static string ResourceIcon(Resource r) => r == Resource.Mais ? "Maiskolben" : r == Resource.Milch ? "Milchflasche" : "Ei";
     }
 }

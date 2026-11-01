@@ -1109,6 +1109,95 @@ def build_school():
     ball((0.65, -0.6, 0.3), (0.14, 0.14, 0.04), GOLD)
 
 
+def chicken(x, y, z, s=1.0, rot=0.0):
+    """Kleines Huhn (für Hühnerstall und Deko)."""
+    red = (0.9, 0.12, 0.1)
+    ball((x, y, z + 0.12 * s), (0.22 * s, 0.26 * s, 0.2 * s), WHITE)
+    ball((x, y - 0.1 * s, z + 0.25 * s), (0.13 * s, 0.13 * s, 0.14 * s), WHITE)
+    ball((x, y - 0.1 * s, z + 0.33 * s), (0.04 * s, 0.08 * s, 0.06 * s), red)
+    tube((x, y - 0.18 * s, z + 0.24 * s), 0.025 * s, 0.05 * s, GOLD, rot=(math.radians(90), 0, 0), r2=0.002)
+    ball((x, y + 0.12 * s, z + 0.16 * s), (0.1 * s, 0.08 * s, 0.14 * s), (0.92, 0.9, 0.85), rot=(math.radians(-30), 0, 0))
+
+
+def build_chicken_coop():
+    """Hühnerstall: rotes Holzhäuschen auf Stelzen mit Leiter, Nest mit Eiern und Hühnern davor."""
+    soft_box((0, 0, 0.06), (1.9, 1.9, 0.12), (0.5, 0.42, 0.3), round_=0.3)
+    red = (0.78, 0.22, 0.16)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            tube((0.45 * sx, 0.25 + 0.3 * sy, 0.3), 0.04, 0.5, DARK_WOOD, segs=8)
+    soft_box((0, 0.25, 0.8), (1.2, 0.9, 0.6), red, round_=0.12)
+    roof((0, 0.25, 1.12), 1.2, 0.9, (0.95, 0.8, 0.4), 0.1)
+    soft_box((0.25, -0.22, 0.76), (0.24, 0.04, 0.3), (0.2, 0.12, 0.08), round_=0.3)
+    # Leiter
+    for i in range(4):
+        soft_box((0.25, -0.38 - i * 0.08, 0.55 - i * 0.13), (0.24, 0.05, 0.03), WOOD, round_=0.3)
+    soft_box((-0.3, -0.22, 0.85), (0.2, 0.04, 0.16), WHITE, round_=0.3)
+    # Nest mit Eiern
+    ring((-0.45, -0.55, 0.18), 0.18, 0.06, STRAW)
+    for (x, y) in [(-0.5, -0.55), (-0.4, -0.5), (-0.44, -0.62)]:
+        ball((x, y, 0.22), (0.09, 0.08, 0.11), (1.0, 0.95, 0.85))
+    chicken(0.55, -0.5, 0.1, 1.2)
+    chicken(-0.1, -0.7, 0.1, 1.0)
+
+
+def build_flowerbed():
+    """Blumenbeet (Deko)."""
+    soft_box((0, 0, 0.08), (0.85, 0.85, 0.16), DARK_WOOD, round_=0.3)
+    soft_box((0, 0, 0.15), (0.75, 0.75, 0.06), (0.4, 0.26, 0.14), round_=0.3)
+    cols = [(1.0, 0.4, 0.6), (1.0, 0.9, 0.3), (0.6, 0.55, 1.0), (1.0, 1.0, 1.0)]
+    i = 0
+    for x in (-0.22, 0.0, 0.22):
+        for y in (-0.22, 0.0, 0.22):
+            tube((x, y, 0.28), 0.015, 0.22, LEAF, segs=6)
+            ball((x, y, 0.4), (0.12, 0.12, 0.06), cols[i % 4])
+            ball((x, y, 0.42), (0.05, 0.05, 0.04), GOLD)
+            i += 1
+
+
+def build_hay_deco():
+    """Heuballen-Stapel mit Mistgabel (Deko)."""
+    for (x, y, z) in [(-0.18, 0, 0.18), (0.2, 0.02, 0.18), (0.0, 0.0, 0.5)]:
+        soft_box((x, y, z), (0.38, 0.5, 0.32), STRAW, round_=0.25)
+        soft_box((x, y - 0.255, z), (0.38, 0.01, 0.04), HATBAND, round_=0.3)
+    tube((0.4, -0.1, 0.45), 0.02, 0.8, WOOD)
+    soft_box((0.4, -0.1, 0.86), (0.14, 0.03, 0.03), METAL, round_=0.3)
+    for dx in (-0.06, 0, 0.06):
+        tube((0.4 + dx, -0.1, 0.95), 0.012, 0.16, METAL, r2=0.002, segs=6)
+
+
+def build_gnome():
+    """Gartenzwerg (Deko)."""
+    tube((0, 0, 0.05), 0.2, 0.1, STONE, segs=12)
+    ball((0, 0, 0.3), (0.3, 0.28, 0.36), DENIM)
+    ball((0, -0.02, 0.56), (0.24, 0.22, 0.22), SKIN)
+    ball((0, -0.08, 0.46), (0.22, 0.14, 0.2), WHITE)
+    tube((0, 0, 0.8), 0.13, 0.36, (0.85, 0.15, 0.15), r2=0.01)
+    for s_ in (-1, 1):
+        ball((0.06 * s_, -0.12, 0.6), (0.04, 0.02, 0.04), BLACK, subsurf=0, segs=8)
+    ball((0, -0.13, 0.55), (0.06, 0.05, 0.05), CHEEK)
+    tube((0.18, -0.08, 0.32), 0.015, 0.4, WOOD, rot=(0, math.radians(15), 0))
+
+
+def build_well():
+    """Brunnen (Deko)."""
+    tube((0, 0, 0.22), 0.36, 0.44, STONE, segs=16)
+    tube((0, 0, 0.42), 0.28, 0.06, MILK_BLUE, segs=16)
+    for s_ in (-1, 1):
+        tube((0.32 * s_, 0, 0.7), 0.035, 0.6, DARK_WOOD, segs=8)
+    roof((0, 0, 1.05), 0.9, 0.5, (0.75, 0.2, 0.15), 0.06)
+    tube((0, 0, 0.88), 0.03, 0.62, DARK_WOOD, rot=(0, math.radians(90), 0), segs=8)
+    tube((0, -0.02, 0.62), 0.07, 0.12, WOOD, segs=10)
+
+
+def build_egg():
+    """Ei im Strohnest (nur für Symbole)."""
+    ring((0, 0, 0.12), 0.32, 0.1, STRAW)
+    ball((0, 0, 0.12), (0.5, 0.5, 0.14), (0.85, 0.65, 0.3))
+    ball((0, 0, 0.42), (0.38, 0.38, 0.5), (1.0, 0.96, 0.88), subsurf=2)
+    ball((0.08, -0.12, 0.55), (0.08, 0.04, 0.12), WHITE, subsurf=0, segs=8)
+
+
 # Name, Bau-Funktion, höchstens Dreiecke
 MODELS = [
     ("Kuh", build_cow, 6000),
@@ -1164,6 +1253,12 @@ MODELS = [
     ("AlienKaiser", build_emperor, 9000),
     ("Kristall", build_crystal, 1500),
     ("Bauernschule", build_school, 6000),
+    ("Huehnerstall", build_chicken_coop, 6000),
+    ("Blumenbeet", build_flowerbed, 3000),
+    ("HeuDeko", build_hay_deco, 2500),
+    ("Gartenzwerg", build_gnome, 2500),
+    ("Brunnen", build_well, 3000),
+    ("Ei", build_egg, 1500),
 ]
 
 # Optional nur einzelne Modelle bauen: ONLY=Name1,Name2

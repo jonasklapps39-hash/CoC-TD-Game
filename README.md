@@ -31,6 +31,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - Tempo 1x/2x, Pause-Menü, Sterne-Wertung nach geretteten Kühen
 - Tägliche Herausforderung mit Sonderregeln und Endlos-Modus mit Rekorden
 - Alien-Überfälle auf den Hof (verteidigen oder Vorräte verlieren)
+- Hühnerstall mit Eiern als drittem Rohstoff, Deko mit kleinen Boni
 - Schwierigkeitsgrade Leicht / Mittel / Schwer: je Level nacheinander freischalten, eigene Sterne pro Schwierigkeitsgrad
 
 **Verbindung:** Levels bringen Mais, Milch und Sterne. Werkstätten schalten Türme frei und bestimmen die höchste Upgrade-Stufe im Level.

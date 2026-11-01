@@ -86,7 +86,7 @@ namespace MuhDefense
             int s = 17;
             foreach (var b in farm.Buildings)
             {
-                if (b.Type == FarmBuildingType.Kuhstall.Id) s = s * 31 + b.X * 1000 + b.Y * 10 + b.Level;
+                if (b.Type == FarmBuildingType.Kuhstall.Id || b.Type == FarmBuildingType.Huehnerstall.Id) s = s * 31 + b.X * 1000 + b.Y * 10 + b.Level + (b.Type.Length << 3);
             }
             return s;
         }
@@ -98,8 +98,9 @@ namespace MuhDefense
             int seed = 3;
             foreach (var b in farm.Buildings)
             {
-                if (b.Type != FarmBuildingType.Kuhstall.Id || b.Level <= 0) continue;
-                int count = Mathf.Min(5, b.Level + 1);
+                bool chickens = b.Type == FarmBuildingType.Huehnerstall.Id;
+                if ((b.Type != FarmBuildingType.Kuhstall.Id && !chickens) || b.Level <= 0) continue;
+                int count = chickens ? Mathf.Min(6, b.Level + 2) : Mathf.Min(5, b.Level + 1);
                 var home = new Vector3(b.X + 1f, 0f, b.Y - 0.8f);
                 for (int i = 0; i < count; i++)
                 {
@@ -107,7 +108,15 @@ namespace MuhDefense
                     go.transform.SetParent(transform, false);
                     var model = new GameObject("Modell").transform;
                     model.SetParent(go.transform, false);
-                    if (ModelLibrary.Spawn("Kuh", model, 0.5f) == null)
+                    if (chickens)
+                    {
+                        // kleines Huhn aus Grundkörpern
+                        Visuals.Prim(PrimitiveType.Sphere, model, new Vector3(0f, 0.1f, 0f), new Vector3(0.16f, 0.14f, 0.2f), Color.white, "Huhn");
+                        Visuals.Prim(PrimitiveType.Sphere, model, new Vector3(0f, 0.2f, 0.08f), Vector3.one * 0.1f, Color.white, "Kopf");
+                        Visuals.Prim(PrimitiveType.Sphere, model, new Vector3(0f, 0.26f, 0.08f), new Vector3(0.03f, 0.05f, 0.06f), new Color(0.9f, 0.12f, 0.1f), "Kamm", outline: false);
+                        Visuals.Prim(PrimitiveType.Sphere, model, new Vector3(0f, 0.19f, 0.14f), Vector3.one * 0.035f, new Color(1f, 0.75f, 0.2f), "Schnabel", outline: false);
+                    }
+                    else if (ModelLibrary.Spawn("Kuh", model, 0.5f) == null)
                     {
                         Visuals.Prim(PrimitiveType.Cube, model, new Vector3(0f, 0.22f, 0f), new Vector3(0.22f, 0.2f, 0.4f), Color.white, "Kuh");
                     }

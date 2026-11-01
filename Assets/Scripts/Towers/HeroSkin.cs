@@ -40,6 +40,11 @@ namespace MuhDefense
         /// <summary>Milch für die nächste Trainingsstufe (Stufe 1..5).</summary>
         public static int CostFor(int nextLevel) => Costs[Mathf.Clamp(nextLevel - 1, 0, Costs.Length - 1)];
 
+        static readonly int[] EggCosts = { 20, 40, 80, 140, 220 };
+
+        /// <summary>Eier für die nächste Trainingsstufe (aus dem Hühnerstall).</summary>
+        public static int EggCostFor(int nextLevel) => EggCosts[Mathf.Clamp(nextLevel - 1, 0, EggCosts.Length - 1)];
+
         public static float DamageFactor(int training) => 1f + 0.08f * training;
         public static float RangeFactor(int training) => 1f + 0.04f * training;
         public static float CooldownFactor(int training) => 1f - 0.06f * training;

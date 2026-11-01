@@ -10,6 +10,7 @@ namespace MuhDefense
         public int Version = 1;
         public double Corn;
         public double Milk;
+        public double Eggs;
         public int NextBuildingId = 1;
         public List<BuildingData> Buildings = new List<BuildingData>();
         public List<LevelProgress> Levels = new List<LevelProgress>();

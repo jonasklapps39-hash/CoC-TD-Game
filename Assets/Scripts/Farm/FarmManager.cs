@@ -176,6 +176,8 @@ namespace MuhDefense
 
         public void DeselectObstacle() => SelectedObstacle = null;
 
+        static Color ResColor(Resource r) => r == Resource.Mais ? UiKit.CornColor : r == Resource.Milch ? UiKit.MilkColor : new Color(1f, 0.96f, 0.85f);
+
         void SyncObstacles()
         {
             var alive = new HashSet<int>();
@@ -293,9 +295,9 @@ namespace MuhDefense
             if (collected >= 1)
             {
                 AddFloatingText(view.TopPoint, $"+{(int)collected} {FarmBuildingType.ResourceName(type.ProducedResource)}",
-                    type.ProducedResource == Resource.Mais ? UiKit.CornColor : UiKit.MilkColor);
+                    ResColor(type.ProducedResource));
                 GameAudio.Play(type.ProducedResource == Resource.Milch ? SoundId.Moo : SoundId.Coin);
-                Effects.Burst(transform, view.TopPoint, type.ProducedResource == Resource.Mais ? UiKit.CornColor : UiKit.MilkColor, 8, 2.5f);
+                Effects.Burst(transform, view.TopPoint, ResColor(type.ProducedResource), 8, 2.5f);
                 Farm.Save();
             }
             else

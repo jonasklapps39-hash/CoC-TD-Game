@@ -247,7 +247,7 @@ namespace MuhDefense
 
         // ---------------------------------------------------------------- Rohstoffe
 
-        public double Amount(Resource r) => r == Resource.Mais ? Data.Corn : Data.Milk;
+        public double Amount(Resource r) => r == Resource.Mais ? Data.Corn : r == Resource.Milch ? Data.Milk : Data.Eggs;
 
         public int FarmhouseLevel
         {
@@ -265,6 +265,16 @@ namespace MuhDefense
 
         public double Capacity(Resource r)
         {
+            if (r == Resource.Eier)
+            {
+                // Eier lagern im Hühnerstall selbst
+                double eggs = 200;
+                foreach (var b in Data.Buildings)
+                {
+                    if (b.Type == FarmBuildingType.Huehnerstall.Id) eggs += 250 * b.Level;
+                }
+                return eggs;
+            }
             double cap = FarmhouseCapacity(FarmhouseLevel);
             foreach (var b in Data.Buildings)
             {
@@ -283,7 +293,8 @@ namespace MuhDefense
             double space = Math.Max(0, Capacity(r) - Amount(r));
             double added = Math.Min(space, Math.Max(0, amount));
             if (r == Resource.Mais) Data.Corn += added;
-            else Data.Milk += added;
+            else if (r == Resource.Milch) Data.Milk += added;
+            else Data.Eggs += added;
             return added;
         }
 
@@ -293,7 +304,8 @@ namespace MuhDefense
         {
             if (!CanAfford(r, amount)) return false;
             if (r == Resource.Mais) Data.Corn -= amount;
-            else Data.Milk -= amount;
+            else if (r == Resource.Milch) Data.Milk -= amount;
+            else Data.Eggs -= amount;
             return true;
         }
 
@@ -302,7 +314,21 @@ namespace MuhDefense
         public float ProductionPerMinute(BuildingData b)
         {
             var type = b.TypeDef;
-            return type != null && type.IsProducer && b.Level > 0 ? type.RatePerMinute[b.Level - 1] : 0f;
+            if (type == null || !type.IsProducer || b.Level <= 0) return 0f;
+            return type.RatePerMinute[b.Level - 1] * (1f + DecoBonus(type.ProducedResource, false));
+        }
+
+        /// <summary>Summe der Deko-Boni für einen Rohstoff (oder für Erfahrung).</summary>
+        public float DecoBonus(Resource r, bool xp)
+        {
+            float sum = 0f;
+            foreach (var b in Data.Buildings)
+            {
+                var t = b.TypeDef;
+                if (t == null || !t.IsDeco || b.Level <= 0) continue;
+                if (xp ? t.DecoXp : (!t.DecoXp && t.DecoResource == r)) sum += t.DecoBonus;
+            }
+            return sum;
         }
 
         public double ProducerCapacity(BuildingData b)
@@ -382,7 +408,8 @@ namespace MuhDefense
                     : "Maximum erreicht";
             }
             if (!CanAfford(type.CostResource, type.CostForLevel(1))) return $"Zu wenig {FarmBuildingType.ResourceName(type.CostResource)}";
-            if (BuildersFree <= 0) return "Kein freier Knecht";
+            // Deko stellt man selbst auf, dafür braucht man keinen Knecht
+            if (!type.IsDeco && BuildersFree <= 0) return "Kein freier Knecht";
             return null;
         }
 
@@ -569,9 +596,13 @@ namespace MuhDefense
 
         public bool IsBoosted(BuildingData b) => b.BoostEnd > Now;
 
-        public bool BoostProducer(BuildingData b)
+        public const int BoostEggs = 30;
+
+        /// <param name="withEggs">Mit Eiern statt Diamanten bezahlen.</param>
+        public bool BoostProducer(BuildingData b, bool withEggs = false)
         {
-            if (b.TypeDef == null || !b.TypeDef.IsProducer || b.Level <= 0 || b.IsUpgrading || IsBoosted(b) || !SpendGems(BoostGems)) return false;
+            if (b.TypeDef == null || !b.TypeDef.IsProducer || b.Level <= 0 || b.IsUpgrading || IsBoosted(b)) return false;
+            if (withEggs ? !Spend(Resource.Eier, BoostEggs) : !SpendGems(BoostGems)) return false;
             Tick();
             b.BoostEnd = Now + BoostSeconds;
             return true;
@@ -725,6 +756,7 @@ namespace MuhDefense
             if (!IsHeroUnlocked(h)) return "Held noch gesperrt";
             if (HeroHutLevel < next) return $"Heldenhütte Stufe {next} nötig";
             if (!CanAfford(Resource.Milch, MuhDefense.HeroTraining.CostFor(next))) return "Zu wenig Milch";
+            if (!CanAfford(Resource.Eier, MuhDefense.HeroTraining.EggCostFor(next))) return "Zu wenig Eier";
             return null;
         }
 
@@ -733,6 +765,7 @@ namespace MuhDefense
             if (WhyCannotTrain(h) != null) return false;
             var p = Progress(h);
             Spend(Resource.Milch, MuhDefense.HeroTraining.CostFor(p.Training + 1));
+            Spend(Resource.Eier, MuhDefense.HeroTraining.EggCostFor(p.Training + 1));
             p.Training++;
             return true;
         }

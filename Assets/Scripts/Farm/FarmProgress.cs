@@ -185,6 +185,7 @@ namespace MuhDefense
         public void AddXp(int amount, Vector3 at)
         {
             if (amount <= 0 || FarmLevel >= MaxFarmLevel) return;
+            amount = Mathf.RoundToInt(amount * (1f + DecoBonus(Resource.Mais, true)));
             if (Data.FarmLevel < 1) Data.FarmLevel = 1;
             Data.FarmXp += amount;
             Events.Add(new FarmEvent { Position = at, Text = $"+{amount} EP", Color = new Color(0.75f, 1f, 0.5f) });

@@ -246,26 +246,28 @@ namespace MuhDefense
             blockers.Add(r);
             GUI.Box(r, GUIContent.none, UiKit.Panel);
 
-            UiKit.PillLabel(new Rect(18f, 10f, 230f, 36f), UiKit.Icon("Maiskolben"),
+            UiKit.PillLabel(new Rect(18f, 10f, 200f, 36f), UiKit.Icon("Maiskolben"),
                 $"{(int)State.Amount(Resource.Mais)} / {(int)State.Capacity(Resource.Mais)}");
-            UiKit.PillLabel(new Rect(266f, 10f, 230f, 36f), UiKit.Icon("Milchflasche"),
+            UiKit.PillLabel(new Rect(228f, 10f, 200f, 36f), UiKit.Icon("Milchflasche"),
                 $"{(int)State.Amount(Resource.Milch)} / {(int)State.Capacity(Resource.Milch)}");
-            var starRect = new Rect(514f, 10f, 110f, 36f);
+            UiKit.PillLabel(new Rect(438f, 10f, 150f, 36f), UiKit.Icon("Ei"),
+                $"{(int)State.Amount(Resource.Eier)}/{(int)State.Capacity(Resource.Eier)}");
+            var starRect = new Rect(598f, 10f, 100f, 36f);
             GUI.Box(starRect, GUIContent.none, UiKit.Pill);
             GUI.color = new Color(1f, 0.82f, 0.1f);
             GUI.DrawTexture(new Rect(starRect.x + 4f, starRect.y + 2f, 32f, 32f), UiKit.Star);
             GUI.color = Color.white;
             UiKit.Title.alignment = TextAnchor.MiddleLeft;
             UiKit.OutlinedText(new Rect(starRect.x + 42f, starRect.y, 66f, 36f), State.TotalStars.ToString(), UiKit.Title, Color.white);
-            UiKit.PillLabel(new Rect(642f, 10f, 140f, 36f), UiKit.Icon("MistgabelBauer"), $"{State.BuildersFree}/{State.BuildersTotal}");
-            var gemRect = new Rect(800f, 10f, 150f, 36f);
+            UiKit.PillLabel(new Rect(708f, 10f, 116f, 36f), UiKit.Icon("MistgabelBauer"), $"{State.BuildersFree}/{State.BuildersTotal}");
+            var gemRect = new Rect(834f, 10f, 130f, 36f);
             if (gemRect.xMax < vw - 10f)
             {
                 UiKit.PillLabel(gemRect, UiKit.Icon("Diamant"), State.Gems.ToString());
                 if (GUI.Button(gemRect, GUIContent.none, GUIStyle.none)) farm.GemShopOpen = true;
             }
             // Bauernstufe mit Erfahrungsbalken
-            var lvlRect = new Rect(968f, 10f, 190f, 36f);
+            var lvlRect = new Rect(974f, 10f, 180f, 36f);
             if (lvlRect.xMax < vw - 10f)
             {
                 GUI.Box(lvlRect, GUIContent.none, UiKit.Pill);
@@ -528,7 +530,7 @@ namespace MuhDefense
             if (type.IsProducer && b.Level > 0)
             {
                 GUI.enabled = b.Stored >= 1;
-                var resIcon = UiKit.Icon(type.ProducedResource == Resource.Mais ? "Maiskolben" : "Milchflasche");
+                var resIcon = UiKit.Icon(FarmBuildingType.ResourceIcon(type.ProducedResource));
                 if (UiKit.IconBtn($"Einsammeln {(int)b.Stored}", resIcon, UiKit.YellowButton, GUILayout.Height(46f))) farm.Collect(b);
                 GUI.enabled = true;
                 if (b.IsUpgrading)
@@ -542,11 +544,20 @@ namespace MuhDefense
                 else
                 {
                     GUI.enabled = State.Gems >= FarmState.BoostGems;
-                    if (UiKit.IconBtn($"Ernte-Turbo 1 h: {FarmState.BoostGems}", UiKit.Icon("Diamant"), UiKit.BlueCard, GUILayout.Height(40f)) && State.BoostProducer(b))
+                    GUILayout.Label("Ernte-Turbo (1 Stunde doppelte Produktion):", UiKit.Small);
+                    GUILayout.BeginHorizontal();
+                    if (UiKit.IconBtn(FarmState.BoostGems.ToString(), UiKit.Icon("Diamant"), UiKit.BlueCard, GUILayout.Height(40f)) && State.BoostProducer(b))
                     {
                         State.Save();
                         GameAudio.Play(SoundId.LevelUp);
                     }
+                    GUI.enabled = State.Amount(Resource.Eier) >= FarmState.BoostEggs;
+                    if (UiKit.IconBtn(FarmState.BoostEggs.ToString(), UiKit.Icon("Ei"), UiKit.BlueCard, GUILayout.Height(40f)) && State.BoostProducer(b, true))
+                    {
+                        State.Save();
+                        GameAudio.Play(SoundId.LevelUp);
+                    }
+                    GUILayout.EndHorizontal();
                     GUI.enabled = true;
                 }
             }
@@ -780,7 +791,8 @@ namespace MuhDefense
             y += 32f;
             string why = State.WhyCannotTrain(h);
             GUI.enabled = why == null;
-            string label = training >= HeroTraining.MaxLevel ? "Voll trainiert" : why ?? $"Trainieren: {HeroTraining.CostFor(training + 1)}";
+            string label = training >= HeroTraining.MaxLevel ? "Voll trainiert"
+                : why ?? $"Trainieren: {HeroTraining.CostFor(training + 1)} + {HeroTraining.EggCostFor(training + 1)} Eier";
             if (UiKit.BtnRect(new Rect(x, y, w, 34f), label, UiKit.YellowButton, why == null ? milk : null) && State.TrainHero(h))
             {
                 State.Save();
@@ -979,7 +991,7 @@ namespace MuhDefense
             {
                 GUILayout.BeginVertical(UiKit.Card, GUILayout.Width(250f));
                 UiKit.Heading($"{FarmState.ResourcePackAmount} {FarmBuildingType.ResourceName(res)}", UiKit.Title, GUILayout.Height(30f));
-                var icon = UiKit.Icon(res == Resource.Mais ? "Maiskolben" : "Milchflasche");
+                var icon = UiKit.Icon(FarmBuildingType.ResourceIcon(res));
                 if (icon != null) GUILayout.Label(icon, GUILayout.Height(80f));
                 GUILayout.Label("Sofort ins Lager (so viel hineinpasst).", UiKit.Small);
                 GUI.enabled = State.Gems >= FarmState.ResourcePackGems;
