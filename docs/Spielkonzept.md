@@ -394,6 +394,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Fehlerbehebungen nach kompletter Code-Prüfung:**
   - Level: Welle konnte mit Berta und getarnten Aliens hängen bleiben (Aliens ziehen jetzt nach 8 s ohne Kuh ab); Pause/Gegner-Fenster sperren jetzt Fähigkeiten und Wellenstart; alle Stufe-5-Fähigkeiten auslösbar (auch im Upgrade-Fenster); Einfrier-Bonus hing dauerhaft am Alien; Verkaufswert mit Rabatt korrekt; Wetterhahn/Gertrud-Tempo wirkt auf Mähdrescher und Hunde; Reichweitenkreis mit Bonus; Seitenleiste und Pfadnamen passen; Bauernaufstand endet mit der Welle; Eisblock bei Ufos in der Luft
   - Hof: sicheres Speichern mit Sicherungskopie (kein Verlust, wenn das Handy die App beim Speichern beendet); Seitenleiste scrollt; Gebäude werden nur verschoben, wenn sie schon ausgewählt sind (sonst Kamera); kein Kamerasprung nach dem Zoomen; Turbo nicht während Umbau; Aufgaben-Belohnung nur bei Platz im Lager; Rohstoffpaket nur bei genug Platz; Tutorial-Schritt mit Bauernhaus; Uhr zurückstellen bringt nichts mehr; Schwierigkeitsgrad wird gemerkt
+- [x] **Türme zeigen ihre Upgrades** (wie in Bloons TD6): jeder Pfad hat ein Thema (Gold, Feuer, Eis, Tempo, Reichweite, Gift, Wucht, Geld, Schwarm, Strom). Ab Stufe 3 trägt der Turm passende Teile (Flammen, Eiskristalle, Zahnräder, Fahne, Giftblasen, Stacheln, Münzen, kreisende Begleiter, Spulen), auf Stufe 5 große Teile (Krone, Antenne, Eiskrone …), eine leuchtende Aura und eine Färbung. Alles animiert.
 
 ### Upgrade-System
 

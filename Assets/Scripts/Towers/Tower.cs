@@ -37,6 +37,9 @@ namespace MuhDefense
         int pulseCount;
         Transform turret;
         Transform decorations;
+        /// <summary>Sichtbare Upgrade-Teile (drehen sich mit dem Turm).</summary>
+        Transform looks;
+        Renderer[] modelRenderers;
         /// <summary>Höhe der Turmspitze über dem Boden (für die Upgrade-Abzeichen).</summary>
         float modelTop = 1.15f;
         LineRenderer rangeCircle;
@@ -443,21 +446,38 @@ namespace MuhDefense
             if (decorations != null) Destroy(decorations.gameObject);
             decorations = new GameObject("Upgrades").transform;
             decorations.SetParent(transform, false);
+            if (looks != null) Destroy(looks.gameObject);
+            looks = new GameObject("Upgrade-Teile").transform;
+            looks.SetParent(turret, false);
+            var fx = looks.gameObject.AddComponent<UpgradeFx>();
 
             int total = 0;
+            Color? tint = null;
             for (int p = 0; p < TowerType.PathCount; p++)
             {
                 total += Tiers[p];
-                var color = Type.Paths[p].Color;
+                var path = Type.Paths[p];
+                var color = path.Color;
+                // kleine Stufen-Kugeln vorne am Sockel
                 for (int t = 0; t < Tiers[p]; t++)
                 {
                     Visuals.Prim(PrimitiveType.Sphere, decorations, new Vector3(-0.36f + 0.36f * p, 0.12f, -0.44f + 0.11f * t),
                         Vector3.one * 0.09f, color, "Stufe");
                 }
-                if (Tiers[p] >= 3)
+                // ab Stufe 3 sichtbare Teile passend zum Pfad, auf Stufe 5 mit Aura und Färbung
+                var look = TowerLooks.LookFor(path);
+                TowerLooks.Build(looks, fx, look, Tiers[p], color, modelTop, p);
+                if (Tiers[p] >= 5) tint = TowerLooks.TintFor(look, color);
+            }
+            if (modelRenderers != null)
+            {
+                var mat = tint.HasValue ? Visuals.TintedVertexMaterial(tint.Value) : Visuals.VertexColorMaterial;
+                foreach (var r in modelRenderers)
                 {
-                    Visuals.Prim(PrimitiveType.Sphere, decorations, new Vector3(-0.25f + 0.25f * p, modelTop + 0.15f, 0f),
-                        Vector3.one * (Tiers[p] >= 5 ? 0.24f : 0.14f), color, "Abzeichen");
+                    if (r == null) continue;
+                    var mats = new Material[r.sharedMaterials.Length];
+                    for (int i = 0; i < mats.Length; i++) mats[i] = mat;
+                    r.sharedMaterials = mats;
                 }
             }
             baseScale = 1f + 0.035f * total;
@@ -471,6 +491,7 @@ namespace MuhDefense
             turret = new GameObject("Turm").transform;
             turret.SetParent(transform, false);
             var model = ModelLibrary.Spawn(ModelNameFor(Type), turret, 0.92f, ModelLibrary.Fit.Footprint);
+            if (model != null) modelRenderers = model.GetComponentsInChildren<Renderer>();
             if (model != null)
             {
                 float top = 0f;
