@@ -304,6 +304,57 @@ def build_farmer():
         tube((0.28 + d, -0.08, 1.98), 0.016, 0.26, METAL, r2=0.004, segs=6)
 
 
+def build_heinz():
+    """Held Bauer Heinz: grimmiger Bauer mit Schrotflinte und Halstuch, ohne Sockel."""
+    for s_ in (-1, 1):
+        tube((0.1 * s_, 0, 0.2), 0.075, 0.36, DENIM)
+        soft_box((0.1 * s_, -0.04, 0.07), (0.15, 0.24, 0.13), BOOT, round_=0.4)
+    soft_box((0, 0, 0.6), (0.44, 0.32, 0.56), DENIM, round_=0.35)
+    soft_box((0, 0.01, 0.84), (0.52, 0.34, 0.24), (0.25, 0.45, 0.25), round_=0.4)
+    for s_ in (-1, 1):
+        soft_box((0.11 * s_, -0.16, 0.76), (0.06, 0.03, 0.32), DENIM, round_=0.3)
+        ball((0.11 * s_, -0.18, 0.64), (0.04, 0.025, 0.04), GOLD, subsurf=0, segs=8)
+    ball((0, -0.06, 0.98), (0.36, 0.3, 0.12), SHIRT)
+    ball((0, 0, 1.14), (0.36, 0.34, 0.4), SKIN, subsurf=2)
+    ball((0, -0.18, 1.11), (0.1, 0.09, 0.11), CHEEK)
+    ball((0, -0.05, 1.0), (0.36, 0.3, 0.26), BEARD, subsurf=2)
+    ball((0, -0.16, 1.06), (0.28, 0.1, 0.07), BEARD)
+    green = (0.3, 0.5, 0.25)
+    eye((-0.08, -0.15, 1.21), 0.12, green, lid=SKIN, lid_tilt=math.radians(20), lid_cover=0.45, brow=BEARD, brow_tilt=math.radians(24))
+    eye((0.08, -0.15, 1.21), 0.12, green, lid=SKIN, lid_tilt=math.radians(-20), lid_cover=0.45, brow=BEARD, brow_tilt=math.radians(-24))
+    hat_rot = (math.radians(-18), 0, 0)
+    tube((0, 0.05, 1.33), 0.36, 0.035, STRAW, rot=hat_rot, segs=20)
+    tube((0, 0.09, 1.42), 0.17, 0.18, STRAW, rot=hat_rot, r2=0.14, segs=16)
+    tube((0, 0.06, 1.36), 0.175, 0.045, HATBAND, rot=hat_rot, segs=16)
+    # Arme halten die Schrotflinte quer vor dem Körper
+    ball((-0.24, -0.12, 0.74), (0.13, 0.3, 0.13), (0.25, 0.45, 0.25), rot=(math.radians(-60), 0, math.radians(-20)))
+    ball((0.24, -0.12, 0.74), (0.13, 0.3, 0.13), (0.25, 0.45, 0.25), rot=(math.radians(-60), 0, math.radians(20)))
+    ball((-0.14, -0.3, 0.7), (0.11, 0.11, 0.11), SKIN)
+    ball((0.16, -0.32, 0.72), (0.11, 0.11, 0.11), SKIN)
+    gun_rot = (math.radians(90), 0, math.radians(-25))
+    soft_box((-0.05, -0.28, 0.69), (0.08, 0.34, 0.1), DARK_WOOD, round_=0.3, rot=(0, 0, math.radians(-25)))
+    for d in (-0.02, 0.02):
+        tube((0.12 + d, -0.5, 0.74), 0.022, 0.5, DARK_METAL, rot=gun_rot)
+
+
+def build_tractor():
+    """Traktor für die Traktor-Raserei: rote Karosserie, große Hinterräder."""
+    red = (0.82, 0.16, 0.12)
+    soft_box((0, -0.1, 0.42), (0.5, 0.9, 0.36), red, round_=0.3)
+    soft_box((0, -0.45, 0.5), (0.42, 0.3, 0.3), red, round_=0.35)
+    soft_box((0, -0.62, 0.48), (0.36, 0.04, 0.22), DARK_METAL, round_=0.3)
+    soft_box((0, 0.22, 0.68), (0.52, 0.38, 0.1), DARK_METAL, round_=0.3)
+    soft_box((0, 0.28, 0.82), (0.2, 0.2, 0.24), (0.2, 0.2, 0.22), round_=0.3)
+    tube((0.12, -0.42, 0.8), 0.04, 0.4, DARK_METAL)
+    ball((0.12, -0.42, 1.02), (0.1, 0.1, 0.06), (0.3, 0.3, 0.3))
+    for s_ in (-1, 1):
+        tube((0.34 * s_, 0.25, 0.36), 0.36, 0.2, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=20)
+        tube((0.35 * s_, 0.25, 0.36), 0.18, 0.21, GOLD, rot=(0, math.radians(90), 0), segs=16)
+        tube((0.28 * s_, -0.5, 0.2), 0.2, 0.14, (0.12, 0.12, 0.13), rot=(0, math.radians(90), 0), segs=16)
+        tube((0.29 * s_, -0.5, 0.2), 0.1, 0.15, GOLD, rot=(0, math.radians(90), 0), segs=12)
+        ball((0.16 * s_, -0.62, 0.56), (0.1, 0.04, 0.1), (1.0, 0.95, 0.6))
+
+
 def build_catapult():
     """Heuballen-Katapult: Holzgestell, Wurfarm, Heuballen."""
     tube((0, 0, 0.1), 0.48, 0.2, STONE, segs=16)
@@ -363,6 +414,8 @@ MODELS = [
     ("Schleicher", build_sneaker, 5000),
     ("Sanitaeter", build_medic, 5000),
     ("KuhUfo", build_cow_ufo, 4000),
+    ("BauerHeinz", build_heinz, 6000),
+    ("Traktor", build_tractor, 4000),
     ("MistgabelBauer", build_farmer, 7000),
     ("HeuballenKatapult", build_catapult, 6000),
     ("EismilchSprueher", build_sprayer, 6000),

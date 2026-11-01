@@ -76,10 +76,12 @@ namespace MuhDefense
         float damage;
         float hitRadius;
         Transform bale;
+        bool spin = true;
         readonly HashSet<Enemy> hit = new HashSet<Enemy>();
 
         /// <param name="towardsEntrance">Index des nächsten Weg-Punkts in Richtung Eingang.</param>
-        public static void Spawn(LevelManager level, Vector3 position, int towardsEntrance, float distance, float damage, float size)
+        /// <param name="modelName">Statt eines Heuballens ein Modell zeigen (z. B. "Traktor").</param>
+        public static void Spawn(LevelManager level, Vector3 position, int towardsEntrance, float distance, float damage, float size, string modelName = null)
         {
             var go = new GameObject("Rollender Ballen");
             go.transform.SetParent(level.transform, false);
@@ -94,6 +96,11 @@ namespace MuhDefense
             pivot.SetParent(go.transform, false);
             pivot.localPosition = new Vector3(0f, size, 0f);
             r.bale = pivot;
+            if (modelName != null && ModelLibrary.Spawn(modelName, go.transform, size * 2.2f, ModelLibrary.Fit.Footprint) != null)
+            {
+                r.spin = false;
+                return;
+            }
             var cyl = Visuals.Prim(PrimitiveType.Cylinder, pivot, Vector3.zero, new Vector3(size * 2f, size * 0.9f, size * 2f),
                 new Color(0.95f, 0.8f, 0.35f), "Ballen");
             cyl.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
@@ -127,7 +134,7 @@ namespace MuhDefense
                     step = 0f;
                 }
             }
-            bale.Rotate(Speed * 120f * Time.deltaTime, 0f, 0f, Space.Self);
+            if (spin) bale.Rotate(Speed * 120f * Time.deltaTime, 0f, 0f, Space.Self);
 
             var enemies = level.Enemies;
             for (int i = enemies.Count - 1; i >= 0; i--)
@@ -140,6 +147,8 @@ namespace MuhDefense
                 if (off.magnitude > hitRadius) continue;
                 hit.Add(e);
                 e.TakeDamage(damage);
+                Effects.Burst(level.transform, e.AimPoint, new Color(0.95f, 0.8f, 0.35f), 4, 2f);
+                GameAudio.Play(SoundId.Hit);
             }
 
             if (distanceLeft <= 0f || nextWaypoint < 0) Destroy(gameObject);

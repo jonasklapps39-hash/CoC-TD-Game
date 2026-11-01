@@ -37,6 +37,7 @@ namespace MuhDefense
             DrawTopBar();
             DrawSideBar();
             if (level.SelectedTower != null && !level.Paused) DrawUpgradePanel(level.SelectedTower);
+            else if (level.HeroSelected && level.Hero != null && !level.Paused) DrawHeroPanel(level.Hero);
 
             switch (level.State)
             {
@@ -97,6 +98,17 @@ namespace MuhDefense
             GUILayout.EndHorizontal();
             GUI.enabled = true;
 
+            if (level.Hero == null)
+            {
+                GUI.enabled = playing;
+                if (GUILayout.Button($"Held: {Hero.HeroName}\ngratis aufstellen", level.PlacingHero ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(52f)))
+                {
+                    if (level.PlacingHero) level.CancelPlacing();
+                    else level.BeginPlacingHero();
+                }
+                GUI.enabled = true;
+            }
+
             GUILayout.Label("Türme", UiKit.Title);
             foreach (var type in level.AvailableTowers)
             {
@@ -115,7 +127,13 @@ namespace MuhDefense
             }
             GUILayout.Space(10f);
 
-            if (level.PlacingType != null)
+            if (level.PlacingHero)
+            {
+                GUILayout.Label("Bauer Heinz kämpft mit der Schrotflinte, sammelt Erfahrung und lernt neue Fähigkeiten.", UiKit.Small);
+                GUILayout.Label("Tippe auf ein hell markiertes Feld.", UiKit.Small);
+                if (GUILayout.Button("Abbrechen", UiKit.Button, GUILayout.Height(40f))) level.CancelPlacing();
+            }
+            else if (level.PlacingType != null)
             {
                 GUILayout.Label(level.PlacingType.Description, UiKit.Small);
                 GUILayout.Label("Tippe auf ein hell markiertes Feld.", UiKit.Small);
@@ -165,6 +183,14 @@ namespace MuhDefense
         {
             bool any = false;
             int shown = 0;
+            var hero = level.Hero;
+            if (hero != null && hero.HasBlast)
+            {
+                GUILayout.Label("Fähigkeiten", UiKit.Title);
+                any = true;
+                AbilityButton("Ladung Schrot", hero.BlastReady, hero.BlastCooldownLeft, level.UseHeroBlast);
+                if (hero.HasTractor) AbilityButton("Traktor-Raserei", hero.TractorReady, hero.TractorCooldownLeft, level.UseHeroTractor);
+            }
             foreach (var tower in level.Towers)
             {
                 if (!tower.HasAbility || shown >= 4) continue;
@@ -181,6 +207,44 @@ namespace MuhDefense
                 if (GUILayout.Button(label, tower.AbilityReady ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(40f))) level.UseAbility(tower);
                 GUI.enabled = true;
             }
+        }
+
+        void AbilityButton(string name, bool ready, float cooldownLeft, System.Action use)
+        {
+            string label = ready ? name : $"{name} ({Mathf.CeilToInt(cooldownLeft)} s)";
+            GUI.enabled = ready && level.State == LevelState.WaveRunning;
+            if (GUILayout.Button(label, ready ? UiKit.ActiveButton : UiKit.Button, GUILayout.Height(40f))) use();
+            GUI.enabled = true;
+        }
+
+        /// <summary>Infos zum Helden: Stufe, Erfahrung, Fähigkeiten, Zielmodus.</summary>
+        void DrawHeroPanel(Hero hero)
+        {
+            float width = UiKit.VirtualWidth - UiKit.SideBarWidth - 16f;
+            const float height = 170f;
+            var r = new Rect(8f, UiKit.RefHeight - height - 8f, width, height);
+            blockers.Add(r);
+            GUI.Box(r, GUIContent.none, UiKit.Panel);
+            GUILayout.BeginArea(new Rect(r.x + 14f, r.y + 10f, r.width - 28f, r.height - 20f));
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(GUILayout.Width(260f));
+            GUILayout.Label($"{Hero.HeroName} – Stufe {hero.Level}", UiKit.Label);
+            Rect bar = GUILayoutUtility.GetRect(240f, 14f);
+            UiKit.DrawBar(bar, hero.XpProgress, new Color(1f, 0.8f, 0.25f));
+            GUILayout.Label(hero.Level >= Hero.MaxLevel ? "Höchste Stufe erreicht" : "Erfahrung durch besiegte Aliens und geschaffte Wellen", UiKit.Small);
+            if (GUILayout.Button($"Ziel: {TowerType.TargetModeName(hero.TargetMode)}", UiKit.Button, GUILayout.Height(36f))) hero.CycleTargetMode();
+            GUILayout.EndVertical();
+            GUILayout.Space(16f);
+            GUILayout.BeginVertical();
+            var st = hero.Stats;
+            GUILayout.Label($"Schrotflinte: {st.Projectiles} Kugeln à {st.Damage:0} Schaden, {st.FireRate:0.0} Schüsse/s, Reichweite {st.Range:0.0}" +
+                            (st.SeesCamo ? ", sieht Getarnte" : "") + (st.ArmorPiercing ? ", durchschlägt Panzer" : ""), UiKit.Small);
+            GUILayout.Label(hero.HasBlast ? $"Ladung Schrot: {hero.BlastDamage:0} Schaden an allen Aliens in Reichweite" : $"Stufe {Hero.BlastLevel}: Ladung Schrot", UiKit.Small);
+            GUILayout.Label(hero.HasTractor ? $"Traktor-Raserei: überrollt alle Aliens am Boden ({hero.TractorDamage:0} Schaden)" : $"Stufe {Hero.TractorLevel}: Traktor-Raserei", UiKit.Small);
+            if (GUILayout.Button("Schließen", UiKit.Button, GUILayout.Height(32f), GUILayout.Width(140f))) level.Select(null);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
         }
 
         /// <summary>Upgrade-Fenster wie in Bloons TD6: drei Pfade nebeneinander, links Zielmodus und Verkaufen.</summary>
@@ -274,7 +338,7 @@ namespace MuhDefense
 
         void DrawPauseMenu()
         {
-            Rect box = UiKit.DrawOverlay(blockers, 460f, confirmLeave ? 300f : 380f);
+            Rect box = UiKit.DrawOverlay(blockers, 460f, confirmLeave ? 300f : 440f);
             GUILayout.BeginArea(new Rect(box.x + 24f, box.y + 20f, box.width - 48f, box.height - 40f));
 
             if (confirmLeave)
@@ -296,6 +360,11 @@ namespace MuhDefense
                 if (GUILayout.Button("Neu starten", UiKit.Button, GUILayout.Height(52f))) level.Restart();
                 GUILayout.Space(6f);
                 if (GUILayout.Button("Level verlassen", UiKit.Button, GUILayout.Height(52f))) confirmLeave = true;
+                GUILayout.Space(6f);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(40f))) GameAudio.MusicOn = !GameAudio.MusicOn;
+                if (GUILayout.Button(GameAudio.SoundOn ? "Ton: an" : "Ton: aus", UiKit.Button, GUILayout.Height(40f))) GameAudio.SoundOn = !GameAudio.SoundOn;
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndArea();
         }

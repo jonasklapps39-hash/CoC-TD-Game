@@ -73,6 +73,8 @@ namespace MuhDefense
             {
                 alreadyHit.Add(target);
                 target.TakeDamage(damage, stats.ArmorPiercing, stats.ArmoredBonus);
+                Effects.Burst(level.transform, transform.position, new Color(0.85f, 0.85f, 0.9f), 2, 1.5f, 0.06f);
+                GameAudio.Play(SoundId.Hit);
                 pierceLeft--;
             }
 
@@ -121,6 +123,8 @@ namespace MuhDefense
                 e.TakeDamage(damage, stats.ArmorPiercing, stats.ArmoredBonus);
             }
             RingEffect.Spawn(level.transform, center, stats.Splash, new Color(1f, 0.85f, 0.3f, 0.9f), 0.3f);
+            Effects.Burst(level.transform, center + Vector3.up * 0.2f, stats.BurnDps > 0f ? new Color(1f, 0.5f, 0.15f) : new Color(0.95f, 0.8f, 0.35f), 8, 2.5f);
+            GameAudio.Play(SoundId.Hit, 1.5f);
 
             if (stats.FireFieldDps > 0f)
             {

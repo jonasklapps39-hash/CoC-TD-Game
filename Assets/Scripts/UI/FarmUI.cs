@@ -89,6 +89,11 @@ namespace MuhDefense
                 GUILayout.Label("Tippe auf ein Gebäude, um es zu verbessern oder Mais und Milch einzusammeln.", UiKit.Small);
                 GUILayout.Space(10f);
                 if (GUILayout.Button("Bauen", UiKit.Button, GUILayout.Height(56f))) farm.ShopOpen = true;
+                GUILayout.Space(6f);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button(GameAudio.MusicOn ? "Musik: an" : "Musik: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.MusicOn = !GameAudio.MusicOn;
+                if (GUILayout.Button(GameAudio.SoundOn ? "Ton: an" : "Ton: aus", UiKit.Button, GUILayout.Height(36f))) GameAudio.SoundOn = !GameAudio.SoundOn;
+                GUILayout.EndHorizontal();
             }
 
             GUILayout.FlexibleSpace();

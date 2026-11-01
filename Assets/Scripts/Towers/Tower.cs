@@ -89,6 +89,8 @@ namespace MuhDefense
             if (tier == null) return;
             Tiers[path]++;
             Invested += tier.Cost;
+            GameAudio.Play(SoundId.Upgrade);
+            Effects.Burst(level.transform, transform.position + Vector3.up * 0.6f, Type.Paths[path].Color, 10, 2.5f);
             RecalculateStats();
             Visuals.SetCircleRadius(rangeCircle, DisplayRange);
             UpdateDecorations();
@@ -197,11 +199,13 @@ namespace MuhDefense
             switch (Type.Kind)
             {
                 case TowerKind.Projectile:
+                    GameAudio.Play(SoundId.Fork);
                     Projectile.Spawn(level, this, from, target, damage, Stats, false,
                         PrimitiveType.Cube, new Vector3(0.05f, 0.05f, 0.35f),
                         Stats.ArmorPiercing ? new Color(1f, 0.82f, 0.2f) : new Color(0.75f, 0.75f, 0.8f));
                     break;
                 case TowerKind.Arc:
+                    GameAudio.Play(SoundId.Pop, 0.6f);
                     Projectile.Spawn(level, this, from, target, damage, Stats, true,
                         PrimitiveType.Cube, new Vector3(0.28f, 0.22f, 0.28f),
                         Stats.BurnDps > 0f ? new Color(1f, 0.55f, 0.2f) : new Color(0.95f, 0.82f, 0.35f));
@@ -235,6 +239,8 @@ namespace MuhDefense
             {
                 var color = freezeNow ? new Color(0.85f, 0.95f, 1f, 1f) : new Color(0.7f, 0.9f, 1f, 0.9f);
                 RingEffect.Spawn(level.transform, transform.position, Mathf.Min(Range, 6f), color, 0.45f);
+                GameAudio.Play(freezeNow ? SoundId.Freeze : SoundId.Spray);
+                if (Stats.Knockback > 0f) GameAudio.Play(SoundId.Wind, 0.5f);
             }
             return hit;
         }

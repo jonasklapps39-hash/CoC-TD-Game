@@ -44,6 +44,10 @@ namespace MuhDefense
 
         public Tower SelectedTower { get; private set; }
         public TowerType PlacingType { get; private set; }
+        /// <summary>Der Held (einmal pro Level), null solange er nicht aufgestellt ist.</summary>
+        public Hero Hero { get; private set; }
+        public bool PlacingHero { get; private set; }
+        public bool HeroSelected { get; private set; }
 
         /// <summary>Spielgeschwindigkeit (1 oder 2). Wird für die Sitzung gemerkt.</summary>
         public static float GameSpeed { get; private set; } = 1f;
@@ -96,6 +100,7 @@ namespace MuhDefense
             }
 
             gameObject.AddComponent<GameUI>().Init(this);
+            GameAudio.PlayMusic(MusicId.Level);
             ApplyTimeScale();
         }
 
@@ -248,6 +253,7 @@ namespace MuhDefense
             float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted);
             WavesStarted++;
             State = LevelState.WaveRunning;
+            GameAudio.Play(SoundId.WaveStart);
             pendingGroups = wave.Groups.Length;
             foreach (var group in wave.Groups) StartCoroutine(SpawnGroup(group, hpMultiplier));
         }
@@ -281,6 +287,7 @@ namespace MuhDefense
         void WaveCleared()
         {
             var wave = Def.Waves[WavesStarted - 1];
+            if (Hero != null) Hero.AddXp(40 + 10 * WavesStarted);
             if (wave.Bonus > 0)
             {
                 Money += wave.Bonus;
@@ -295,6 +302,7 @@ namespace MuhDefense
             }
 
             State = LevelState.Won;
+            GameAudio.Play(SoundId.Win);
             Stars = CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1;
             Reward = GameFlow.CompleteLevel(Def, Stars);
             CancelPlacing();
@@ -304,6 +312,7 @@ namespace MuhDefense
         void Lose()
         {
             State = LevelState.Lost;
+            GameAudio.Play(SoundId.Lose);
             Stars = 0;
             StopAllCoroutines();
             CancelPlacing();
@@ -347,7 +356,11 @@ namespace MuhDefense
                     bestDist = d;
                 }
             }
-            if (best != null) best.Grab();
+            if (best != null)
+            {
+                best.Grab();
+                GameAudio.Play(SoundId.Moo);
+            }
             return best;
         }
 
@@ -356,6 +369,10 @@ namespace MuhDefense
             Enemies.Remove(enemy);
             Money += enemy.Type.Reward;
             AddFloatingText(enemy.transform.position + Vector3.up * 0.5f, "+" + enemy.Type.Reward, new Color(1f, 0.9f, 0.3f));
+            if (Hero != null) Hero.AddXp(enemy.IsBoss ? 60 : 3);
+            Effects.Burst(transform, enemy.AimPoint, enemy.Type.Color, enemy.IsBoss ? 20 : 8, 3f);
+            GameAudio.Play(SoundId.Pop);
+            GameAudio.Play(SoundId.Coin);
         }
 
         public void OnEnemyEscaped(Enemy enemy)
@@ -367,6 +384,7 @@ namespace MuhDefense
             Cows.Remove(cow);
             Destroy(cow.gameObject);
             CowsLost++;
+            GameAudio.Play(SoundId.CowLost);
             AddFloatingText(enemy.transform.position + Vector3.up, "Kuh entführt!", new Color(1f, 0.35f, 0.3f));
             if (CowsRemaining <= 0) Lose();
         }
@@ -379,13 +397,66 @@ namespace MuhDefense
 
             var cell = new Vector2Int(Mathf.FloorToInt(worldPoint.x), Mathf.FloorToInt(worldPoint.z));
 
+            if (PlacingHero)
+            {
+                if (TryPlaceHero(cell)) CancelPlacing();
+                return;
+            }
             if (PlacingType != null)
             {
                 if (TryPlace(PlacingType, cell)) CancelPlacing();
                 return;
             }
 
+            if (Hero != null && Hero.Cell == cell)
+            {
+                SelectHero();
+                return;
+            }
             Select(Towers.Find(t => t.Cell == cell));
+        }
+
+        // ---------------------------------------------------------------- Held
+
+        public void BeginPlacingHero()
+        {
+            if (Hero != null) return;
+            Select(null);
+            PlacingType = null;
+            PlacingHero = true;
+            map.ShowBuildable(true, IsBuildable);
+        }
+
+        bool TryPlaceHero(Vector2Int cell)
+        {
+            if (!IsBuildable(cell))
+            {
+                AddFloatingText(CellCenter(cell), "Hier nicht!", new Color(1f, 0.4f, 0.3f));
+                return false;
+            }
+            Hero = new GameObject("Held").AddComponent<Hero>();
+            Hero.transform.SetParent(transform, false);
+            Hero.Init(this, cell);
+            Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.3f, new Color(1f, 0.85f, 0.3f), 10, 2.5f);
+            GameAudio.Play(SoundId.Build);
+            return true;
+        }
+
+        public void SelectHero()
+        {
+            Select(null);
+            HeroSelected = true;
+            Hero.SetSelected(true);
+        }
+
+        public void UseHeroBlast()
+        {
+            if (State == LevelState.WaveRunning && Hero != null) Hero.UseBlast();
+        }
+
+        public void UseHeroTractor()
+        {
+            if (State == LevelState.WaveRunning && Hero != null) Hero.UseTractor();
         }
 
         public bool IsBuildable(Vector2Int cell)
@@ -393,21 +464,24 @@ namespace MuhDefense
             return map.InBounds(cell)
                 && !map.IsPath(cell)
                 && !Def.Pasture.Contains(cell)
-                && !Towers.Exists(t => t.Cell == cell);
+                && !Towers.Exists(t => t.Cell == cell)
+                && (Hero == null || Hero.Cell != cell);
         }
 
         public void BeginPlacing(TowerType type)
         {
             if (Money < type.Cost || MaxTowerLevel(type) <= 0) return;
             Select(null);
+            PlacingHero = false;
             PlacingType = type;
             map.ShowBuildable(true, IsBuildable);
         }
 
         public void CancelPlacing()
         {
-            if (PlacingType == null) return;
+            if (PlacingType == null && !PlacingHero) return;
             PlacingType = null;
+            PlacingHero = false;
             map.ShowBuildable(false, IsBuildable);
         }
 
@@ -425,11 +499,15 @@ namespace MuhDefense
             tower.transform.SetParent(transform, false);
             tower.Init(this, type, cell, MaxTowerLevel(type));
             Towers.Add(tower);
+            GameAudio.Play(SoundId.Build);
+            Effects.Burst(transform, CellCenter(cell) + Vector3.up * 0.2f, new Color(0.75f, 0.6f, 0.4f), 8, 2f);
             return true;
         }
 
         public void Select(Tower tower)
         {
+            if (HeroSelected && Hero != null) Hero.SetSelected(false);
+            HeroSelected = false;
             if (SelectedTower != null) SelectedTower.SetSelected(false);
             SelectedTower = tower;
             if (SelectedTower != null) SelectedTower.SetSelected(true);
@@ -457,6 +535,7 @@ namespace MuhDefense
             switch (ability)
             {
                 case TowerAbility.Gabelsturm:
+                    GameAudio.Play(SoundId.Boom);
                     for (int i = Enemies.Count - 1; i >= 0; i--)
                     {
                         if (i >= Enemies.Count) continue;
@@ -467,12 +546,15 @@ namespace MuhDefense
                     break;
                 case TowerAbility.Bauernaufstand:
                     FarmerFrenzyTimer = 10f;
+                    GameAudio.Play(SoundId.LevelUp);
                     break;
                 case TowerAbility.Heulawine:
                     StartCoroutine(HayAvalanche());
+                    GameAudio.Play(SoundId.Boom);
                     break;
                 case TowerAbility.Eiszeit:
                     foreach (var e in Enemies) e.Freeze(4f, 1.5f, true);
+                    GameAudio.Play(SoundId.Freeze);
                     break;
             }
         }

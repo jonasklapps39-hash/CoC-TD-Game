@@ -40,6 +40,7 @@ namespace MuhDefense
             BuildGround();
             foreach (var b in Farm.Buildings) CreateView(b);
             gameObject.AddComponent<FarmUI>().Init(this);
+            GameAudio.PlayMusic(MusicId.Farm);
         }
 
         void Update()
@@ -50,6 +51,8 @@ namespace MuhDefense
                 {
                     view.Refresh();
                     AddFloatingText(view.TopPoint, $"{b.TypeDef.Name} fertig!", UiKit.Gold);
+                    GameAudio.Play(SoundId.LevelUp);
+                    Effects.Burst(transform, view.TopPoint, UiKit.Gold, 12, 3f);
                 }
                 Farm.Save();
             }
@@ -118,6 +121,8 @@ namespace MuhDefense
             {
                 AddFloatingText(view.TopPoint, $"+{(int)collected} {FarmBuildingType.ResourceName(type.ProducedResource)}",
                     type.ProducedResource == Resource.Mais ? UiKit.CornColor : UiKit.MilkColor);
+                GameAudio.Play(type.ProducedResource == Resource.Milch ? SoundId.Moo : SoundId.Coin);
+                Effects.Burst(transform, view.TopPoint, type.ProducedResource == Resource.Mais ? UiKit.CornColor : UiKit.MilkColor, 8, 2.5f);
                 Farm.Save();
             }
             else
@@ -129,6 +134,7 @@ namespace MuhDefense
         public void UpgradeSelected()
         {
             if (Selected == null || !Farm.StartUpgrade(Selected)) return;
+            GameAudio.Play(SoundId.Build);
             Views[Selected.Id].Refresh();
             Farm.Save();
         }
@@ -161,6 +167,7 @@ namespace MuhDefense
                 if (b != null)
                 {
                     CreateView(b);
+                    GameAudio.Play(SoundId.Build);
                     CancelMode();
                     Select(b);
                     Farm.Save();
