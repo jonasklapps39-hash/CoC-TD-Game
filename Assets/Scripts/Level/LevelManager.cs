@@ -79,12 +79,16 @@ namespace MuhDefense
 
         public static Vector3 CellCenter(Vector2Int c) => new Vector3(c.x + 0.5f, 0f, c.y + 0.5f);
 
-        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout, LevelBonuses bonuses = null, HeroType hero = null)
+        public Difficulty Difficulty { get; private set; } = Difficulty.Mittel;
+
+        public void Init(LevelDefinition def, Dictionary<TowerType, int> towerLoadout, LevelBonuses bonuses = null, HeroType hero = null,
+            Difficulty difficulty = Difficulty.Mittel)
         {
             Def = def;
+            Difficulty = difficulty;
             HeroChoice = hero ?? HeroType.Heinz;
             Bonuses = bonuses ?? new LevelBonuses();
-            Money = def.StartMoney + Bonuses.StartMoney;
+            Money = Mathf.RoundToInt(def.StartMoney * DifficultyRules.StartMoneyFactor(difficulty)) + Bonuses.StartMoney;
             towerMaxLevels = towerLoadout;
             foreach (var type in TowerType.All)
             {
@@ -264,7 +268,7 @@ namespace MuhDefense
             if (State != LevelState.Building || !HasMoreWaves) return;
 
             var wave = Def.Waves[WavesStarted];
-            float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted);
+            float hpMultiplier = Def.HpMultiplier * (1f + Def.HpGrowthPerWave * WavesStarted) * DifficultyRules.HpFactor(Difficulty);
             WavesStarted++;
             State = LevelState.WaveRunning;
             GameAudio.Play(SoundId.WaveStart);
@@ -338,8 +342,8 @@ namespace MuhDefense
 
             State = LevelState.Won;
             GameAudio.Play(SoundId.Win);
-            Stars = CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1;
-            Reward = GameFlow.CompleteLevel(Def, Stars);
+            Stars = Mathf.Min(CowsLost == 0 ? 3 : CowsLost <= 2 ? 2 : 1, DifficultyRules.MaxStars(Difficulty));
+            Reward = GameFlow.CompleteLevel(Def, Stars, Difficulty);
             CancelPlacing();
             Select(null);
         }

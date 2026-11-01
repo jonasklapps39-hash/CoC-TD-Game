@@ -53,5 +53,7 @@ namespace MuhDefense
     {
         public string Id;
         public int BestStars;
+        /// <summary>Auf „Schwer“ geschafft (Krone, zählt als zusätzlicher Stern).</summary>
+        public bool HardCleared;
     }
 }

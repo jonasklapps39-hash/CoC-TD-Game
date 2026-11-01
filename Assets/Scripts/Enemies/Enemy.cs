@@ -123,7 +123,7 @@ namespace MuhDefense
                 targetIndex = path.Length - 2;
             }
 
-            float speed = Type.Speed * slowFactor * (Carried != null ? 0.75f : 1f);
+            float speed = Type.Speed * slowFactor * (Carried != null ? 0.75f : 1f) * DifficultyRules.SpeedFactor(level.Difficulty);
             Move(speed * dt);
             ApplyModelPose(speed);
         }

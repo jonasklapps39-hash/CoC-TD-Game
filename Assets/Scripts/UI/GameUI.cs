@@ -498,6 +498,10 @@ namespace MuhDefense
             Rect box = UiKit.DrawOverlay(blockers, 700f, 470f);
             GUILayout.BeginArea(new Rect(box.x + 28f, box.y + 20f, box.width - 56f, box.height - 40f));
             UiKit.Heading(level.Def.Name, UiKit.Big, GUILayout.Height(60f));
+            if (level.Difficulty != Difficulty.Mittel)
+            {
+                GUILayout.Label($"Schwierigkeit: {DifficultyRules.Name(level.Difficulty)} – {DifficultyRules.Description(level.Difficulty)}", UiKit.Small);
+            }
 
             string story = level.Def.Id == Levels.All[0].Id
                 ? "Ein Alien-Schiff vom Planeten Zorb ist auf Bauer Heinz' Weide bruchgelandet. " +
@@ -517,7 +521,8 @@ namespace MuhDefense
             Rect stars = GUILayoutUtility.GetRect(10f, 40f);
             UiKit.DrawStars(new Rect(stars.x, stars.y, 140f, 40f), 3, 34f);
             GUILayout.Label("3 Sterne: keine Kuh verloren  •  2 Sterne: höchstens 2  •  1 Stern: geschafft\n" +
-                            $"Belohnung bei 3 Sternen: {level.Def.RewardCorn} Mais und {level.Def.RewardMilk} Milch", UiKit.Small);
+                            $"Belohnung bei 3 Sternen: {Mathf.RoundToInt(level.Def.RewardCorn * DifficultyRules.RewardFactor(level.Difficulty))} Mais und " +
+                            $"{Mathf.RoundToInt(level.Def.RewardMilk * DifficultyRules.RewardFactor(level.Difficulty))} Milch", UiKit.Small);
 
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
@@ -560,6 +565,11 @@ namespace MuhDefense
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
                     if (reward.CornLost > 0 || reward.MilkLost > 0) GUILayout.Label("Lager voll – baue Silos und Tanks!", UiKit.Center);
+                    if (reward.NewCrown) GUILayout.Label("Krone verdient: auf „Schwer“ geschafft! +1 Stern", UiKit.Center);
+                    else if (level.Difficulty == Difficulty.Leicht && level.CowsLost == 0)
+                    {
+                        GUILayout.Label("Auf „Leicht“ gibt es höchstens 2 Sterne – versuch es auf „Mittel“!", UiKit.Center);
+                    }
                 }
             }
             else

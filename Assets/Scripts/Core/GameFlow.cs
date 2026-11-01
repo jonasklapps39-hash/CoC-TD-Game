@@ -14,6 +14,8 @@ namespace MuhDefense
         public int MilkLost;
         /// <summary>Diamanten für neue Sterne und das erste Schaffen.</summary>
         public int Gems;
+        /// <summary>Zum ersten Mal auf „Schwer“ geschafft.</summary>
+        public bool NewCrown;
     }
 
     /// <summary>
@@ -40,6 +42,15 @@ namespace MuhDefense
             go.AddComponent<FarmManager>().Init(Farm);
         }
 
+        /// <summary>Gewählter Schwierigkeitsgrad (gilt für das nächste und das laufende Level).</summary>
+        public static Difficulty CurrentDifficulty = Difficulty.Mittel;
+
+        public static void StartLevel(LevelDefinition def, Difficulty difficulty)
+        {
+            CurrentDifficulty = difficulty;
+            StartLevel(def);
+        }
+
         public static void StartLevel(LevelDefinition def)
         {
             Farm.Tick();
@@ -48,7 +59,7 @@ namespace MuhDefense
             var bonuses = Farm.LevelBonuses;
             // Heldenhütte: jede Stufe lässt den Helden eine Stufe höher starten
             bonuses.HeroStartLevels += Mathf.Max(0, Farm.HeroHutLevel - 1);
-            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), bonuses, Farm.SelectedHero);
+            go.AddComponent<LevelManager>().Init(def, BuildTowerLoadout(), bonuses, Farm.SelectedHero, CurrentDifficulty);
         }
 
         /// <summary>Welche Türme im Level verfügbar sind und bis zu welcher Stufe – bestimmt durch die Werkstätten auf dem Hof.</summary>
@@ -75,15 +86,18 @@ namespace MuhDefense
 
         public static bool IsRegionUnlocked(int region) => Farm.TotalStars >= Levels.Regions[region].UnlockStars;
 
-        public static LevelReward CompleteLevel(LevelDefinition def, int stars)
+        public static LevelReward CompleteLevel(LevelDefinition def, int stars, Difficulty difficulty = Difficulty.Mittel)
         {
             Farm.Tick();
-            int corn = Mathf.RoundToInt(def.RewardCorn * stars / 3f);
-            int milk = Mathf.RoundToInt(def.RewardMilk * stars / 3f);
+            float factor = DifficultyRules.RewardFactor(difficulty);
+            int corn = Mathf.RoundToInt(def.RewardCorn * stars / 3f * factor);
+            int milk = Mathf.RoundToInt(def.RewardMilk * stars / 3f * factor);
             int cornAdded = (int)Farm.Add(Resource.Mais, corn);
             int milkAdded = (int)Farm.Add(Resource.Milch, milk);
             int previousBest = Farm.BestStars(def.Id);
             int gems = Mathf.Max(0, stars - previousBest) * FarmState.GemsPerNewStar + (previousBest == 0 ? FarmState.GemsFirstClear : 0);
+            bool newCrown = difficulty == Difficulty.Schwer && Farm.RecordHardClear(def.Id);
+            if (newCrown) gems += DifficultyRules.HardFirstClearGems;
             Farm.AddGems(gems);
             Farm.RecordStars(def.Id, stars);
             Farm.Save();
@@ -95,6 +109,7 @@ namespace MuhDefense
                 CornLost = corn - cornAdded,
                 MilkLost = milk - milkAdded,
                 Gems = gems,
+                NewCrown = newCrown,
             };
         }
 

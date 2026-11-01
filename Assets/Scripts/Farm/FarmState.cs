@@ -420,7 +420,7 @@ namespace MuhDefense
             get
             {
                 int n = 0;
-                foreach (var p in Data.Levels) n += p.BestStars;
+                foreach (var p in Data.Levels) n += p.BestStars + (p.HardCleared ? 1 : 0);
                 return n;
             }
         }
@@ -557,6 +557,29 @@ namespace MuhDefense
         }
 
         public LevelBonuses LevelBonuses => MuhDefense.Talents.BuildBonuses(Data.Talents ?? new List<string>());
+
+        public bool HardCleared(string levelId)
+        {
+            foreach (var p in Data.Levels)
+            {
+                if (p.Id == levelId) return p.HardCleared;
+            }
+            return false;
+        }
+
+        /// <returns>true, wenn das Level zum ersten Mal auf „Schwer“ geschafft wurde.</returns>
+        public bool RecordHardClear(string levelId)
+        {
+            foreach (var p in Data.Levels)
+            {
+                if (p.Id != levelId) continue;
+                if (p.HardCleared) return false;
+                p.HardCleared = true;
+                return true;
+            }
+            Data.Levels.Add(new LevelProgress { Id = levelId, HardCleared = true });
+            return true;
+        }
 
         public void RecordStars(string levelId, int stars)
         {

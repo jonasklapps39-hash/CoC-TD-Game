@@ -25,6 +25,7 @@ Der komplette Spielkreislauf ist spielbar: **Level spielen → Hof ausbauen → 
 - 3 Helden (Stufe 1–10, je 2 Fähigkeiten): **Bauer Heinz** (Schrotflinte), **Oma Gertrud** (Kekse, macht Türme schneller), **Berta** (Laseraugen, schützt Kühe)
 - 9 Aliens: Grünling, Flitzer, Brocken (gepanzert), Schleicher (getarnt), Kuhfänger-Ufo (fliegt), Sanitäter (heilt), Teiler (zerfällt in zwei), Bosse Oberbrocken Gorg und Ernte-Roboter (wirft Flitzer ab)
 - Tempo 1x/2x, Pause-Menü, Sterne-Wertung nach geretteten Kühen
+- Schwierigkeitsgrade Leicht / Mittel / Schwer (Krone für „Schwer“)
 
 **Verbindung:** Levels bringen Mais, Milch und Sterne. Werkstätten schalten Türme frei und bestimmen die höchste Upgrade-Stufe im Level.
 

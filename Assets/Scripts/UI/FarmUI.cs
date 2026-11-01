@@ -705,6 +705,17 @@ namespace MuhDefense
             GUILayout.EndHorizontal();
             GUILayout.Space(6f);
 
+            // Schwierigkeitsgrad
+            GUILayout.BeginHorizontal();
+            foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty)))
+            {
+                var style = d == GameFlow.CurrentDifficulty ? (d == Difficulty.Schwer ? UiKit.RedButton : UiKit.ActiveButton) : UiKit.Button;
+                if (UiKit.Btn(DifficultyRules.Name(d), style, GUILayout.Height(38f), GUILayout.Width(130f))) GameFlow.CurrentDifficulty = d;
+            }
+            GUILayout.Label(DifficultyRules.Description(GameFlow.CurrentDifficulty), UiKit.Small);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
             bool regionOpen = GameFlow.IsRegionUnlocked(mapRegion);
             if (!regionOpen)
             {
@@ -724,8 +735,10 @@ namespace MuhDefense
                 if (levelIcon != null) GUILayout.Label(levelIcon, GUILayout.Width(72f), GUILayout.Height(72f));
                 GUILayout.BeginVertical();
                 UiKit.Heading(def.Name, UiKit.Title, GUILayout.Height(30f));
+                float rf = DifficultyRules.RewardFactor(GameFlow.CurrentDifficulty);
                 GUILayout.Label(unlocked
-                    ? $"Belohnung bei 3 Sternen: {def.RewardCorn} Mais, {def.RewardMilk} Milch"
+                    ? $"Belohnung bei 3 Sternen: {Mathf.RoundToInt(def.RewardCorn * rf)} Mais, {Mathf.RoundToInt(def.RewardMilk * rf)} Milch" +
+                      (State.HardCleared(def.Id) ? "   •   Krone (Schwer geschafft)" : "")
                     : regionOpen ? "Gesperrt – schaffe zuerst das vorherige Level." : "Gesperrt – zu wenige Sterne.", UiKit.Small);
                 GUILayout.EndVertical();
                 Rect stars = GUILayoutUtility.GetRect(130f, 60f, GUILayout.Width(130f));
@@ -734,7 +747,7 @@ namespace MuhDefense
                 if (UiKit.Btn("Spielen", UiKit.BigButton, GUILayout.Width(140f), GUILayout.Height(60f)))
                 {
                     farm.MapOpen = false;
-                    farm.PlayLevel(def);
+                    farm.PlayLevel(def, GameFlow.CurrentDifficulty);
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();

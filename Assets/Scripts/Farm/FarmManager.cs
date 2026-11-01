@@ -223,10 +223,10 @@ namespace MuhDefense
             PlacingType = null;
         }
 
-        public void PlayLevel(LevelDefinition def)
+        public void PlayLevel(LevelDefinition def, Difficulty difficulty = Difficulty.Mittel)
         {
             Farm.Save();
-            GameFlow.StartLevel(def);
+            GameFlow.StartLevel(def, difficulty);
         }
 
         public void AddFloatingText(Vector3 position, string text, Color color)
