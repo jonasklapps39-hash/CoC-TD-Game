@@ -402,6 +402,10 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 - [x] **Hühnerstall und Eier** (dritter Rohstoff, ab Bauernhaus 2): Hühner legen Eier (Lager im Stall selbst), Hühner laufen über den Hof. Eier braucht man für Helden-Training (zusätzlich zur Milch), Deko und den Ernte-Turbo (30 Eier statt 10 Diamanten)
 - [x] **Deko mit Boni** (1 Feld, sofort fertig, kein Knecht nötig, bezahlt mit Eiern): Blumenbeet (+3 % Mais), Heuballen-Stapel (+3 % Milch), Brunnen (+5 % Eier), Gartenzwerg (+4 % Erfahrung); Anzahl wächst mit dem Bauernhaus
 
+### Für später (vor der Veröffentlichung)
+
+- [ ] **Bauzeiten verlängern:** Im Moment sind sie zum Testen kurz (Sekunden bis 10 Minuten, voller Hof in ca. 10–15 Stunden Spielzeit). Für die fertige App auf Minuten bis einige Stunden für hohe Stufen strecken, damit der Hof länger hält und „Sofort fertig“ mit Diamanten sich lohnt. Dabei Kosten und Produktion mit anpassen (aktuell voller Hof: ca. 109 000 Mais, 88 000 Milch, 6 Stunden Knecht-Arbeit).
+
 ### Upgrade-System
 
 **Regeln**
