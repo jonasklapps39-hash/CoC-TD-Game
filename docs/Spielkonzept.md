@@ -404,6 +404,7 @@ Die erste Kuh, die je entführt wurde. Sie ist mit Alien-Technik entkommen und w
 
 ### Für später (vor der Veröffentlichung)
 
+- [ ] **Grafiksystem auf URP umstellen**, falls Unity die Built-In Render Pipeline abschafft (Unity Hub zeigt dazu ein Warndreieck): Toon-Shader `MuhDefense/Toon` für URP neu schreiben, Licht und Schatten anpassen.
 - [ ] **Bauzeiten verlängern:** Im Moment sind sie zum Testen kurz (Sekunden bis 10 Minuten, voller Hof in ca. 10–15 Stunden Spielzeit). Für die fertige App auf Minuten bis einige Stunden für hohe Stufen strecken, damit der Hof länger hält und „Sofort fertig“ mit Diamanten sich lohnt. Dabei Kosten und Produktion mit anpassen (aktuell voller Hof: ca. 109 000 Mais, 88 000 Milch, 6 Stunden Knecht-Arbeit).
 
 ### Upgrade-System
