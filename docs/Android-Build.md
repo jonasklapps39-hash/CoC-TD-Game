@@ -2,18 +2,16 @@
 
 GitHub baut die APK in der Cloud. Du brauchst dafür keinen Mac und kein Unity – nur einmal eine Unity-Lizenzdatei.
 
-## Einmalig einrichten (ca. 10 Minuten, am Mac)
+## Einmalig einrichten (ca. 5 Minuten)
 
-1. **Lizenzdatei finden.** Auf dem Mac, auf dem Unity Hub angemeldet ist, liegt sie hier:
-   `/Library/Application Support/Unity/Unity_lic.ulf`
-   (Im Finder: *Gehe zu → Gehe zum Ordner …* und den Pfad einfügen.)
-   Die Datei mit TextEdit öffnen und den **ganzen Inhalt** kopieren.
-2. **Secrets bei GitHub anlegen.** Auf github.com im Repository *CoC-TD-Game*:
-   *Settings → Secrets and variables → Actions → New repository secret*. Drei Secrets anlegen:
-   - `UNITY_LICENSE` – der kopierte Inhalt der `.ulf`-Datei
-   - `UNITY_EMAIL` – die E-Mail-Adresse deines Unity-Kontos
-   - `UNITY_PASSWORD` – das Passwort deines Unity-Kontos
-3. Fertig. Die Daten sind verschlüsselt und nur für die Builds sichtbar.
+Auf github.com im Repository *CoC-TD-Game*: *Settings → Secrets and variables → Actions → New repository secret*.
+
+- `UNITY_EMAIL` – die E-Mail-Adresse deines Unity-Kontos
+- `UNITY_PASSWORD` – das Passwort deines Unity-Kontos
+- *(nur falls vorhanden)* `UNITY_LICENSE` – Inhalt von `/Library/Application Support/Unity/Unity_lic.ulf`.
+  Neuere Unity-Hub-Versionen legen diese Datei nicht mehr an (stattdessen `~/Library/Unity/licenses/UnityEntitlementLicense.xml`) – dann einfach weglassen.
+
+Die Daten sind verschlüsselt und nur für die Builds sichtbar.
 
 ## App bauen und aufs Handy laden
 

@@ -1,5 +1,5 @@
 # Baut die Android-App (APK) von Muh Defense in der Cloud – ohne Unity auf dem eigenen Rechner.
-# Einmalig einrichten: siehe docs/Android-Build.md (drei Secrets: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD).
+# Einmalig einrichten: siehe docs/Android-Build.md (Secrets UNITY_EMAIL und UNITY_PASSWORD, optional UNITY_LICENSE).
 # Starten: GitHub → Actions → „Android-App bauen“ → „Run workflow“, oder automatisch bei jedem Push mit Spiel-Änderungen.
 name: Android-App bauen
 
@@ -25,13 +25,15 @@ jobs:
     steps:
       - id: check
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
-          if [ -n "$UNITY_LICENSE" ]; then
+          # Neuere Unity-Versionen haben keine .ulf-Datei mehr – dann reicht die Anmeldung mit E-Mail und Passwort
+          if [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Noch keine Unity-Lizenz hinterlegt – Build übersprungen. Anleitung: docs/Android-Build.md"
+            echo "::notice::Noch keine Unity-Anmeldung hinterlegt – Build übersprungen. Anleitung: docs/Android-Build.md"
           fi
 
   build:
