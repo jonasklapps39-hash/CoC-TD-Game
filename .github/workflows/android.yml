@@ -25,15 +25,17 @@ jobs:
     steps:
       - id: check
         env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
-          # Neuere Unity-Versionen haben keine .ulf-Datei mehr – dann reicht die Anmeldung mit E-Mail und Passwort
-          if [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
+          # game-ci braucht für die Personal-Lizenz die Lizenzdatei (UNITY_LICENSE) plus E-Mail und Passwort.
+          # Neuere Unity-Hub-Versionen legen diese Datei nicht mehr an – dann wird der Bau übersprungen (APK lokal bauen, siehe docs/Android-Build.md).
+          if [ -n "$UNITY_LICENSE" ] && [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Noch keine Unity-Anmeldung hinterlegt – Build übersprungen. Anleitung: docs/Android-Build.md"
+            echo "::notice::Keine Unity-Lizenzdatei (UNITY_LICENSE) hinterlegt – Build übersprungen. APK lokal bauen: docs/Android-Build.md"
           fi
 
   build:

@@ -1,4 +1,17 @@
-# Android-App automatisch bauen (GitHub Actions)
+# Android-App bauen
+
+## Weg 1: Direkt in Unity am Mac (funktioniert immer)
+
+1. Unity öffnen, oben im Menü **Muh Defense → Android einrichten** (stellt alles ein, legt die Startszene an, setzt das App-Icon).
+2. **File → Build Profiles → Android → Build**, als Ziel z. B. den Schreibtisch wählen, Name `MuhDefense.apk`.
+   Der erste Bau dauert 5–15 Minuten.
+3. Die APK auf **drive.google.com** hochladen, am Handy in der Google-Drive-App antippen und installieren
+   (beim ersten Mal „Apps aus dieser Quelle zulassen“ erlauben).
+   Alternativ: Handy per USB anschließen (USB-Debugging an) und **Build And Run** wählen.
+
+## Weg 2: Automatisch in der Cloud (GitHub Actions)
+
+Klappt nur, wenn eine Lizenzdatei `Unity_lic.ulf` vorhanden ist – neuere Unity-Hub-Versionen legen sie nicht mehr an.
 
 GitHub baut die APK in der Cloud. Du brauchst dafür keinen Mac und kein Unity – nur einmal eine Unity-Lizenzdatei.
 
