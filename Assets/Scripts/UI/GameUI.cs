@@ -480,20 +480,15 @@ namespace MuhDefense
         /// <summary>Fenster mit großem Bild links, Titel, Name und Text rechts.</summary>
         bool PictureDialog(string title, string name, string text, Texture2D icon, string button, float height = 340f)
         {
-            Rect box = UiKit.DrawOverlay(blockers, 640f, height);
-            GUILayout.BeginArea(new Rect(box.x + 24f, box.y + 18f, box.width - 48f, box.height - 36f));
-            UiKit.Heading(title, UiKit.Big, GUILayout.Height(54f));
-            GUILayout.BeginHorizontal();
-            if (icon != null) GUILayout.Label(icon, GUILayout.Width(150f), GUILayout.Height(150f));
-            GUILayout.BeginVertical();
-            UiKit.Heading(name, UiKit.Title, GUILayout.Height(32f));
-            GUILayout.Label(text, UiKit.Label);
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-            GUILayout.FlexibleSpace();
-            bool clicked = UiKit.Btn(button, UiKit.BigButton, GUILayout.Height(56f));
-            GUILayout.EndArea();
-            return clicked;
+            // Abgedunkelter Hintergrund, große Überschrift, darunter erklärt Bauer Heinz in einer Sprechblase
+            var full = new Rect(0f, 0f, UiKit.VirtualWidth, UiKit.RefHeight);
+            blockers.Add(full);
+            UiKit.DrawRect(full, new Color(0f, 0f, 0f, 0.55f));
+            float w = 780f, h = height + 20f;
+            var area = new Rect((UiKit.VirtualWidth - w) / 2f, (UiKit.RefHeight - h) / 2f + 30f, w, h);
+            UiKit.OutlinedText(new Rect(area.x, area.y - 70f, w, 60f), title, UiKit.Big, new Color(1f, 0.86f, 0.25f), 3f);
+            var actions = UiKit.SpeechBubble(area, UiKit.Icon("BauerHeinz"), name, text, icon, 52f);
+            return UiKit.BtnRect(new Rect(actions.xMax - 220f, actions.y, 220f, actions.height), button, UiKit.BigButton, null);
         }
 
         void DrawEnemyIntro()

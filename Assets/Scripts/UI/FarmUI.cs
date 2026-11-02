@@ -57,48 +57,69 @@ namespace MuhDefense
             ApplyCamera();
         }
 
-        /// <summary>Zwei Finger: zoomen (nur mit dem alten Input-System verfügbar, sonst Mausrad und +/− Knöpfe).</summary>
+        float pinchEndedAt = -10f;
+
+        /// <summary>Während und kurz nach dem Zoomen mit zwei Fingern werden Maus-Ereignisse ignoriert
+        /// (Unity meldet einen der Finger zusätzlich als Maus und springt dabei zwischen den Fingern).</summary>
+        bool PinchGuard
+        {
+            get
+            {
+#if ENABLE_LEGACY_INPUT_MANAGER
+                if (Input.touchCount >= 2) return true;
+#endif
+                return pinching || Time.unscaledTime - pinchEndedAt < 0.35f;
+            }
+        }
+
+        /// <summary>Zwei Finger: zoomen um den Punkt zwischen den Fingern (nur mit dem alten Input-System, sonst Mausrad und +/− Knöpfe).</summary>
         void UpdatePinch()
         {
 #if ENABLE_LEGACY_INPUT_MANAGER
             if (Input.touchCount >= 2 && !farm.AnyWindowOpen)
             {
-                float d = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
+                var t0 = Input.GetTouch(0).position;
+                var t1 = Input.GetTouch(1).position;
+                float d = Vector2.Distance(t0, t1);
+                var mid = (t0 + t1) / 2f;
+                var midGui = new Vector2(mid.x, Screen.height - mid.y);
                 if (!pinching)
                 {
                     pinching = true;
                     panning = false;
                     pressOnGround = false;
                     pressedBuilding = null;
+                    draggingGhost = false;
                     pinchStartDistance = Mathf.Max(1f, d);
                     pinchStartSize = camSize;
+                    if (UiKit.ScreenToGround(midGui, cam, out var g)) pinchGround = g;
                 }
                 else
                 {
                     camSize = pinchStartSize * pinchStartDistance / Mathf.Max(1f, d);
                     ApplyCamera();
+                    // Der Punkt zwischen den Fingern bleibt unter den Fingern (zoomen und gleichzeitig verschieben)
+                    if (UiKit.ScreenToGround(midGui, cam, out var now))
+                    {
+                        camCenter += pinchGround - now;
+                        ApplyCamera();
+                    }
                 }
                 return;
             }
 #endif
             if (pinching)
             {
+                // Nach dem Zoomen erst wieder verschieben, wenn alle Finger los waren – sonst springt die Kamera
                 pinching = false;
-                // Nach dem Zoomen mit einem Finger weiter verschieben, ohne Sprung
-#if ENABLE_LEGACY_INPUT_MANAGER
-                if (Input.touchCount == 1)
-                {
-                    var tp = Input.GetTouch(0).position;
-                    if (UiKit.ScreenToGround(new Vector2(tp.x, Screen.height - tp.y), cam, out var g))
-                    {
-                        panGrab = g;
-                        pressOnGround = true;
-                        panning = true;
-                    }
-                }
-#endif
+                pinchEndedAt = Time.unscaledTime;
+                panning = false;
+                pressOnGround = false;
+                pressedBuilding = null;
             }
         }
+
+        Vector3 pinchGround;
 
         /// <summary>
         /// Gebäude festhalten und ziehen verschiebt es (Loslassen auf freiem Platz bestätigt, sonst springt es zurück).
@@ -108,6 +129,21 @@ namespace MuhDefense
         {
             var e = Event.current;
             bool blocked = farm.AnyWindowOpen || UiKit.IsOverUi(rawMouse, blockers);
+
+            if (e.isMouse && PinchGuard)
+            {
+                // Zwei Finger: keine Klicks, kein Verschieben
+                if (e.type == EventType.MouseUp)
+                {
+                    draggingGhost = false;
+                    moveByDrag = false;
+                    pressedBuilding = null;
+                    pressOnGround = false;
+                    panning = false;
+                }
+                if (!farm.AnyWindowOpen) e.Use();
+                return;
+            }
 
             if (e.type == EventType.ScrollWheel && !blocked)
             {
@@ -308,19 +344,20 @@ namespace MuhDefense
             if (Event.current.type == EventType.Layout) FarmTutorial.Update(State);
             var step = FarmTutorial.Current(State);
             if (step == null || farm.AnyWindowOpen || farm.Mode != FarmMode.Normal) return;
-            var r = new Rect(16f, UiKit.RefHeight - 80f - 190f, 440f, 180f);
+            // Bauer Heinz erklärt in einer Comic-Sprechblase
+            var r = new Rect(12f, UiKit.RefHeight - 80f - 214f, 600f, 206f);
             blockers.Add(r);
-            GUI.Box(r, GUIContent.none, UiKit.Dialog);
-            GUILayout.BeginArea(new Rect(r.x + 16f, r.y + 10f, r.width - 32f, r.height - 20f));
-            UiKit.Heading($"{step.Title}  ({State.Data.TutorialStep + 1}/{FarmTutorial.Steps.Length})", UiKit.Title, GUILayout.Height(30f));
-            GUILayout.Label(step.Text, UiKit.Small);
-            GUILayout.FlexibleSpace();
-            GUILayout.BeginHorizontal();
-            if (UiKit.Btn("Überspringen", UiKit.Button, GUILayout.Height(36f), GUILayout.Width(150f))) FarmTutorial.Skip(State);
-            GUILayout.FlexibleSpace();
-            if (step.Done == null && UiKit.Btn("Weiter", UiKit.YellowButton, GUILayout.Height(36f), GUILayout.Width(150f))) FarmTutorial.Next(State);
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
+            var actions = UiKit.SpeechBubble(r, UiKit.Icon("BauerHeinz"), step.Title, step.Text);
+            if (UiKit.BtnRect(new Rect(actions.x, actions.y, 130f, actions.height), "Überspringen", UiKit.Button, null)) FarmTutorial.Skip(State);
+            UiKit.ProgressDots(new Rect(actions.x + 136f, actions.y, actions.width - 272f, actions.height), State.Data.TutorialStep, FarmTutorial.Steps.Length);
+            if (step.Done == null)
+            {
+                if (UiKit.BtnRect(new Rect(actions.xMax - 130f, actions.y, 130f, actions.height), "Weiter", UiKit.YellowButton, null)) FarmTutorial.Next(State);
+            }
+            else
+            {
+                GUI.Label(new Rect(actions.xMax - 130f, actions.y, 130f, actions.height), "Mach's vor!", UiKit.SpeechText);
+            }
         }
 
         /// <summary>Knöpfe zum Zoomen unten links (funktionieren überall, auch ohne zwei Finger).</summary>
@@ -349,7 +386,7 @@ namespace MuhDefense
                 lastSelected = farm.Selected;
                 sideScroll = Vector2.zero;
             }
-            sideScroll = GUILayout.BeginScrollView(sideScroll);
+            sideScroll = UiKit.BeginScroll("sideScroll", sideScroll);
 
             if (farm.Mode != FarmMode.Normal)
             {
@@ -402,7 +439,7 @@ namespace MuhDefense
                 }
                 GUILayout.EndHorizontal();
             }
-            GUILayout.EndScrollView();
+            UiKit.EndScroll("sideScroll");
 
             GUILayout.FlexibleSpace();
             if (farm.Mode == FarmMode.Normal)
@@ -695,7 +732,7 @@ namespace MuhDefense
             GUILayout.EndHorizontal();
             GUILayout.Space(6f);
 
-            shopScroll = GUILayout.BeginScrollView(shopScroll);
+            shopScroll = UiKit.BeginScroll("shopScroll", shopScroll);
             foreach (var type in FarmBuildingType.All)
             {
                 if (type == FarmBuildingType.Bauernhaus) continue;
@@ -716,7 +753,7 @@ namespace MuhDefense
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4f);
             }
-            GUILayout.EndScrollView();
+            UiKit.EndScroll("shopScroll");
             GUILayout.EndArea();
         }
 
@@ -888,7 +925,7 @@ namespace MuhDefense
             if (UiKit.Btn("Schließen", UiKit.Button, GUILayout.Width(140f), GUILayout.Height(40f))) farm.QuestsOpen = false;
             GUILayout.EndHorizontal();
 
-            questScroll = GUILayout.BeginScrollView(questScroll);
+            questScroll = UiKit.BeginScroll("questScroll", questScroll);
             if (!questAchievements)
             {
                 GUILayout.Label("Jeden Tag gibt es drei neue Aufgaben. Um Mitternacht kommen frische.", UiKit.Small);
@@ -917,7 +954,7 @@ namespace MuhDefense
                         State.IsAchievementClaimed(a), a.Icon, () => State.ClaimAchievement(a));
                 }
             }
-            GUILayout.EndScrollView();
+            UiKit.EndScroll("questScroll");
             GUILayout.EndArea();
         }
 
@@ -968,7 +1005,7 @@ namespace MuhDefense
             GUILayout.EndHorizontal();
             GUILayout.Label($"Diamanten gibt es für jeden neuen Stern ({FarmState.GemsPerNewStar}) und beim ersten Schaffen eines Levels ({FarmState.GemsFirstClear}).", UiKit.Small);
 
-            gemScroll = GUILayout.BeginScrollView(gemScroll);
+            gemScroll = UiKit.BeginScroll("gemScroll", gemScroll);
             GUILayout.BeginHorizontal();
             // Knecht
             GUILayout.BeginVertical(UiKit.Card, GUILayout.Width(250f));
@@ -1066,7 +1103,7 @@ namespace MuhDefense
             }
             GUILayout.EndHorizontal();
             GUILayout.Label("Echtgeld-Käufe kommen erst mit dem Start im Play Store.", UiKit.Small);
-            GUILayout.EndScrollView();
+            UiKit.EndScroll("gemScroll");
             GUILayout.EndArea();
         }
 
@@ -1254,7 +1291,7 @@ namespace MuhDefense
                                 $"(du hast {State.TotalStars}).", UiKit.Label);
             }
 
-            mapScroll = GUILayout.BeginScrollView(mapScroll);
+            mapScroll = UiKit.BeginScroll("mapScroll", mapScroll);
             for (int i = 0; i < Levels.All.Length; i++)
             {
                 var def = Levels.All[i];
@@ -1304,7 +1341,7 @@ namespace MuhDefense
                 GUILayout.EndHorizontal();
                 GUILayout.Space(6f);
             }
-            GUILayout.EndScrollView();
+            UiKit.EndScroll("mapScroll");
 
             GUILayout.Label("Tipp: Werkstätten auf dem Hof schalten neue Türme frei und erlauben höhere Turm-Stufen im Level.", UiKit.Small);
             GUILayout.EndArea();

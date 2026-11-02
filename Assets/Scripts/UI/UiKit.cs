@@ -27,6 +27,8 @@ namespace MuhDefense
         public static GUIStyle BlueCard, YellowButton, RedButton, Pill;
         /// <summary>Schrift auf Knöpfen (Comic-Schrift, weiß mit dunkler Umrandung).</summary>
         public static GUIStyle ButtonText;
+        /// <summary>Comic-Sprechblase (weiß-creme mit dunklem Rand) und ihre Schriften.</summary>
+        public static GUIStyle SpeechBox, SpeechTitle, SpeechText;
         public static Texture2D Star;
         /// <summary>Comic-Schrift „Luckiest Guy“ (Apache-2.0-Lizenz), null falls nicht vorhanden.</summary>
         public static Font ComicFont;
@@ -253,6 +255,71 @@ namespace MuhDefense
             return st;
         }
 
+        // ---------------------------------------------------------------- Scrollen mit dem Finger
+
+        static readonly Dictionary<string, Rect> scrollRects = new Dictionary<string, Rect>();
+        static string dragScrollId;
+        static Vector2 dragScrollStart;
+        static bool dragScrollMoved;
+        const float DragScrollThreshold = 10f;
+
+        /// <summary>
+        /// Wie GUILayout.BeginScrollView, aber man kann zusätzlich mit dem Finger (oder der Maus) in der Fläche wischen.
+        /// Ein Wisch löst keinen Knopf aus; ein kurzer Tipp schon.
+        /// </summary>
+        public static Vector2 BeginScroll(string id, Vector2 scroll, params GUILayoutOption[] options)
+        {
+            var e = Event.current;
+            if (scrollRects.TryGetValue(id, out var area))
+            {
+                switch (e.type)
+                {
+                    case EventType.MouseDown:
+                        // nicht auf dem Schiebebalken am rechten Rand (der scrollt schon selbst)
+                        if (area.Contains(e.mousePosition) && e.mousePosition.x < area.xMax - 24f && e.mousePosition.y < area.yMax - 24f)
+                        {
+                            dragScrollId = id;
+                            dragScrollStart = e.mousePosition;
+                            dragScrollMoved = false;
+                        }
+                        break;
+                    case EventType.MouseDrag:
+                        if (dragScrollId == id)
+                        {
+                            if (!dragScrollMoved && (e.mousePosition - dragScrollStart).magnitude > DragScrollThreshold) dragScrollMoved = true;
+                            if (dragScrollMoved)
+                            {
+                                scroll -= e.delta;
+                                scroll.x = Mathf.Max(0f, scroll.x);
+                                scroll.y = Mathf.Max(0f, scroll.y);
+                                // Knopf, auf dem der Finger angefangen hat, nicht mehr auslösen
+                                GUIUtility.hotControl = 0;
+                                e.Use();
+                            }
+                        }
+                        break;
+                    case EventType.MouseUp:
+                        if (dragScrollId == id)
+                        {
+                            if (dragScrollMoved)
+                            {
+                                GUIUtility.hotControl = 0;
+                                e.Use();
+                            }
+                            dragScrollId = null;
+                        }
+                        break;
+                }
+            }
+            return GUILayout.BeginScrollView(scroll, options);
+        }
+
+        public static void EndScroll(string id)
+        {
+            GUILayout.EndScrollView();
+            if (Event.current.type == EventType.Repaint) scrollRects[id] = GUILayoutUtility.GetLastRect();
+        }
+
         // ---------------------------------------------------------------- Text mit Umrandung, Knöpfe, Symbole
 
         /// <summary>Text mit dunkler Umrandung (wie in Bloons TD6).</summary>
@@ -429,7 +496,76 @@ namespace MuhDefense
             Bubble.normal.textColor = new Color(0.35f, 0.22f, 0.1f);
             Bubble.hover.textColor = Bubble.normal.textColor;
 
+            SpeechBox = RoundedStyle(GUI.skin.box, new Color(1f, 1f, 0.98f), new Color(1f, 0.95f, 0.84f), new Color(0.3f, 0.17f, 0.07f), 18, 4);
+            SpeechTitle = new GUIStyle(Title) { fontSize = 22, wordWrap = false };
+            SpeechTitle.normal.textColor = new Color(0.62f, 0.25f, 0.08f);
+            SpeechText = new GUIStyle(GUI.skin.label) { fontSize = 16, wordWrap = true, alignment = TextAnchor.UpperLeft };
+            SpeechText.normal.textColor = new Color(0.24f, 0.15f, 0.08f);
+
             Star = MakeStarTexture(64);
+        }
+
+        /// <summary>
+        /// Eine Figur spricht: Porträt unten links, daneben eine Comic-Sprechblase mit Spitze, Überschrift, optionalem Bild und Text.
+        /// Liefert die Fläche unten in der Blase für Knöpfe.
+        /// </summary>
+        public static Rect SpeechBubble(Rect area, Texture2D portrait, string title, string text, Texture2D picture = null, float actionHeight = 40f)
+        {
+            float pw = Mathf.Clamp(area.height * 0.8f, 100f, 170f);
+            var bubble = new Rect(area.x + pw + 18f, area.y, area.width - pw - 18f, area.height);
+
+            // Figur mit leichtem Wippen
+            if (portrait != null)
+            {
+                float bob = Mathf.Sin(Time.realtimeSinceStartup * 2.2f) * 3f;
+                DrawRect(new Rect(area.x + pw * 0.15f, area.yMax - 10f, pw * 0.7f, 8f), new Color(0f, 0f, 0f, 0.25f));
+                GUI.DrawTexture(new Rect(area.x, area.yMax - pw + bob, pw, pw), portrait, ScaleMode.ScaleToFit);
+            }
+
+            // Spitze der Sprechblase zeigt zur Figur (erst Rand, dann Füllung)
+            float y0 = bubble.yMax - 74f, y1 = bubble.yMax - 34f;
+            float apexX = bubble.x - 22f;
+            Tail(bubble.x + 6f, apexX - 4f, y0 - 3f, y1 + 4f, new Color(0.3f, 0.17f, 0.07f));
+            GUI.Box(bubble, GUIContent.none, SpeechBox);
+            Tail(bubble.x + 8f, apexX + 2f, y0, y1, new Color(1f, 0.96f, 0.86f));
+
+            var inner = new Rect(bubble.x + 18f, bubble.y + 12f, bubble.width - 36f, bubble.height - 24f);
+            GUI.Label(new Rect(inner.x, inner.y, inner.width, 30f), title, SpeechTitle);
+            float textX = inner.x;
+            float top = inner.y + 34f;
+            if (picture != null)
+            {
+                GUI.DrawTexture(new Rect(inner.x, top, 84f, 84f), picture, ScaleMode.ScaleToFit);
+                textX += 94f;
+            }
+            float textBottom = inner.yMax - actionHeight - 8f;
+            GUI.Label(new Rect(textX, top, inner.xMax - textX, Mathf.Max(20f, textBottom - top)), text, SpeechText);
+            return new Rect(inner.x, inner.yMax - actionHeight, inner.width, actionHeight);
+        }
+
+        /// <summary>Dreieckige Spitze: oben so breit wie die Blase, unten spitz nach links.</summary>
+        static void Tail(float rightX, float apexX, float y0, float y1, Color c)
+        {
+            int rows = Mathf.Max(1, Mathf.RoundToInt(y1 - y0));
+            for (int i = 0; i < rows; i++)
+            {
+                float t = i / (float)rows;
+                float left = Mathf.Lerp(rightX - 4f, apexX, t);
+                DrawRect(new Rect(left, y0 + i, rightX - left, 1.2f), c);
+            }
+        }
+
+        /// <summary>Kleine Punkte für Fortschritt (z. B. Tutorial-Schritt 2 von 6).</summary>
+        public static void ProgressDots(Rect r, int current, int total)
+        {
+            float size = 10f, gap = 6f;
+            float w = total * size + (total - 1) * gap;
+            float x = r.x + (r.width - w) / 2f;
+            float y = r.y + (r.height - size) / 2f;
+            for (int i = 0; i < total; i++)
+            {
+                DrawRect(new Rect(x + i * (size + gap), y, size, size), i == current ? new Color(0.95f, 0.6f, 0.1f) : new Color(0.3f, 0.17f, 0.07f, 0.35f));
+            }
         }
     }
 }
